@@ -94,7 +94,7 @@ internal abstract class Treap<S : Treap<S>>(
      * Derived classes use this to compare key/value data appropriately.  For example, hashed sets and maps
      * need to compare all keys/values with the same hash code.
      */
-    abstract fun shallowEquals(that: Treap<S>): Boolean
+    abstract fun shallowEquals(that: S): Boolean
 
     /**
      * Derived classes use this to report the number of logical items stored in this node due to hash collisions.
@@ -105,7 +105,6 @@ internal abstract class Treap<S : Treap<S>>(
      * Derived classes use these to perform these operations in the face of hash collisions.
      */
     abstract infix fun shallowAdd(that: S): S
-    abstract infix fun shallowDifference(that: S): S?
     abstract fun shallowRemove(element: Any?): S?
     abstract fun shallowRemoveAll(predicate: (Any?) -> Boolean): S?
     abstract fun shallowComputeHashCode(): Int
@@ -175,28 +174,6 @@ internal infix fun <S : Treap<S>> S?.join(greater: S?): S? = when {
  * speed.  To add multiple nodes, use `union`.
  */
 internal fun <S : Treap<S>> S?.add(that: S): S = add(that, that.precompute())
-
-/**
- * Removes the items in `that` from `this`.
- */
-internal infix fun <S : Treap<S>> S?.difference(that: S?): S? = when {
-    this == null -> null
-    that == null -> this
-    this === that -> null
-    else -> {
-        val thatSplit = that.split(this)
-        val newLeft = this.left difference thatSplit.left
-        val newRight = this.right difference thatSplit.right
-        val newThis = when {
-            thatSplit.duplicate == null -> this
-            else -> this.shallowDifference(thatSplit.duplicate!!)
-        }
-        when {
-            newThis == null -> newLeft join newRight
-            else -> newThis.with(newLeft, newRight)
-        }
-    }
-}
 
 private fun <S : Treap<S>> Treap<S>?.add(that: S, thatKey: TreapKey): S = when {
     that.left != null || that.right != null -> throw IllegalArgumentException("add requires a single treap node")

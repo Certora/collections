@@ -69,6 +69,7 @@ internal abstract class TreapSet<E, S : TreapSet<E, S>>(
 
     abstract infix fun shallowUnion(that: S): S
     abstract infix fun shallowIntersect(that: S): S?
+    abstract infix fun shallowDifference(that: S): S?
     abstract fun shallowContainsAll(elements: S): Boolean
     abstract fun shallowContainsAny(elements: S): Boolean
 
@@ -221,6 +222,29 @@ private fun <E, S : TreapSet<E, S>> intersectMerge(higher: Treap<S>, lower: Trea
     lower.split(higher).let { lowerSplit ->
         (higher.left intersect lowerSplit.left) join (higher.right intersect lowerSplit.right)
     }
+
+/**
+ * Removes the items in `that` from `this`.
+ */
+internal infix fun <E, S : TreapSet<E, S>> S?.difference(that: S?): S? = when {
+    this == null -> null
+    that == null -> this
+    this === that -> null
+    else -> {
+        val thatSplit = that.split(this)
+        val newLeft = this.left difference thatSplit.left
+        val newRight = this.right difference thatSplit.right
+        val newThis = when {
+            thatSplit.duplicate == null -> this
+            else -> this.shallowDifference(thatSplit.duplicate!!)
+        }
+        when {
+            newThis == null -> newLeft join newRight
+            else -> newThis.with(newLeft, newRight)
+        }
+    }
+}
+
 
 /**
  * Checks if this Treap contains all items in another Treap.  This should be equivalent to:

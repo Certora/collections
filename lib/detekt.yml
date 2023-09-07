@@ -390,7 +390,7 @@ potential-bugs:
   HasPlatformType:
     active: false
   IgnoredReturnValue:
-    active: true
+    active: false
     restrictToConfig: true
     returnValueAnnotations:
       - 'CheckResult'
