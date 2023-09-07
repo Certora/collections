@@ -9,7 +9,7 @@ import kotlinx.collections.immutable.ImmutableSet
  * Base class for Treap-based PersistentMap implementations.  Provides the Map operations; derived classes deal
  * with type-specific behavior such as hash collisions.  See [Treap] for an overview of all of this.
  */
-internal abstract class AbstractTreapMap<@WithStableHashCodeIfSerialized K, V, S : AbstractTreapMap<K, V, S>>(
+internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K, V, S>>(
     left: S?,
     right: S?
 ) : TreapMap<K, V>, Treap<K, S>(left, right) {
@@ -335,7 +335,7 @@ internal abstract class AbstractTreapMap<@WithStableHashCodeIfSerialized K, V, S
 /**
  * Removes a map entry (`entryKey`, `entryValue`) with key `key`
  */
-internal fun <@WithStableHashCodeIfSerialized K, V, S : AbstractTreapMap<K, V, S>> S?.removeEntry(key: TreapKey, entryKey: K, entryValue: V): S? = when {
+internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.removeEntry(key: TreapKey, entryKey: K, entryValue: V): S? = when {
     this == null -> null
     key.comparePriorityTo(this) > 0 -> this
     else -> {
@@ -348,7 +348,7 @@ internal fun <@WithStableHashCodeIfSerialized K, V, S : AbstractTreapMap<K, V, S
     }
 }
 
-internal fun <@WithStableHashCodeIfSerialized K, V, U, S : AbstractTreapMap<K, V, S>> S?.updateEntry(
+internal fun <@Treapable K, V, U, S : AbstractTreapMap<K, V, S>> S?.updateEntry(
     thatKey: TreapKey, 
     entryKey: K, 
     toUpdate: U?, 

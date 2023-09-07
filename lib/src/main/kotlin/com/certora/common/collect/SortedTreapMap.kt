@@ -7,7 +7,7 @@ import kotlinx.collections.immutable.PersistentMap
  * A AbstractTreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element
  * per Treap node, with the map key itself as the Treap key, and an additional `value` field
  */
-internal sealed class SortedTreapMap<@WithStableHashCodeIfSerialized K : Comparable<K>, V> private constructor(
+internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private constructor(
     left: SortedTreapMap<K, V>?,
     right: SortedTreapMap<K, V>?
 ) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
@@ -45,7 +45,7 @@ internal sealed class SortedTreapMap<@WithStableHashCodeIfSerialized K : Compara
         return sequenceOf(MapEntry(thisNode.key, thisNode.value to thatNode.value))
     }
 
-    private class Node<@WithStableHashCodeIfSerialized K : Comparable<K>, V>(
+    private class Node<@Treapable K : Comparable<K>, V>(
         val key: K,
         val value: V,
         left: SortedTreapMap<K, V>? = null,
@@ -95,7 +95,7 @@ internal sealed class SortedTreapMap<@WithStableHashCodeIfSerialized K : Compara
         }
     }
 
-    private class Empty<@WithStableHashCodeIfSerialized K : Comparable<K>, V> : SortedTreapMap<K, V>(null, null) {
+    private class Empty<@Treapable K : Comparable<K>, V> : SortedTreapMap<K, V>(null, null) {
          // `Empty<E>` is just a placeholder, and should not be used as a treap
          override val treap get() = null
          override val self get() = this
@@ -119,6 +119,6 @@ internal sealed class SortedTreapMap<@WithStableHashCodeIfSerialized K : Compara
 
     companion object {
         private val _empty = Empty<Nothing, Nothing>()
-        fun <@WithStableHashCodeIfSerialized K : Comparable<K>, V> emptyOf() = _empty.uncheckedAs<SortedTreapMap<K, V>>()
+        fun <@Treapable K : Comparable<K>, V> emptyOf() = _empty.uncheckedAs<SortedTreapMap<K, V>>()
     }
 }

@@ -1,14 +1,13 @@
 package com.certora.common.collect
 
 import com.certora.common.utils.*
-import kotlinx.collections.immutable.PersistentSet
 
 // A "builder" for an arbitrary PersistentSet.  Assumes that all PersistentSet operations
 // maintain object identity for updates which have no effect.  E.g., a.add(b) === a, iff b is a subset of a.
 
-internal class TreapSetBuilder<E, S : AbstractTreapSet<E, S>>(
+internal class TreapSetBuilder<@Treapable E, S : AbstractTreapSet<E, S>>(
     private var set: S
-) : AbstractMutableSet<E>(), PersistentSet.Builder<E>, java.io.Serializable {
+) : AbstractMutableSet<E>(), TreapSet.Builder<E>, java.io.Serializable {
 
     override fun hashCode() = set.hashCode()
     override fun equals(other: Any?) = set.equals(other)

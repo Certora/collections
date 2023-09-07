@@ -11,11 +11,11 @@ package com.certora.common.collect
  *
  * This allows collection types to rely on stable hash codes for serialization, but otherwise not require them.  E.g.:
  *
- *      class AbstractTreapSet<@WithStableHashCodeIfSerialized T>(): Serializable
+ *      class AbstractTreapSet<@Treapable T>(): Serializable
  *
  * `AbstractTreapSet` can rely on hashCode stability in its serialization code, because if T is serializable, it also has a
  * stable hash code.  But we're free to instantiate `AbstractTreapSet<UnstableType>`, as long as `UnstableType` definitely not
  * serializable.
  */
 @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE)
-annotation class WithStableHashCodeIfSerialized
+annotation class Treapable

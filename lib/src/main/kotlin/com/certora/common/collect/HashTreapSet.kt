@@ -12,7 +12,7 @@ import kotlinx.collections.immutable.PersistentSet
  * is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be rare
  * enough that these lists will be very small - usually just one element.
  */
-internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private constructor(
+internal sealed class HashTreapSet<@Treapable E> private constructor(
     left: HashTreapSet<E>? = null,
     right: HashTreapSet<E>? = null
 ) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E> {
@@ -43,7 +43,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
         }
     }
 
-    private class Node<@WithStableHashCodeIfSerialized E>(
+    private class Node<@Treapable E>(
         override val element: E,
         override val next: MoreElements<E>? = null,
         left: HashTreapSet<E>? = null,
@@ -252,7 +252,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
         override fun shallowGetSingleElement(): E? = element.takeIf { next == null }
     }
 
-    private class Empty<@WithStableHashCodeIfSerialized E> : HashTreapSet<E>(null, null) {
+    private class Empty<@Treapable E> : HashTreapSet<E>(null, null) {
         override fun iterator(): Iterator<E> = emptySet<E>().iterator()
 
         // `Empty<E>` is just a placeholder, and should not be used as a treap
@@ -280,7 +280,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
 
     companion object {
         private val _empty = Empty<Nothing>()
-        fun <@WithStableHashCodeIfSerialized E> emptyOf() = _empty.uncheckedAs<HashTreapSet<E>>()
+        fun <@Treapable E> emptyOf() = _empty.uncheckedAs<HashTreapSet<E>>()
     }
 }
 

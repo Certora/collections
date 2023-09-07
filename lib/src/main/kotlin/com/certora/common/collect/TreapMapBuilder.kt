@@ -1,6 +1,6 @@
 package com.certora.common.collect
 
-internal class TreapMapBuilder<@WithStableHashCodeIfSerialized K, V, S : AbstractTreapMap<K, V, S>>(
+internal class TreapMapBuilder<@Treapable K, V, S : AbstractTreapMap<K, V, S>>(
     private var map: S
 ) : AbstractMutableMap<K, V>(), TreapMap.Builder<K, V>, java.io.Serializable {
 

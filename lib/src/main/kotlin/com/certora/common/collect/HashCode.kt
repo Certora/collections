@@ -24,7 +24,7 @@ inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode) = action(HashC
     @PublishedApi
     internal inline fun add(obj: Any?) = HashCode(31 * this.code + obj.hashCode())
 
-    inline infix operator fun <@WithStableHashCodeIfSerialized T> plus(obj: T) = add(obj)
+    inline infix operator fun <@Treapable T> plus(obj: T) = add(obj)
     inline infix operator fun plus(clazz: Class<*>?) = add(clazz?.name)
     inline infix operator fun plus(clazz: KClass<*>?) = add(clazz?.java?.name)
     inline infix operator fun plus(e: Enum<*>?) = add(e?.name)

@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.*
 
 /**
- * Enforces hash code stability for types marked with 'utils.StableHashCode' and 'utils.WithStableHashCodeIfSerialized'.  See those
+ * Enforces hash code stability for types marked with 'utils.StableHashCode' and 'utils.Treapable'.  See those
  * definitions for the rules.
  */
 @RequiresTypeResolution
@@ -193,7 +193,7 @@ class HashCodeStability(config: Config) : Rule(config) {
 
     companion object {
         private val stableHashCodeName = FqName("com.certora.common.collect.StableHashCode")
-        private val stableHashCodeAnnotationName = FqName("com.certora.common.collect.WithStableHashCodeIfSerialized")
+        private val stableHashCodeAnnotationName = FqName("com.certora.common.collect.Treapable")
         private val hashCodePlusName = FqName("com.certora.common.collect.HashCode.plus")
 
         // Known types with stable hash codes

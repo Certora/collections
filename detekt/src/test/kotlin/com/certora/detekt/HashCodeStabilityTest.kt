@@ -15,14 +15,14 @@ class HashCodeStabilityTest(val env: KotlinCoreEnvironment) {
         interface StableHashCode
 
         @Target(AnnotationTarget.TYPE_PARAMETER)
-        annotation class WithStableHashCodeIfSerialized
+        annotation class Treapable
 
         inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode) = action(HashCode(initial)).code
         @JvmInline value class HashCode(val code: Int) {
             @PublishedApi
             internal inline fun add(obj: Any?) = HashCode(31 * this.code + obj.hashCode())
 
-            inline infix operator fun <@WithStableHashCodeIfSerialized T> plus(obj: T) = add(obj)
+            inline infix operator fun <@Treapable T> plus(obj: T) = add(obj)
             inline infix operator fun plus(clazz: Class<*>?) = add(clazz?.name)
             inline infix operator fun plus(clazz: KClass<*>?) = add(clazz?.java?.name)
             inline infix operator fun plus(e: Enum<*>?) = add(e?.name)
@@ -35,9 +35,9 @@ class HashCodeStabilityTest(val env: KotlinCoreEnvironment) {
         class UnstableNonSerializable
         class Stable : StableHashCode, Serializable
         enum class UnstableEnum { A, B }
-        open class Container<@WithStableHashCodeIfSerialized T>(t: T)
-        interface IContainer<@WithStableHashCodeIfSerialized T>
-        fun <@WithStableHashCodeIfSerialized T> genericFunc(t: T) = t
+        open class Container<@Treapable T>(t: T)
+        interface IContainer<@Treapable T>
+        fun <@Treapable T> genericFunc(t: T) = t
     """
 
     fun failureCount(code: String) =

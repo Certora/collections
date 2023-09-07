@@ -12,7 +12,7 @@ import kotlinx.collections.immutable.PersistentMap
  * This is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be
  * rare enough that these lists will be very small - usually just one element.
  */
-internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private constructor(
+internal sealed class HashTreapMap<@Treapable K, V> private constructor(
     left: HashTreapMap<K, V>?,
     right: HashTreapMap<K, V>?
 ) : AbstractTreapMap<K, V, HashTreapMap<K, V>>(left, right), TreapKey.Hashed<K> {
@@ -115,7 +115,7 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
         }
     }
 
-    private class Node<@WithStableHashCodeIfSerialized K, V>(
+    private class Node<@Treapable K, V>(
         override val key: K,
         override val value: V,
         override val next: MoreKeyValuePairs<K, V>? = null,
@@ -327,7 +327,7 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
         }
     }
 
-    private class Empty<@WithStableHashCodeIfSerialized K, V> : HashTreapMap<K, V>(null, null) {
+    private class Empty<@Treapable K, V> : HashTreapMap<K, V>(null, null) {
         // `Empty<E>` is just a placeholder, and should not be used as a treap
         override val treap get() = null
         override val self get() = this
@@ -351,6 +351,6 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
 
     companion object {
         private val _empty = Empty<Nothing, Nothing>()
-        fun <@WithStableHashCodeIfSerialized K, V> emptyOf() = _empty.uncheckedAs<HashTreapMap<K, V>>()
+        fun <@Treapable K, V> emptyOf() = _empty.uncheckedAs<HashTreapMap<K, V>>()
     }
 }

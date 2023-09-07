@@ -7,7 +7,7 @@ import kotlinx.collections.immutable.PersistentSet
  * A AbstractTreapSet specific to Comparable elements.  Iterates in the order defined by the objects.  We store one element
  * per Treap node, with the element itself as the Treap key.
  */
-internal sealed class SortedTreapSet<@WithStableHashCodeIfSerialized E : Comparable<E>> private constructor(
+internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private constructor(
     left: SortedTreapSet<E>? = null,
     right: SortedTreapSet<E>? = null
 ) : AbstractTreapSet<E, SortedTreapSet<E>>(left, right), TreapKey.Sorted<E> {
@@ -20,7 +20,7 @@ internal sealed class SortedTreapSet<@WithStableHashCodeIfSerialized E : Compara
         (this as? SortedTreapSet<E>)
         ?: (this as? PersistentSet.Builder<E>)?.build() as? SortedTreapSet<E>
 
-    private class Node<@WithStableHashCodeIfSerialized E : Comparable<E>>(
+    private class Node<@Treapable E : Comparable<E>>(
         override val treapKey: E,
         left: SortedTreapSet<E>? = null,
         right: SortedTreapSet<E>? = null
@@ -51,7 +51,7 @@ internal sealed class SortedTreapSet<@WithStableHashCodeIfSerialized E : Compara
         override fun shallowForEach(action: (element: E) -> Unit): Unit { action(treapKey) }
     }
 
-    private class Empty<@WithStableHashCodeIfSerialized E : Comparable<E>> : SortedTreapSet<E>(null, null) {
+    private class Empty<@Treapable E : Comparable<E>> : SortedTreapSet<E>(null, null) {
         override fun iterator(): Iterator<E> = emptySet<E>().iterator()
 
         // `Empty<E>` is just a placeholder, and should not be used as a treap
@@ -79,7 +79,7 @@ internal sealed class SortedTreapSet<@WithStableHashCodeIfSerialized E : Compara
 
     companion object {
         private val _empty = Empty<Nothing>()
-        fun <@WithStableHashCodeIfSerialized E : Comparable<E>> emptyOf() = _empty.uncheckedAs<SortedTreapSet<E>>()
+        fun <@Treapable E : Comparable<E>> emptyOf() = _empty.uncheckedAs<SortedTreapSet<E>>()
     }
 }
 

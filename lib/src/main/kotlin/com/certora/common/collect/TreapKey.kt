@@ -67,7 +67,7 @@ internal interface TreapKey {
     /**
      * A TreapKey whose underlying key implement Comparable.  This allows us to sort the Treap naturally.
      */
-    interface Sorted<@WithStableHashCodeIfSerialized K : Comparable<K>> : TreapKey {
+    interface Sorted<@Treapable K : Comparable<K>> : TreapKey {
         abstract override val treapKey: K
 
         // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is
@@ -76,7 +76,7 @@ internal interface TreapKey {
 
         override fun precompute() = FromKey(treapKey)
 
-        class FromKey<@WithStableHashCodeIfSerialized K : Comparable<K>>(override val treapKey: K) : Sorted<K> {
+        class FromKey<@Treapable K : Comparable<K>>(override val treapKey: K) : Sorted<K> {
             override val treapPriority = super.treapPriority // precompute the priority
         }
     }
@@ -85,7 +85,7 @@ internal interface TreapKey {
      * A TreapKey whose underlying key is not Comparable.  We have to use its hash code instead.  Derived classes
      * will need to deal with hash collisions.
      */
-    interface Hashed<@WithStableHashCodeIfSerialized K> : TreapKey {
+    interface Hashed<@Treapable K> : TreapKey {
         abstract override val treapKey: K
 
         // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is
@@ -104,7 +104,7 @@ internal interface TreapKey {
 
         override fun precompute() = FromKey(treapKey)
 
-        class FromKey<@WithStableHashCodeIfSerialized K>(override val treapKey: K) : Hashed<K> {
+        class FromKey<@Treapable K>(override val treapKey: K) : Hashed<K> {
             override val treapKeyHashCode = treapKey.hashCode() // precompute the hash code
             override val treapPriority = super.treapPriority // precompute the priority
         }
