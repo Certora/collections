@@ -47,7 +47,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     /**
      * Converts the supplied set element to a TreapKey appropriate to this type of AbstractTreapSet (sorted vs. hashed)
      */
-    abstract fun E.toTreapKey(): TreapKey
+    abstract fun E.toTreapKey(): TreapKey<E>
 
     /**
      * Does this node contain the element?
@@ -64,7 +64,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
      */
     abstract fun shallowForEach(action: (element: E) -> Unit): Unit
 
-    abstract fun shallowGetSingleElement(): Any?
+    abstract fun shallowGetSingleElement(): E?
 
     abstract infix fun shallowUnion(that: S): S
     abstract infix fun shallowIntersect(that: S): S?
@@ -86,11 +86,12 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         if (it === this) { "(this Collection)" } else { it.toString() }
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun equals(other: Any?): Boolean = when {
         other == null -> false
         this === other -> true
         other !is Set<*> -> false
-        else -> other.uncheckedAs<Set<E>>().useAsTreap(
+        else -> (other as Set<E>).useAsTreap(
             { otherTreap -> this.treap.deepEquals(otherTreap) },
             { this.size == other.size && this.containsAll(other) }
         )
@@ -127,7 +128,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     )
 
     override fun removeAll(predicate: (E) -> Boolean): S =
-        treap.removeAll(predicate.uncheckedAs<(Any?) -> Boolean>()) ?: clear()
+        treap.removeAll(predicate) ?: clear()
 
     // Require clear() to return a AbstractTreapSet
     override abstract fun clear(): S
@@ -140,13 +141,14 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     override fun findEqual(element: E): E? =
         treap.find(element.toTreapKey())?.shallowFindEqual(element)
 
-    fun single(): E = treap?.getSingleElement()?.uncheckedAs() ?: when {
+    @Suppress("UNCHECKED_CAST")
+    fun single(): E = treap?.getSingleElement() ?: when {
         isEmpty() -> throw NoSuchElementException("Set is empty")
         size > 1 -> throw IllegalArgumentException("Set has more than one element")
-        else -> null.uncheckedAs<E>()
+        else -> null as E // The single element must have been null!
     }
 
-    fun singleOrNull(): E? = treap?.getSingleElement().uncheckedAs()
+    fun singleOrNull(): E? = treap?.getSingleElement()
 
     fun forEachElement(action: (element: E) -> Unit): Unit {
         if (treap != null) { shallowForEach(action) }
@@ -154,7 +156,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         right?.forEachElement(action)
     }
 
-    fun getSingleElement(): Any? = when {
+    fun getSingleElement(): E? = when {
         left === null && right === null -> shallowGetSingleElement()
         else -> null
     }

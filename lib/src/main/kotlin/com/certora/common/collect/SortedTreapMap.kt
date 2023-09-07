@@ -25,8 +25,8 @@ internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private co
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? SortedTreapMap<K, V>
 
     override fun getShallowMerger(merger: (K, V?, V?) -> V?): (SortedTreapMap<K, V>?, SortedTreapMap<K, V>?) -> SortedTreapMap<K, V>? = { t1, t2 ->
-        val e1 = t1.uncheckedAs<Node<K, V>?>()
-        val e2 = t2.uncheckedAs<Node<K, V>?>()
+        val e1 = t1 as Node<K, V>?
+        val e2 = t2 as Node<K, V>?
         val k = e1?.key ?: e2?.key as K
         val v1 = e1?.value
         val v2 = e2?.value
@@ -40,8 +40,8 @@ internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private co
     }
 
     override fun shallowZip(that: SortedTreapMap<K, V>): Sequence<Map.Entry<K, Pair<V, V>>> {
-        val thisNode = this.uncheckedAs<Node<K, V>>()
-        val thatNode = that.uncheckedAs<Node<K, V>>()
+        val thisNode = this as Node<K, V>
+        val thatNode = that as Node<K, V>
         return sequenceOf(MapEntry(thisNode.key, thisNode.value to thatNode.value))
     }
 
@@ -63,7 +63,7 @@ internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private co
         override fun shallowRemoveEntry(key: K, value: V): SortedTreapMap<K, V>? = this.takeIf { this.value != value }
         override fun shallowRemoveAll(predicate: (K) -> Boolean): SortedTreapMap<K, V>? = this.takeIf { !predicate(this.key) }
         override fun shallowGetValue(key: K): V = value
-        override fun shallowEquals(that: SortedTreapMap<K, V>): Boolean = this.value == that.uncheckedAs<Node<K, V>>().value
+        override fun shallowEquals(that: SortedTreapMap<K, V>): Boolean = this.value == (that as Node<K, V>).value
         override fun shallowComputeHashCode(): Int = AbstractMapEntry.hashCode(key, value)
 
         override fun copyWith(left: SortedTreapMap<K, V>?, right: SortedTreapMap<K, V>?) = Node(key, value, left, right)
@@ -119,6 +119,7 @@ internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private co
 
     companion object {
         private val _empty = Empty<Nothing, Nothing>()
-        fun <@Treapable K : Comparable<K>, V> emptyOf() = _empty.uncheckedAs<SortedTreapMap<K, V>>()
+        @Suppress("UNCHECKED_CAST")
+        fun <@Treapable K : Comparable<K>, V> emptyOf() = _empty as SortedTreapMap<K, V>
     }
 }

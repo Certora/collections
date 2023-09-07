@@ -1,7 +1,5 @@
 package com.certora.common.collect
 
-import com.certora.common.forkjoin.*
-
 /**
     Treaps are probabilistically balanced binary search trees.  We use these to implement efficient persistent Set and
     Map data structures.  For background reading, see:
@@ -69,10 +67,10 @@ import com.certora.common.forkjoin.*
     - We take advantage of the total ordering we impose on Treap priorities, to avoid additional key comparisons. We
       never need to check if two keys are equal, if their nodes' priorities have already been compared.
 */
-internal abstract class Treap<T, S : Treap<T, S>>(
+internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     @JvmField val left: S?,
     @JvmField val right: S?
-) : TreapKey, java.io.Serializable {
+) : TreapKey<T>, java.io.Serializable {
 
     abstract val self: S
 
@@ -131,7 +129,7 @@ internal abstract class Treap<T, S : Treap<T, S>>(
  * and if there was a node with the same key, returns that too.  This is a basic building block of other Treap
  * operations.
  */
-internal fun <T, S : Treap<T, S>> Treap<T, S>?.split(key: TreapKey): Split<T, S> = when {
+internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.split(key: TreapKey<T>): Split<T, S> = when {
     this == null -> Split<T, S>(left = null, right = null, duplicate = null)
     else -> {
         val c = this.compareKeyTo(key)
@@ -154,14 +152,14 @@ internal fun <T, S : Treap<T, S>> Treap<T, S>?.split(key: TreapKey): Split<T, S>
         }
     }
 }
-internal class Split<T, S : Treap<T, S>>(var left: S?, var right: S?, var duplicate: S?)
+internal class Split<@Treapable T, S : Treap<T, S>>(var left: S?, var right: S?, var duplicate: S?)
 
 
 /**
  * Converse of `split.`  Combines this treap with another treap whose keys are all greater than any key in this treap.
  * Another basic building block.
  */
-internal infix fun <T, S : Treap<T, S>> S?.join(greater: S?): S? = when {
+internal infix fun <@Treapable T, S : Treap<T, S>> S?.join(greater: S?): S? = when {
     this == null -> greater
     greater == null -> this
     this.comparePriorityTo(greater) < 0 -> greater.with(left = self join greater.left)
@@ -173,9 +171,9 @@ internal infix fun <T, S : Treap<T, S>> S?.join(greater: S?): S? = when {
  * Adds a single Treap node to this Treap, if its key does not already exist.  We precompute the key hashes for extra
  * speed.  To add multiple nodes, use `union`.
  */
-internal fun <T, S : Treap<T, S>> S?.add(that: S): S = add(that, that.precompute())
+internal fun <@Treapable T, S : Treap<T, S>> S?.add(that: S): S = add(that, that.precompute())
 
-private fun <T, S : Treap<T, S>> Treap<T, S>?.add(that: S, thatKey: TreapKey): S = when {
+private fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.add(that: S, thatKey: TreapKey<T>): S = when {
     that.left != null || that.right != null -> throw IllegalArgumentException("add requires a single treap node")
     this == null -> that
     else -> {
@@ -194,7 +192,7 @@ private fun <T, S : Treap<T, S>> Treap<T, S>?.add(that: S, thatKey: TreapKey): S
 /**
  * Removes `element` with key `key`
  */
-internal fun <T, S : Treap<T, S>> S?.remove(key: TreapKey, element: T): S? = when {
+internal fun <@Treapable T, S : Treap<T, S>> S?.remove(key: TreapKey<T>, element: T): S? = when {
     this == null -> null
     key.comparePriorityTo(this) > 0 -> this
     else -> {
@@ -207,66 +205,7 @@ internal fun <T, S : Treap<T, S>> S?.remove(key: TreapKey, element: T): S? = whe
     }
 }
 
-/**
- * Merges two treaps, using a supplied merge function.  This is used to implement our Map<K, V>.merge() function.  It's
- * distinct from `union` because it needs to call the merge function even in cases where the key only exists in
- * one of the Treaps, to support the semantics of the higher-level Map.merge() function.  Note that we always prefer to
- * return 'this' over 'that', to preserve the object identity invariant described in the `Treap` summary.
- */
-internal fun <T, S : Treap<T, S>> S?.mergeWith(that: S?, shallowMerge: (S?, S?) -> S?): S? =
-    notForking(this to that) {
-        mergeWithImpl(that, shallowMerge)
-    }
-
-internal fun <T, S : Treap<T, S>> S?.parallelMergeWith(that: S?, parallelThresholdLog2: Int, shallowMerge: (S?, S?) -> S?): S? =
-    maybeForking(
-        this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
-    ) {
-        mergeWithImpl(that, shallowMerge)
-    }
-
-context(ThresholdForker<Pair<S?, S?>>)
-private fun <T, S : Treap<T, S>> S?.mergeWithImpl(that: S?, shallowMerge: (S?, S?) -> S?): S? {
-    val (newLeft, newRight, newThis) = when {
-        this == null && that == null -> {
-            return null
-        }
-        this == null || that == null -> {
-            fork(
-                this to that,
-                { this?.left.mergeWithImpl(that?.left, shallowMerge) },
-                { this?.right.mergeWithImpl(that?.right, shallowMerge) },
-                { shallowMerge(this, that) }
-            )
-        }
-        this.comparePriorityTo(that) >= 0 -> {
-            val thatSplit = that.split(this)
-            fork(
-                this to that,
-                { this.left.mergeWithImpl(thatSplit.left, shallowMerge) },
-                { this.right.mergeWithImpl(thatSplit.right, shallowMerge) },
-                { shallowMerge(this, thatSplit.duplicate) }
-            )
-        }
-        else -> {
-            // remember, a.comparePriorityTo(b)==0 <=> a.compareKeyTo(b)==0
-            val thisSplit = this.split(that)
-            fork(
-                this to that,
-                { thisSplit.left.mergeWithImpl(that.left, shallowMerge) },
-                { thisSplit.right.mergeWithImpl(that.right, shallowMerge) },
-                { shallowMerge(thisSplit.duplicate, that) }
-            )
-        }
-    }
-    return newThis?.with(newLeft, newRight) ?: (newLeft join newRight)
-}
-
-internal infix fun <T, S : Treap<T, S>> S?.removeAll(predicate: (T) -> Boolean): S? = when {
+internal infix fun <@Treapable T, S : Treap<T, S>> S?.removeAll(predicate: (T) -> Boolean): S? = when {
     this == null -> null
     else -> {
         val newThis = this.shallowRemoveAll(predicate)
@@ -279,7 +218,7 @@ internal infix fun <T, S : Treap<T, S>> S?.removeAll(predicate: (T) -> Boolean):
 /**
  * Counts the items stored in this Treap.
  */
-internal fun <T, S : Treap<T, S>> Treap<T, S>?.computeSize(): Int = when {
+internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.computeSize(): Int = when {
     this == null -> 0
     else -> shallowSize + left.computeSize() + right.computeSize()
 }
@@ -287,7 +226,7 @@ internal fun <T, S : Treap<T, S>> Treap<T, S>?.computeSize(): Int = when {
 /**
  * Finds a given key in this Treap, and returns the Treap node.  Takes advantage of tail-recursion for speed.
  */
-internal tailrec fun <T, S : Treap<T, S>> S?.find(key: TreapKey): S? = when {
+internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.find(key: TreapKey<T>): S? = when {
     this == null -> null
     this.comparePriorityTo(key) < 0 -> null
     else -> {
@@ -300,12 +239,12 @@ internal tailrec fun <T, S : Treap<T, S>> S?.find(key: TreapKey): S? = when {
     }
 }
 
-internal fun <T, S : Treap<T, S>> S?.containsKey(key: TreapKey): Boolean = (find(key) != null)
+internal fun <@Treapable T, S : Treap<T, S>> S?.containsKey(key: TreapKey<T>): Boolean = (find(key) != null)
 
 /**
  * Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
  */
-internal fun <T, S : Treap<T, S>> S?.asSequence(): Sequence<S> = when {
+internal fun <@Treapable T, S : Treap<T, S>> S?.asSequence(): Sequence<S> = when {
     this == null -> sequenceOf<S>()
     else -> sequence<S> {
         val stack = ArrayDeque<S>()
@@ -326,7 +265,7 @@ internal fun <T, S : Treap<T, S>> S?.asSequence(): Sequence<S> = when {
 /**
  * Compares two treaps for equality, according to the derived class' definition.
  */
-internal fun <T, S : Treap<T, S>> S?.deepEquals(that: S?): Boolean = when {
+internal fun <@Treapable T, S : Treap<T, S>> S?.deepEquals(that: S?): Boolean = when {
     this === that -> true
     this == null -> that == null
     that == null -> false
@@ -335,7 +274,7 @@ internal fun <T, S : Treap<T, S>> S?.deepEquals(that: S?): Boolean = when {
     else -> this.left.deepEquals(that.left) && this.right.deepEquals(that.right)
 }
 
-internal fun <T, S : Treap<T, S>> S?.computeHashCode(): Int = when {
+internal fun <@Treapable T, S : Treap<T, S>> S?.computeHashCode(): Int = when {
     this == null -> 0
     else -> shallowComputeHashCode() + left.computeHashCode() + right.computeHashCode()
 }
@@ -344,7 +283,7 @@ internal fun <T, S : Treap<T, S>> S?.computeHashCode(): Int = when {
   Quickly estimates if this Treap is smaller than a given size, without actually counting the nodes.  Probes the depth
   along a single path, under the assumption that the tree is balanced.
  */
-internal tailrec fun <T, S : Treap<T, S>> S?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {
+internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {
     this == null -> true
     sizeLog2 <= 0 -> false
     else -> this.left.isApproximatelySmallerThanLog2(sizeLog2 - 1)

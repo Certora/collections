@@ -27,7 +27,7 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
     ) : SortedTreapSet<E>(left, right) {
         override val treap get() = this
         override val self get() = this
-        override fun iterator(): Iterator<E> = treap.asSequence().map { it.treapKey.uncheckedAs<E>() }.iterator()
+        override fun iterator(): Iterator<E> = treap.asSequence().map { it.treapKey }.iterator()
 
         override fun shallowEquals(that: SortedTreapSet<E>): Boolean = this.compareKeyTo(that) == 0
         override val shallowSize: Int get() = 1
@@ -79,7 +79,8 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
 
     companion object {
         private val _empty = Empty<Nothing>()
-        fun <@Treapable E : Comparable<E>> emptyOf() = _empty.uncheckedAs<SortedTreapSet<E>>()
+        @Suppress("UNCHECKED_CAST")
+        fun <@Treapable E : Comparable<E>> emptyOf() = _empty as SortedTreapSet<E>
     }
 }
 

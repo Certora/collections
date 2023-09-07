@@ -16,11 +16,11 @@ import com.certora.common.utils.*
  * according to their hashCode values; priorities are again assigned by hashing the hashCode.  Within the buckets, we
  * use chaining to maintain distinct map/set keys.
  */
-internal interface TreapKey {
+internal interface TreapKey<@Treapable K> {
     /**
      * Get's the value of this key.
      */
-    abstract val treapKey: Any?
+    abstract val treapKey: K
 
     /**
      * Compares two keys for treap sort order.  Returns:
@@ -32,7 +32,7 @@ internal interface TreapKey {
      * If result == 0, we require that the two keys have equal hashCodes as well, so that they will have the same
      * priority in the treap.
      */
-    abstract fun compareKeyTo(that: TreapKey): Int
+    abstract fun compareKeyTo(that: TreapKey<K>): Int
 
     open val treapKeyHashCode: Int get() = treapKey.hashCode()
 
@@ -49,7 +49,7 @@ internal interface TreapKey {
         return h
     }
 
-    fun comparePriorityTo(that: TreapKey) : Int {
+    fun comparePriorityTo(that: TreapKey<K>) : Int {
         val thisPri = this.treapPriority
         val thatPri = that.treapPriority
         return when {
@@ -62,17 +62,17 @@ internal interface TreapKey {
     /**
      * Produces an equivalent TreapKey with the hashes precomputed.  Used in Treap.add for extra speed.
      */
-    abstract fun precompute(): TreapKey
+    abstract fun precompute(): TreapKey<K>
 
     /**
      * A TreapKey whose underlying key implement Comparable.  This allows us to sort the Treap naturally.
      */
-    interface Sorted<@Treapable K : Comparable<K>> : TreapKey {
+    interface Sorted<@Treapable K : Comparable<K>> : TreapKey<K> {
         abstract override val treapKey: K
 
         // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is
         // extremely perf-critical code.
-        override fun compareKeyTo(that: TreapKey) = this.treapKey.compareTo(that.treapKey.uncheckedAs<K>())
+        override fun compareKeyTo(that: TreapKey<K>) = this.treapKey.compareTo(that.treapKey)
 
         override fun precompute() = FromKey(treapKey)
 
@@ -85,14 +85,14 @@ internal interface TreapKey {
      * A TreapKey whose underlying key is not Comparable.  We have to use its hash code instead.  Derived classes
      * will need to deal with hash collisions.
      */
-    interface Hashed<@Treapable K> : TreapKey {
+    interface Hashed<@Treapable K> : TreapKey<K> {
         abstract override val treapKey: K
 
         // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is
         // extremely perf-critical code.
         // On that note, it might be tempting to just subtract the hashes here, but that doesn't work due to integer
         // over/underflow.
-        override fun compareKeyTo(that: TreapKey): Int {
+        override fun compareKeyTo(that: TreapKey<K>): Int {
             val thisHash = this.treapKeyHashCode
             val thatHash = that.treapKeyHashCode
             return when {

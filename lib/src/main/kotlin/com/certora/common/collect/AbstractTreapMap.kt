@@ -61,7 +61,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     /**
      * Converts the supplied map key to a TreapKey appropriate to this type of AbstractTreapMap (sorted vs. hashed)
      */
-    abstract fun K.toTreapKey(): TreapKey
+    abstract fun K.toTreapKey(): TreapKey<K>
 
     /**
      * Does this node contain an entry with the given map key?
@@ -95,9 +95,6 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
      * Gets a sequence of all map entries in this Map.
      */
     fun entrySequence() = treap.asSequence().flatMap { it.shallowEntrySequence() }
-
-
-//    private fun Treap?.asMap() = this.uncheckedAs<AbstractTreapMap<K, V>?>() ?: clear()
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,7 +332,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 /**
  * Removes a map entry (`entryKey`, `entryValue`) with key `key`
  */
-internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.removeEntry(key: TreapKey, entryKey: K, entryValue: V): S? = when {
+internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.removeEntry(key: TreapKey<K>, entryKey: K, entryValue: V): S? = when {
     this == null -> null
     key.comparePriorityTo(this) > 0 -> this
     else -> {
@@ -349,7 +346,7 @@ internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.removeEntry(key
 }
 
 internal fun <@Treapable K, V, U, S : AbstractTreapMap<K, V, S>> S?.updateEntry(
-    thatKey: TreapKey, 
+    thatKey: TreapKey<K>, 
     entryKey: K, 
     toUpdate: U?, 
     merger: (V?, U?) -> V?, 
@@ -382,5 +379,64 @@ internal fun <@Treapable K, V, U, S : AbstractTreapMap<K, V, S>> S?.updateEntry(
             else -> this.with(right = this.right.updateEntry(thatKey, entryKey, toUpdate, merger, new))
         }
     }
+}
+
+/**
+ * Merges two treaps, using a supplied merge function.  This is used to implement our Map<K, V>.merge() function.  It's
+ * distinct from `union` because it needs to call the merge function even in cases where the key only exists in
+ * one of the Treaps, to support the semantics of the higher-level Map.merge() function.  Note that we always prefer to
+ * return 'this' over 'that', to preserve the object identity invariant described in the `Treap` summary.
+ */
+internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.mergeWith(that: S?, shallowMerge: (S?, S?) -> S?): S? =
+    notForking(this to that) {
+        mergeWithImpl(that, shallowMerge)
+    }
+
+internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.parallelMergeWith(that: S?, parallelThresholdLog2: Int, shallowMerge: (S?, S?) -> S?): S? =
+    maybeForking(
+        this to that,
+        {
+            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
+            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
+        }
+    ) {
+        mergeWithImpl(that, shallowMerge)
+    }
+
+context(ThresholdForker<Pair<S?, S?>>)
+private fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.mergeWithImpl(that: S?, shallowMerge: (S?, S?) -> S?): S? {
+    val (newLeft, newRight, newThis) = when {
+        this == null && that == null -> {
+            return null
+        }
+        this == null || that == null -> {
+            fork(
+                this to that,
+                { this?.left.mergeWithImpl(that?.left, shallowMerge) },
+                { this?.right.mergeWithImpl(that?.right, shallowMerge) },
+                { shallowMerge(this, that) }
+            )
+        }
+        this.comparePriorityTo(that) >= 0 -> {
+            val thatSplit = that.split(this)
+            fork(
+                this to that,
+                { this.left.mergeWithImpl(thatSplit.left, shallowMerge) },
+                { this.right.mergeWithImpl(thatSplit.right, shallowMerge) },
+                { shallowMerge(this, thatSplit.duplicate) }
+            )
+        }
+        else -> {
+            // remember, a.comparePriorityTo(b)==0 <=> a.compareKeyTo(b)==0
+            val thisSplit = this.split(that)
+            fork(
+                this to that,
+                { thisSplit.left.mergeWithImpl(that.left, shallowMerge) },
+                { thisSplit.right.mergeWithImpl(that.right, shallowMerge) },
+                { shallowMerge(thisSplit.duplicate, that) }
+            )
+        }
+    }
+    return newThis?.with(newLeft, newRight) ?: (newLeft join newRight)
 }
 

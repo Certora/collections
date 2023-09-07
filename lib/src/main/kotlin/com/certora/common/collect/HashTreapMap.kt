@@ -27,8 +27,8 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? HashTreapMap<K, V>
 
     override fun getShallowMerger(merger: (K, V?, V?) -> V?): (HashTreapMap<K, V>?, HashTreapMap<K, V>?) -> HashTreapMap<K, V>? = { t1, t2 ->
-        val e1 = t1.uncheckedAs<Node<K, V>?>()
-        val e2 = t2.uncheckedAs<Node<K, V>?>()
+        val e1 = t1 as Node<K, V>?
+        val e2 = t2 as Node<K, V>?
         var newPairs: MoreKeyValuePairs<K, V>? = null
         e1?.forEachPair { (k, v1) ->
             val v2 = e2?.shallowGetValue(k)
@@ -102,8 +102,8 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
     }
 
     override fun shallowZip(that: HashTreapMap<K, V>): Sequence<Map.Entry<K, Pair<V?, V?>>> = sequence {
-        val thisNode = this@HashTreapMap.uncheckedAs<Node<K, V>>()
-        val thatNode = that.uncheckedAs<Node<K, V>>()
+        val thisNode = this@HashTreapMap as Node<K, V>
+        val thatNode = that as Node<K, V>
 
         thisNode.forEachPair {
             yield(MapEntry(it.key, it.value to thatNode.shallowGetValue(it.key)))
@@ -146,7 +146,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
         }
 
         override fun shallowAdd(that: HashTreapMap<K, V>): HashTreapMap<K, V> {
-            val thatNode = that.uncheckedAs<Node<K, V>>()
+            val thatNode = that as Node<K, V>
             check(thatNode.next == null) { "Add with mulple map entries?" }
             return when {
                 !shallowContainsKey(thatNode.key) -> {
@@ -172,7 +172,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
 
         override fun shallowRemoveEntry(key: K, value: V): HashTreapMap<K, V>? {
             return when {
-                !this.shallowContainsPair(key.uncheckedAs<K>(), value) -> this
+                !this.shallowContainsPair(key, value) -> this
                 else -> {
                     var newPairs: MoreKeyValuePairs<K, V>? = null
                     this.forEachPair {
@@ -209,9 +209,8 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
         }
 
         override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): HashTreapMap<K, V>? {
-            val k = entryKey.uncheckedAs<K>()
             return when (this.key) {
-                k -> {
+                entryKey -> {
                     val newValue = merger(this.value, toUpdate)
                     if(newValue == null) {
                         if(this.next == null) {
@@ -222,7 +221,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
                     } else if(newValue == value) {
                         this
                     } else {
-                        Node(this.key, newValue.uncheckedAs(), this.next, this.left, this.right)
+                        Node(this.key, newValue, this.next, this.left, this.right)
                     }
                 }
                 else -> {
@@ -231,13 +230,13 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
                     var found = false
                     var it = this.next
                     while(it != null) {
-                        if(it.key == k) {
+                        if(it.key == entryKey) {
                             val upd = merger(it.value, toUpdate)
                             found = true
                             if(upd != null && upd == it.value) {
                                 return this
                             } else if(upd != null) {
-                                newPairs = MoreKeyValuePairs(it.key, upd.uncheckedAs(), newPairs)
+                                newPairs = MoreKeyValuePairs(it.key, upd, newPairs)
                             }
                         } else {
                             newPairs = MoreKeyValuePairs(it.key, it.value, newPairs)
@@ -246,7 +245,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
                     }
                     if(!found) {
                         val deNovoMerge = merger(null, toUpdate) ?: return this
-                        newPairs = MoreKeyValuePairs(k, deNovoMerge.uncheckedAs(), this.next)
+                        newPairs = MoreKeyValuePairs(entryKey, deNovoMerge, this.next)
                     }
                     Node(this.key, this.value, newPairs, this.left, this.right)
                 }
@@ -254,7 +253,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
         }
 
         override fun shallowRemove(element: K): HashTreapMap<K, V>? {
-            if (!this.shallowContainsKey(element.uncheckedAs<K>())) {
+            if (!this.shallowContainsKey(element)) {
                 return this
             } else {
                 var newPairs: MoreKeyValuePairs<K, V>? = null
@@ -281,7 +280,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
         }
 
         override fun shallowEquals(that: HashTreapMap<K, V>): Boolean {
-            val thatNode = that.uncheckedAs<Node<K, V>>()
+            val thatNode = that as Node<K, V>
             forEachPair {
                 if (!thatNode.shallowContainsPair(it.key, it.value)) {
                     return false
@@ -351,6 +350,7 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
 
     companion object {
         private val _empty = Empty<Nothing, Nothing>()
-        fun <@Treapable K, V> emptyOf() = _empty.uncheckedAs<HashTreapMap<K, V>>()
+        @Suppress("UNCHECKED_CAST")
+        fun <@Treapable K, V> emptyOf() = _empty as HashTreapMap<K, V>
     }
 }

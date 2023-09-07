@@ -69,7 +69,7 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
         }
 
         override fun shallowEquals(that: HashTreapSet<E>): Boolean {
-            val thatSet = that.uncheckedAs<Node<E>>()
+            val thatSet = that as Node<E>
             forEachNodeElement {
                 if (!thatSet.shallowContains(it)) {
                     return false
@@ -101,7 +101,7 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
         }
 
         override fun shallowContainsAll(elements: HashTreapSet<E>): Boolean {
-            elements.uncheckedAs<Node<E>>().forEachNodeElement {
+            (elements as Node<E>).forEachNodeElement {
                 if (!this.shallowContains(it)) {
                     return false
                 }
@@ -110,7 +110,7 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
         }
 
         override fun shallowContainsAny(elements: HashTreapSet<E>): Boolean {
-            elements.uncheckedAs<Node<E>>().forEachNodeElement {
+            (elements as Node<E>).forEachNodeElement {
                 if (this.shallowContains(it)) {
                     return true
                 }
@@ -120,21 +120,21 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
 
         override fun shallowAdd(that: HashTreapSet<E>): HashTreapSet<E> {
             // add is only called with a single element
-            val thatNode = that.uncheckedAs<Node<E>>()
+            val thatNode = that as Node<E>
             check (thatNode.next == null) { "add with multiple elements?" }
             return this.withElement(thatNode.element)
         }
 
         override fun shallowUnion(that: HashTreapSet<E>): HashTreapSet<E> {
             var result = this
-            that.uncheckedAs<Node<E>>().forEachNodeElement {
+            (that as Node<E>).forEachNodeElement {
                 result = result.withElement(it)
             }
             return result
         }
 
         override fun shallowDifference(that: HashTreapSet<E>): HashTreapSet<E>? {
-            val thatSet = that.uncheckedAs<Node<E>>()
+            val thatSet = that as Node<E>
 
             // Fast path for the most common case
             if (this.next == null) {
@@ -163,7 +163,7 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
         }
 
         override fun shallowIntersect(that: HashTreapSet<E>): HashTreapSet<E>? {
-            val thatSet = that.uncheckedAs<Node<E>>()
+            val thatSet = that as Node<E>
 
             // Fast path for the most common case
             if (this.next == null) {
@@ -243,7 +243,7 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
 
         override fun iterator(): Iterator<E> = sequence {
             treap.asSequence().forEach { node ->
-                node.uncheckedAs<Node<E>>().forEachNodeElement {
+                (node as Node<E>).forEachNodeElement {
                     yield(it)
                 }
             }
@@ -280,7 +280,8 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
 
     companion object {
         private val _empty = Empty<Nothing>()
-        fun <@Treapable E> emptyOf() = _empty.uncheckedAs<HashTreapSet<E>>()
+        @Suppress("UNCHECKED_CAST")
+        fun <@Treapable E> emptyOf() = _empty as HashTreapSet<E>
     }
 }
 
