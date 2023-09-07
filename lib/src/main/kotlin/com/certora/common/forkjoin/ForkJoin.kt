@@ -1,6 +1,6 @@
-package parallel.forkjoin
+package com.certora.common.forkjoin
 
-import com.certora.common.utils.internal.*
+import com.certora.common.utils.*
 import java.util.concurrent.*
 
 /**

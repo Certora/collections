@@ -1,7 +1,7 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
 import com.certora.common.collect.*
-import com.certora.common.utils.internal.*
+import com.certora.common.utils.*
 import java.util.Random
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString

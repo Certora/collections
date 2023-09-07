@@ -1,7 +1,6 @@
 package com.certora.common.collect
 
-import com.certora.common.collect.impl.*
-import com.certora.common.utils.internal.*
+import com.certora.common.utils.*
 import kotlinx.collections.immutable.PersistentMap
 
 fun <@WithStableHashCodeIfSerialized K : Comparable<K>, V> persistentSortedMapOf(): PersistentMap<K, V> = SortedTreapMap.emptyOf<K, V>()

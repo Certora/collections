@@ -1,15 +1,15 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
 import com.certora.common.collect.*
-import com.certora.common.utils.internal.*
+import com.certora.common.forkjoin.*
+import com.certora.common.utils.*
 import kotlinx.collections.immutable.ImmutableCollection
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.PersistentMap
-import parallel.forkjoin.*
 
 /**
  * Base class for Treap-based PersistentMap implementations.  Provides the Map operations; derived classes deal
- * with type-specific behavior such as hash collisions.  See `Treap` for an overview of all of this.
+ * with type-specific behavior such as hash collisions.  See [Treap] for an overview of all of this.
  */
 internal abstract class TreapMap<@WithStableHashCodeIfSerialized K, V>(
     left: Treap?,

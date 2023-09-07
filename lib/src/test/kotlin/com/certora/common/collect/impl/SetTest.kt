@@ -1,4 +1,4 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
 import java.util.Random
 import java.io.ObjectInputStream

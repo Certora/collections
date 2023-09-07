@@ -1,4 +1,4 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
 @PublishedApi
 internal class MapEntry<K, V>(

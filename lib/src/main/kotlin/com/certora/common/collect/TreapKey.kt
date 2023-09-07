@@ -1,7 +1,7 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
 import com.certora.common.collect.*
-import com.certora.common.utils.internal.*
+import com.certora.common.utils.*
 
 /**
  * Provides properties and methods over Treap keys.  See `Treap` for an overview.  This is an interface rather than an
@@ -17,7 +17,7 @@ import com.certora.common.utils.internal.*
  * according to their hashCode values; priorities are again assigned by hashing the hashCode.  Within the buckets, we
  * use chaining to maintain distinct map/set keys.
  */
-interface TreapKey {
+internal interface TreapKey {
     /**
      * Get's the value of this key.
      */

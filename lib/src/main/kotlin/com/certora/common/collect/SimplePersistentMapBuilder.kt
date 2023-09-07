@@ -1,4 +1,4 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
 import kotlinx.collections.immutable.PersistentMap
 

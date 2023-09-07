@@ -1,6 +1,6 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
-import com.certora.common.utils.internal.*
+import com.certora.common.utils.*
 import kotlinx.collections.immutable.PersistentSet
 
 // A "builder" for an arbitrary PersistentSet.  Assumes that all PersistentSet operations

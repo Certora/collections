@@ -1,6 +1,6 @@
-package com.certora.common.collect.impl
+package com.certora.common.collect
 
-import parallel.forkjoin.*
+import com.certora.common.forkjoin.*
 
 /*
     Treaps are probabilistically balanced binary search trees.  We use these to implement efficient persistent

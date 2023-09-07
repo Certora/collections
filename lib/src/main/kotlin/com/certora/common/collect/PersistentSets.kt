@@ -1,7 +1,6 @@
 package com.certora.common.collect
 
-import com.certora.common.collect.impl.*
-import com.certora.common.utils.internal.*
+import com.certora.common.utils.*
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.PersistentSet
 
