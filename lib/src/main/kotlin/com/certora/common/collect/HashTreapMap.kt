@@ -170,9 +170,9 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
             }
         }
 
-        override fun shallowRemoveEntry(key: Any?, value: Any?): HashTreapMap<K, V>? {
+        override fun shallowRemoveEntry(key: K, value: V): HashTreapMap<K, V>? {
             return when {
-                !this.shallowContainsPair(key.uncheckedAs<K>(), value.uncheckedAs<V>()) -> this
+                !this.shallowContainsPair(key.uncheckedAs<K>(), value) -> this
                 else -> {
                     var newPairs: MoreKeyValuePairs<K, V>? = null
                     this.forEachPair {
@@ -190,7 +190,7 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
             }
         }
 
-        override fun shallowRemoveAll(predicate: (Any?) -> Boolean): HashTreapMap<K, V>? {
+        override fun shallowRemoveAll(predicate: (K) -> Boolean): HashTreapMap<K, V>? {
             var newPairs: MoreKeyValuePairs<K, V>? = null
             var removed = false
             this.forEachPair {
@@ -208,7 +208,7 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
             }
         }
 
-        override fun shallowUpdate(entryKey: Any?, toUpdate: Any?, merger: (Any?, Any?) -> Any?): HashTreapMap<K, V>? {
+        override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): HashTreapMap<K, V>? {
             val k = entryKey.uncheckedAs<K>()
             return when (this.key) {
                 k -> {
@@ -253,7 +253,7 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
             }
         }
 
-        override fun shallowRemove(element: Any?): HashTreapMap<K, V>? {
+        override fun shallowRemove(element: K): HashTreapMap<K, V>? {
             if (!this.shallowContainsKey(element.uncheckedAs<K>())) {
                 return this
             } else {
@@ -339,10 +339,10 @@ internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private
         override val shallowSize get() = throw UnsupportedOperationException()
         override fun shallowEquals(that: HashTreapMap<K, V>) = throw UnsupportedOperationException()
         override fun shallowAdd(that: HashTreapMap<K, V>) = throw UnsupportedOperationException()
-        override fun shallowRemove(element: Any?) = throw UnsupportedOperationException()
-        override fun shallowRemoveEntry(key: Any?, value: Any?) = throw UnsupportedOperationException()
-        override fun shallowRemoveAll(predicate: (Any?) -> Boolean) = throw UnsupportedOperationException()
-        override fun shallowUpdate(entryKey: Any?, toUpdate: Any?, merger: (Any?, Any?) -> Any?) = throw UnsupportedOperationException()
+        override fun shallowRemove(element: K) = throw UnsupportedOperationException()
+        override fun shallowRemoveEntry(key: K, value: V) = throw UnsupportedOperationException()
+        override fun shallowRemoveAll(predicate: (K) -> Boolean) = throw UnsupportedOperationException()
+        override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?) = throw UnsupportedOperationException()
         override fun shallowContainsKey(key: K) = throw UnsupportedOperationException()
         override fun shallowGetValue(key: K) = throw UnsupportedOperationException()
         override fun shallowUpdateValues(transform: (K, V) -> V?) = throw UnsupportedOperationException()

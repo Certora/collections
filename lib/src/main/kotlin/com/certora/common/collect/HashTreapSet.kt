@@ -13,13 +13,13 @@ import kotlinx.collections.immutable.PersistentSet
  * enough that these lists will be very small - usually just one element.
  */
 internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private constructor(
-    left: Treap? = null,
-    right: Treap? = null
-) : TreapSet<E>(left, right), TreapKey.Hashed<E> {
+    left: HashTreapSet<E>? = null,
+    right: HashTreapSet<E>? = null
+) : TreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E> {
 
     override fun E.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun clear() = emptyOf<E>()
-    override fun new(element: E): TreapSet<E> = Node(element)
+    override fun new(element: E): HashTreapSet<E> = Node(element)
 
     override fun Iterable<E>.toTreapSetOrNull(): HashTreapSet<E>? =
         (this as? HashTreapSet<E>)
@@ -46,10 +46,11 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
     private class Node<@WithStableHashCodeIfSerialized E>(
         override val element: E,
         override val next: MoreElements<E>? = null,
-        left: Treap? = null,
-        right: Treap? = null
+        left: HashTreapSet<E>? = null,
+        right: HashTreapSet<E>? = null
     ) : HashTreapSet<E>(left, right), ElementList<E> {
         override val treap get() = this
+        override val self get() = this
         override val treapKey get() = element
 
         override val shallowSize: Int get() {
@@ -60,14 +61,14 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             return count
         }
 
-        override fun copyWith(left: Treap?, right: Treap?): Treap = Node(element, next, left, right)
+        override fun copyWith(left: HashTreapSet<E>?, right: HashTreapSet<E>?): HashTreapSet<E> = Node(element, next, left, right)
 
         fun withElement(element: E) = when {
             this.shallowContains(element) -> this
             else -> Node(this.element, MoreElements(element, this.next), this.left, this.right)
         }
 
-        override fun shallowEquals(that: Treap): Boolean {
+        override fun shallowEquals(that: HashTreapSet<E>): Boolean {
             val thatSet = that.uncheckedAs<Node<E>>()
             forEachNodeElement {
                 if (!thatSet.shallowContains(it)) {
@@ -99,7 +100,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             return false
         }
 
-        override fun shallowContainsAll(elements: Treap): Boolean {
+        override fun shallowContainsAll(elements: HashTreapSet<E>): Boolean {
             elements.uncheckedAs<Node<E>>().forEachNodeElement {
                 if (!this.shallowContains(it)) {
                     return false
@@ -108,7 +109,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             return true
         }
 
-        override fun shallowContainsAny(elements: Treap): Boolean {
+        override fun shallowContainsAny(elements: HashTreapSet<E>): Boolean {
             elements.uncheckedAs<Node<E>>().forEachNodeElement {
                 if (this.shallowContains(it)) {
                     return true
@@ -117,14 +118,14 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             return false
         }
 
-        override fun shallowAdd(that: Treap): Treap {
+        override fun shallowAdd(that: HashTreapSet<E>): HashTreapSet<E> {
             // add is only called with a single element
             val thatNode = that.uncheckedAs<Node<E>>()
             check (thatNode.next == null) { "add with multiple elements?" }
             return this.withElement(thatNode.element)
         }
 
-        override fun shallowUnion(that: Treap): Treap {
+        override fun shallowUnion(that: HashTreapSet<E>): HashTreapSet<E> {
             var result = this
             that.uncheckedAs<Node<E>>().forEachNodeElement {
                 result = result.withElement(it)
@@ -132,7 +133,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             return result
         }
 
-        override fun shallowDifference(that: Treap): Treap? {
+        override fun shallowDifference(that: HashTreapSet<E>): HashTreapSet<E>? {
             val thatSet = that.uncheckedAs<Node<E>>()
 
             // Fast path for the most common case
@@ -161,7 +162,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             }
         }
 
-        override fun shallowIntersect(that: Treap): Treap? {
+        override fun shallowIntersect(that: HashTreapSet<E>): HashTreapSet<E>? {
             val thatSet = that.uncheckedAs<Node<E>>()
 
             // Fast path for the most common case
@@ -190,7 +191,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             }
         }
 
-        override fun shallowRemove(element: Any?): Treap? {
+        override fun shallowRemove(element: E): HashTreapSet<E>? {
             // Fast path for the most common case
             if (this.next == null) {
                 if (this.element == element) {
@@ -217,7 +218,7 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
             }
         }
 
-        override fun shallowRemoveAll(predicate: (Any?) -> Boolean): Treap? {
+        override fun shallowRemoveAll(predicate: (E) -> Boolean): HashTreapSet<E>? {
             var result: Node<E>? = null
             var removed = false
             this.forEachNodeElement {
@@ -255,25 +256,26 @@ internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private co
         override fun iterator(): Iterator<E> = emptySet<E>().iterator()
 
         // `Empty<E>` is just a placeholder, and should not be used as a treap
-        override val treap: Treap? get() = null
+        override val treap get() = null
+        override val self get() = this
 
-        override val treapKey: E get() = throw UnsupportedOperationException()
-        override fun copyWith(left: Treap?, right: Treap?): Treap = throw UnsupportedOperationException()
-        override val shallowSize: Int get() = throw UnsupportedOperationException()
-        override fun shallowEquals(that: Treap): Boolean = throw UnsupportedOperationException()
-        override fun shallowFindEqual(element: E): E? = throw UnsupportedOperationException()
-        override fun shallowContains(element: E): Boolean = throw UnsupportedOperationException()
-        override fun shallowContainsAll(elements: Treap): Boolean = throw UnsupportedOperationException()
-        override fun shallowContainsAny(elements: Treap): Boolean = throw UnsupportedOperationException()
-        override fun shallowAdd(that: Treap): Treap = throw UnsupportedOperationException()
-        override fun shallowUnion(that: Treap): Treap = throw UnsupportedOperationException()
-        override fun shallowDifference(that: Treap): Treap? = throw UnsupportedOperationException()
-        override fun shallowIntersect(that: Treap): Treap? = throw UnsupportedOperationException()
-        override fun shallowRemove(element: Any?): Treap? = throw UnsupportedOperationException()
-        override fun shallowRemoveAll(predicate: (Any?) -> Boolean): Treap? = throw UnsupportedOperationException()
-        override fun shallowComputeHashCode(): Int = throw UnsupportedOperationException()
-        override fun shallowGetSingleElement(): E? = throw UnsupportedOperationException()
-        override fun shallowForEach(action: (element: E) -> Unit): Unit = throw UnsupportedOperationException()
+        override val treapKey get() = throw UnsupportedOperationException()
+        override fun copyWith(left: HashTreapSet<E>?, right: HashTreapSet<E>?) = throw UnsupportedOperationException()
+        override val shallowSize get() = throw UnsupportedOperationException()
+        override fun shallowEquals(that: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowFindEqual(element: E) = throw UnsupportedOperationException()
+        override fun shallowContains(element: E) = throw UnsupportedOperationException()
+        override fun shallowContainsAll(elements: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowContainsAny(elements: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowAdd(that: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowUnion(that: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowDifference(that: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowIntersect(that: HashTreapSet<E>) = throw UnsupportedOperationException()
+        override fun shallowRemove(element: E) = throw UnsupportedOperationException()
+        override fun shallowRemoveAll(predicate: (E) -> Boolean) = throw UnsupportedOperationException()
+        override fun shallowComputeHashCode() = throw UnsupportedOperationException()
+        override fun shallowGetSingleElement() = throw UnsupportedOperationException()
+        override fun shallowForEach(action: (element: E) -> Unit) = throw UnsupportedOperationException()
     }
 
     companion object {

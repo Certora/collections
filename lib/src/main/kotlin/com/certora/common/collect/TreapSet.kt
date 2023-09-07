@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.PersistentSet
 internal abstract class TreapSet<E, S : TreapSet<E, S>>(
     left: S?, 
     right: S?
-) : PersistentSet<E>, InternSet<E>, Treap<S>(left, right) {
+) : PersistentSet<E>, InternSet<E>, Treap<E, S>(left, right) {
     /**
      * In order to reduce heap space usage, we derive from Treap.  That makes it tricky to have a TreapSet representing
      * an empty set.  To handle that, we create special subclasses to represent empty sets, and distinguish them
@@ -182,7 +182,7 @@ internal infix fun <E, S : TreapSet<E, S>> S?.union(that: S?): S? = when {
     }
 }
 
-private fun <E, S : TreapSet<E, S>> unionMerge(higher: Treap<S>, lower: Treap<S>) =
+private fun <E, S : TreapSet<E, S>> unionMerge(higher: TreapSet<E, S>, lower: TreapSet<E, S>) =
     // Note that the "higher" key can not occur in "lower", because if it did it wouldn't have a higher priority.
     // We don't need to worry about the split's `duplicate` field.
     lower.split(higher).let { lowerSplit ->
@@ -216,7 +216,7 @@ internal infix fun <E, S : TreapSet<E, S>> S?.intersect(that: S?): S? = when {
     }
 }
 
-private fun <E, S : TreapSet<E, S>> intersectMerge(higher: Treap<S>, lower: Treap<S>) =
+private fun <E, S : TreapSet<E, S>> intersectMerge(higher: TreapSet<E, S>, lower: TreapSet<E, S>) =
     // Note that the "higher" key can not occur in "lower", because if it did it wouldn't have a higher priority.
     // We don't need to worry about the split's `duplicate` field.
     lower.split(higher).let { lowerSplit ->

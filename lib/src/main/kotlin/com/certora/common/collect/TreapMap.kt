@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.PersistentMap
 internal abstract class TreapMap<@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>>(
     left: S?,
     right: S?
-) : PersistentMap<K, V>, Treap<S>(left, right) {
+) : PersistentMap<K, V>, Treap<K, S>(left, right) {
 
     /**
      * In order to reduce heap space usage, we derive from Treap.  That makes it tricky to have a TreapMap representing
@@ -74,8 +74,8 @@ internal abstract class TreapMap<@WithStableHashCodeIfSerialized K, V, S : Treap
      */
     abstract fun shallowGetValue(key: K): V?
 
-    abstract fun shallowRemoveEntry(key: Any?, value: Any?): S?
-    abstract fun shallowUpdate(entryKey: Any?, toUpdate: Any?, merger: (Any?, Any?) -> Any?): S?
+    abstract fun shallowRemoveEntry(key: K, value: V): S?
+    abstract fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): S?
 
     /**
      * Applies a merge function to all entries in this Treap node
@@ -146,7 +146,7 @@ internal abstract class TreapMap<@WithStableHashCodeIfSerialized K, V, S : Treap
         treap.remove(key.toTreapKey(), key) ?: clear()
 
     override fun remove(key: K, value: V): S =
-        (treap difference new(key, value)) ?: clear()
+        treap.removeEntry(key.toTreapKey(), key, value) ?: clear()
 
     override abstract fun clear(): S
 
@@ -282,8 +282,8 @@ internal abstract class TreapMap<@WithStableHashCodeIfSerialized K, V, S : Treap
      * }
      * ```
      */
-    fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?) : PersistentMap<K, V> {
-        return this.treap.updateEntry(key.toTreapKey().precompute(), key, value, merger.uncheckedAs(), this::new.uncheckedAs()).uncheckedAs() ?: clear()
+    fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?): S {
+        return this.treap.updateEntry(key.toTreapKey().precompute(), key, value, merger, ::new) ?: clear()
     }
 
     /**
@@ -336,7 +336,7 @@ internal abstract class TreapMap<@WithStableHashCodeIfSerialized K, V, S : Treap
 /**
  * Removes a map entry (`entryKey`, `entryValue`) with key `key`
  */
-internal fun <@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>> S?.removeEntry(key: TreapKey, entryKey: Any?, entryValue: Any?): S? = when {
+internal fun <@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>> S?.removeEntry(key: TreapKey, entryKey: K, entryValue: V): S? = when {
     this == null -> null
     key.comparePriorityTo(this) > 0 -> this
     else -> {
@@ -349,13 +349,19 @@ internal fun <@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>> S?.re
     }
 }
 
-internal fun <@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>> S?.updateEntry(thatKey: TreapKey, entryKey: Any?, toUpdate: Any?, merger: (Any?, Any?) -> Any?, generate: (Any?, Any?) -> S): S? = when {
+internal fun <@WithStableHashCodeIfSerialized K, V, U, S : TreapMap<K, V, S>> S?.updateEntry(
+    thatKey: TreapKey, 
+    entryKey: K, 
+    toUpdate: U?, 
+    merger: (V?, U?) -> V?, 
+    new: (K, V) -> S
+): S? = when {
     this == null -> {
         val generated = merger(null, toUpdate)
         if(generated == null) {
             null
         } else {
-            generate(entryKey, generated)
+            new(entryKey, generated)
         }
     }
     else -> {
@@ -367,14 +373,14 @@ internal fun <@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>> S?.up
                 if(merged == null) {
                     self
                 } else {
-                    val newRoot = generate(entryKey, merged)
+                    val newRoot = new(entryKey, merged)
                     this.split(thatKey).let { split ->
                         newRoot.with(left = split.left, right = split.right)
                     }
                 }
             }
-            thatKey.compareKeyTo(this) < 0 -> this.with(left = this.left.updateEntry(thatKey, entryKey, toUpdate, merger, generate))
-            else -> this.with(right = this.right.updateEntry(thatKey, entryKey, toUpdate, merger, generate))
+            thatKey.compareKeyTo(this) < 0 -> this.with(left = this.left.updateEntry(thatKey, entryKey, toUpdate, merger, new))
+            else -> this.with(right = this.right.updateEntry(thatKey, entryKey, toUpdate, merger, new))
         }
     }
 }
