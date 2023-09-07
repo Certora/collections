@@ -1,7 +1,6 @@
 package com.certora.common.collect
 
 import com.certora.common.utils.*
-import kotlinx.collections.immutable.PersistentSet
 
 /**
  * Base class for Treap-based PersistentSet implementations.  Provides the Set operations; derived classes deal
@@ -10,7 +9,7 @@ import kotlinx.collections.immutable.PersistentSet
 internal abstract class AbstractTreapSet<E, S : AbstractTreapSet<E, S>>(
     left: S?, 
     right: S?
-) : PersistentSet<E>, InternSet<E>, Treap<E, S>(left, right) {
+) : TreapSet<E>, InternSet<E>, Treap<E, S>(left, right) {
     /**
      * In order to reduce heap space usage, we derive from Treap.  That makes it tricky to have a AbstractTreapSet representing
      * an empty set.  To handle that, we create special subclasses to represent empty sets, and distinguish them
