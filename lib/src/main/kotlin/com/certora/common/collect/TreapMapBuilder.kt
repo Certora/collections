@@ -2,11 +2,8 @@ package com.certora.common.collect
 
 import kotlinx.collections.immutable.PersistentMap
 
-// A "builder" for an arbitrary PersistentMap.  Assumes that all PersistentMap operations
-// maintain object identity for updates which have no effect.  E.g., a.put(k, v) === a, iff a[k] == v
-
-internal class SimplePersistentMapBuilder<K, V>(
-    private var map: PersistentMap<K, V>
+internal class TreapMapBuilder<@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>>(
+    private var map: S
 ) : AbstractMutableMap<K, V>(), PersistentMap.Builder<K, V>, java.io.Serializable {
 
     override val size get() = map.size
@@ -43,7 +40,7 @@ internal class SimplePersistentMapBuilder<K, V>(
         return oldMap.get(key)
     }
 
-    override fun build(): PersistentMap<K, V> = map
+    override fun build(): S = map
 
     private inner class EntryIterator : MutableIterator<MutableMap.MutableEntry<K, V>> {
         val mapIterator = map.entries.iterator()
@@ -56,7 +53,7 @@ internal class SimplePersistentMapBuilder<K, V>(
             val nextKey = mapIterator.next().key
             currentKey = nextKey
             haveCurrent = true
-            return MutableMapEntry(this@SimplePersistentMapBuilder, nextKey)
+            return MutableMapEntry(this@TreapMapBuilder, nextKey)
         }
 
         override fun remove() {
@@ -69,8 +66,8 @@ internal class SimplePersistentMapBuilder<K, V>(
     }
 
     private inner class EntrySet : AbstractMutableSet<MutableMap.MutableEntry<K, V>>() {
-        override val size get() = this@SimplePersistentMapBuilder.size
-        override fun clear() = this@SimplePersistentMapBuilder.clear()
+        override val size get() = this@TreapMapBuilder.size
+        override fun clear() = this@TreapMapBuilder.clear()
         override fun add(element: MutableMap.MutableEntry<K, V>): Boolean = throw UnsupportedOperationException()
         override fun iterator(): MutableIterator<MutableMap.MutableEntry<K, V>> = EntryIterator()
     }

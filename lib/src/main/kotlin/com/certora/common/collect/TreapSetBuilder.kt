@@ -6,8 +6,8 @@ import kotlinx.collections.immutable.PersistentSet
 // A "builder" for an arbitrary PersistentSet.  Assumes that all PersistentSet operations
 // maintain object identity for updates which have no effect.  E.g., a.add(b) === a, iff b is a subset of a.
 
-internal class SimplePersistentSetBuilder<E>(
-    private var set: PersistentSet<E>
+internal class TreapSetBuilder<E, S : TreapSet<E, S>>(
+    private var set: S
 ) : AbstractMutableSet<E>(), PersistentSet.Builder<E>, java.io.Serializable {
 
     override fun hashCode() = set.hashCode()
@@ -49,7 +49,7 @@ internal class SimplePersistentSetBuilder<E>(
         }
     }
 
-    private fun update(newSet: PersistentSet<E>): Boolean {
+    private fun update(newSet: S): Boolean {
         if (newSet !== set) {
             set = newSet
             return true

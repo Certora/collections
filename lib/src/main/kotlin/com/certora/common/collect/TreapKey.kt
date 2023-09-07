@@ -1,6 +1,5 @@
 package com.certora.common.collect
 
-import com.certora.common.collect.*
 import com.certora.common.utils.*
 
 /**
