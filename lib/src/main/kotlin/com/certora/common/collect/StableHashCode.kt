@@ -37,4 +37,4 @@ package com.certora.common.collect
  *
  * o Our analysis considers some known JCL types to have stable hash codes (such as BigIngeter).
  */
-interface StableHashCode
+public interface StableHashCode

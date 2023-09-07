@@ -1,7 +1,5 @@
 package com.certora.common.collect
 
-import com.certora.common.utils.*
-
 /**
  * Provides properties and methods over Treap keys.  See `Treap` for an overview.  This is an interface rather than an
  * abstract class so that it can be "mixed into" other classes with their own bases.

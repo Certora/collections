@@ -1,7 +1,6 @@
 package com.certora.common.collect
 
 import com.certora.common.collect.*
-import com.certora.common.utils.*
 import java.util.Random
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.Json

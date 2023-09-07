@@ -18,16 +18,16 @@ import kotlin.reflect.KClass
  * This automates the usual "multiply and add" composition scheme.  It also provides stable hash codes for some
  * problematic types, such as enums.
  */
-inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode) = action(HashCode(initial)).code
+public inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode): Int = action(HashCode(initial)).code
 
-@JvmInline value class HashCode(val code: Int) {
+public @JvmInline value class HashCode(@PublishedApi internal val code: Int) {
     @PublishedApi
-    internal inline fun add(obj: Any?) = HashCode(31 * this.code + obj.hashCode())
+    internal inline fun add(obj: Any?): HashCode = HashCode(31 * this.code + obj.hashCode())
 
-    inline infix operator fun <@Treapable T> plus(obj: T) = add(obj)
-    inline infix operator fun plus(clazz: Class<*>?) = add(clazz?.name)
-    inline infix operator fun plus(clazz: KClass<*>?) = add(clazz?.java?.name)
-    inline infix operator fun plus(e: Enum<*>?) = add(e?.name)
+    public inline infix operator fun <@Treapable T> plus(obj: T): HashCode = add(obj)
+    public inline infix operator fun plus(clazz: Class<*>?): HashCode = add(clazz?.name)
+    public inline infix operator fun plus(clazz: KClass<*>?): HashCode = add(clazz?.java?.name)
+    public inline infix operator fun plus(e: Enum<*>?): HashCode = add(e?.name)
 }
 
 
@@ -38,5 +38,5 @@ inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode) = action(HashC
  *          override fun hashCode() = hashObject(this)
  *      }
  */
-inline fun hashObject(obj: Any) = hash { it + obj::class }
+public inline fun hashObject(obj: Any): Int = hash { it + obj::class }
 

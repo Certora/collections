@@ -1,7 +1,5 @@
 package com.certora.common.collect
 
-import com.certora.common.utils.*
-
 /**
  * Base class for Treap-based PersistentSet implementations.  Provides the Set operations; derived classes deal
  * with type-specific behavior such as hash collisions.  See `Treap` for an overview of all of this.
@@ -9,7 +7,7 @@ import com.certora.common.utils.*
 internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>(
     left: S?, 
     right: S?
-) : TreapSet<E>, InternSet<E>, Treap<E, S>(left, right) {
+) : TreapSet<E>, Treap<E, S>(left, right) {
     /**
      * In order to reduce heap space usage, we derive from Treap.  That makes it tricky to have a AbstractTreapSet representing
      * an empty set.  To handle that, we create special subclasses to represent empty sets, and distinguish them

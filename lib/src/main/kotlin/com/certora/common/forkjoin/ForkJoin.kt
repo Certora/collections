@@ -1,6 +1,5 @@
 package com.certora.common.forkjoin
 
-import com.certora.common.utils.*
 import java.util.concurrent.*
 
 /**
@@ -32,13 +31,13 @@ import java.util.concurrent.*
     See [datasturctures.treap.AbstractTreapMap.parallelUpdateValues] for a more realistic example, which includes using
     [ThresholdForker] to improve the efficiency of the parallel case.
  */
-sealed class Forker private constructor(
-    val forking: Boolean
+public sealed class Forker private constructor(
+    @PublishedApi internal val forking: Boolean
 ) {
     @PublishedApi internal object Forking : Forker(true)
     @PublishedApi internal object NotForking : Forker(false)
 
-    inline fun <R1, R2> fork(
+    public inline fun <R1, R2> fork(
         crossinline f1: () -> R1,
         crossinline f2: () -> R2
     ): Pair<R1, R2> = when {
@@ -52,7 +51,7 @@ sealed class Forker private constructor(
         }
     }
 
-    inline fun <R1, R2, R3> fork(
+    public inline fun <R1, R2, R3> fork(
         crossinline f1: () -> R1,
         crossinline f2: () -> R2,
         crossinline f3: () -> R3
@@ -74,12 +73,12 @@ sealed class Forker private constructor(
 /**
     Runs the function [f] in a [Forking] context that will fork parallel operations.
  */
-fun <R> forking(f: context(Forker)() -> R): R = f(Forker.Forking)
+public fun <R> forking(f: context(Forker)() -> R): R = f(Forker.Forking)
 
 /**
     Runs the function [f] in a [Forking] context that will not fork.
  */
-inline fun <R> notForking(f: context(Forker)() -> R): R = f(Forker.NotForking)
+public inline fun <R> notForking(f: context(Forker)() -> R): R = f(Forker.NotForking)
 
 
 /**
@@ -91,12 +90,12 @@ inline fun <R> notForking(f: context(Forker)() -> R): R = f(Forker.NotForking)
 
     See See [datasturctures.treap.AbstractTreapMap.parallelUpdateValues] for a usage example.
  */
-open class ThresholdForker<in T> @PublishedApi internal constructor(
-    val threshold: (T) -> Boolean
+public open class ThresholdForker<in T> @PublishedApi internal constructor(
+    @PublishedApi internal val threshold: (T) -> Boolean
 ) {
     @PublishedApi internal object NotForking : ThresholdForker<Any?>({ true })
 
-    inline fun <R1, R2> fork(
+    public inline fun <R1, R2> fork(
         currentObj: T,
         crossinline f1: context(ThresholdForker<T>)() -> R1,
         crossinline f2: context(ThresholdForker<T>)() -> R2
@@ -106,7 +105,7 @@ open class ThresholdForker<in T> @PublishedApi internal constructor(
         else -> Forker.Forking.fork({ f1(this) }, { f2(this) })
     }
 
-    inline fun <R1, R2, R3> fork(
+    public inline fun <R1, R2, R3> fork(
         currentObj: T,
         crossinline f1: context(ThresholdForker<T>)() -> R1,
         crossinline f2: context(ThresholdForker<T>)() -> R2,
@@ -121,7 +120,7 @@ open class ThresholdForker<in T> @PublishedApi internal constructor(
     Runs the function [f] in a [ThresholdForker] context that will fork parallel operations until [threshold] returns
     true.
  */
-fun <T, R> maybeForking(
+public fun <T, R> maybeForking(
     currentObject: T,
     threshold: (T) -> Boolean,
     f: context(ThresholdForker<T>)() -> R
@@ -133,7 +132,7 @@ fun <T, R> maybeForking(
 /**
     Runs the function [f] in a [ThresholdForker] context that will not fork.
  */
- inline fun <T, R> notForking(
+public inline fun <T, R> notForking(
     @Suppress("unused_parameter") currentObject: T, // used to disambiguate between the two notForking functions
     f: context(ThresholdForker<T>)() -> R
 ): R = f(ThresholdForker.NotForking)

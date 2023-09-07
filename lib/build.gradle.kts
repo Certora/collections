@@ -29,6 +29,10 @@ tasks.withType<KotlinCompile> {
     }
 }
 
+kotlin {
+    explicitApi()
+}
+
 detekt {
     config.setFrom("detekt.yml")
 }

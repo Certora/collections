@@ -18,4 +18,4 @@ package com.certora.common.collect
  * serializable.
  */
 @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE)
-annotation class Treapable
+public annotation class Treapable

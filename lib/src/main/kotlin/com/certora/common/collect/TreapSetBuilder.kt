@@ -1,7 +1,5 @@
 package com.certora.common.collect
 
-import com.certora.common.utils.*
-
 // A "builder" for an arbitrary PersistentSet.  Assumes that all PersistentSet operations
 // maintain object identity for updates which have no effect.  E.g., a.add(b) === a, iff b is a subset of a.
 
