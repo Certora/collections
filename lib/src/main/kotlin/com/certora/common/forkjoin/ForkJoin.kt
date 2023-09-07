@@ -133,10 +133,10 @@ fun <T, R> maybeForking(
 /**
     Runs the function [f] in a [ThresholdForker] context that will not fork.
  */
-inline fun <T, R> notForking(
-    currentObject: T, // used to disambiguate between the two notForking functions
+ inline fun <T, R> notForking(
+    @Suppress("unused_parameter") currentObject: T, // used to disambiguate between the two notForking functions
     f: context(ThresholdForker<T>)() -> R
-): R = unused(currentObject).let { f(ThresholdForker.NotForking) }
+): R = f(ThresholdForker.NotForking)
 
 
 /**

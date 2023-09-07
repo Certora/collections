@@ -41,9 +41,10 @@ internal class TreapSetBuilder<@Treapable E, S : AbstractTreapSet<E, S>>(
             return next
         }
 
+        @Suppress("UNCHECKED_CAST")
         override fun remove() {
             check(haveCurrent) { "remove() called with no current item" }
-            remove(current.uncheckedAs<E>())
+            remove(current as E)
             haveCurrent = false
         }
     }

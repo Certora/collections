@@ -5,9 +5,10 @@ import com.certora.common.utils.*
 import kotlinx.serialization.DeserializationStrategy
 import java.util.TreeSet
 
+@Suppress("UNCHECKED_CAST")
 class PersistentSortedSetTest : SetTest() {
     override val nullKeysAllowed get() = false
-    override fun makeSet(): MutableSet<HashTestObject?> = treapSetOf<HashTestObject>().builder().uncheckedAs<MutableSet<HashTestObject?>>()
+    override fun makeSet(): MutableSet<HashTestObject?> = treapSetOf<HashTestObject>().builder() as MutableSet<HashTestObject?>
     override fun makeBaseline(): MutableSet<HashTestObject?> = TreeSet()
     override fun makeSet(other: Collection<HashTestObject?>): MutableSet<HashTestObject?> =
             makeSet().apply { addAll(other) }

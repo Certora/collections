@@ -277,7 +277,8 @@ abstract class MapTest {
     }
 
     fun testMapOf(vararg pairs: Pair<Int, Int>): TreapMap<Int, Int> {
-        val m = makeMapOfInts().uncheckedAs<TreapMap<Int, Int>>()
+        @Suppress("UNCHECKED_CAST")
+        val m = makeMapOfInts() as TreapMap<Int, Int>
         return m.putAll(pairs.toMap())
     }
 

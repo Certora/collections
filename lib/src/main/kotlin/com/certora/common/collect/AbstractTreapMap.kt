@@ -287,6 +287,8 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
      * the key to a pair of (possibly null) values.
      */
     override fun zip(m: Map<out K, V>) = sequence<Map.Entry<K, Pair<V?, V?>>> {
+        fun <T> Iterator<T>.nextOrNull() = if (hasNext()) { next() } else { null }
+
         // Iterate over the two maps' treap sequences.  We ensure that each sequence uses the same key ordering, by
         // converting `m` to a AbstractTreapMap of this map's type, if necessary.
         // Note that we can't use entrySequence, because HashTreapMap's entrySequence is only partially ordered.

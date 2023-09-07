@@ -65,12 +65,13 @@ fun <@Treapable K, V> Map<K, V>.toHashTreapMap(): TreapMap<K, V> =
     ?: hashTreapMapOf<K, V>().putAll(this)
 
 
+@Suppress("UNCHECKED_CAST")
 inline fun <@Treapable K, V> TreapMap<out K, V>.mutate(mutator: (MutableMap<K, V>) -> Unit): TreapMap<K, V> =
-    this.uncheckedAs<TreapMap<K, V>>().builder().apply(mutator).build()
+    (this as TreapMap<K, V>).builder().apply(mutator).build()
 
-
+@Suppress("UNCHECKED_CAST")
 operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pair: Pair<K, V>): TreapMap<K, V> =
-    this.uncheckedAs<TreapMap<K, V>>().put(pair.first, pair.second)
+    (this as TreapMap<K, V>).put(pair.first, pair.second)
 
 operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pairs
 : Iterable<Pair<K, V>>): TreapMap<K, V> = putAll(pairs)
@@ -82,8 +83,9 @@ operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pairs: Sequence<Pair<K, V
 operator fun <@Treapable K, V> TreapMap<out K, V>.plus(map: Map<out K, V>): TreapMap<K, V> = putAll(map)
 
 
+@Suppress("UNCHECKED_CAST")
 public fun <@Treapable K, V> TreapMap<out K, V>.putAll(map: Map<out K, V>): TreapMap<K, V> =
-    this.uncheckedAs<TreapMap<K, V>>().putAll(map)
+    (this as TreapMap<K, V>).putAll(map)
 
 public fun <@Treapable K, V> TreapMap<out K, V>.putAll(pairs: Iterable<Pair<K, V>>): TreapMap<K, V> =
     mutate { it.putAll(pairs) }
@@ -95,8 +97,9 @@ public fun <@Treapable K, V> TreapMap<out K, V>.putAll(pairs: Sequence<Pair<K, V
     mutate { it.putAll(pairs) }
 
 
+@Suppress("UNCHECKED_CAST")
 public operator fun <@Treapable K, V> TreapMap<out K, V>.minus(key: K): TreapMap<K, V> =
-        this.uncheckedAs<TreapMap<K, V>>().remove(key)
+    (this as TreapMap<K, V>).remove(key)
 
 public operator fun <@Treapable K, V> TreapMap<out K, V>.minus(keys: Iterable<K>): TreapMap<K, V> =
     mutate { it.minusAssign(keys) }
