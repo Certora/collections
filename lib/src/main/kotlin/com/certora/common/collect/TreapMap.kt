@@ -10,18 +10,17 @@ fun <@WithStableHashCodeIfSerialized K, V> hashTreapMapOf(): TreapMap<K, V> =
 
 
 interface TreapMap<@WithStableHashCodeIfSerialized K, V> : PersistentMap<K, V> {
-    interface Builder<@WithStableHashCodeIfSerialized K, V> : PersistentMap.Builder<K, V> {
+    override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
+    override fun remove(key: K): TreapMap<K, V>
+    override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
+    override fun putAll(m: Map<out K, @UnsafeVariance V>): TreapMap<K, V>
+    override fun clear(): TreapMap<K, V>
+
+    interface Builder<@WithStableHashCodeIfSerialized K, V>: PersistentMap.Builder<K, V> {
         override fun build(): TreapMap<K, V>
     }
 
-    override fun builder(): Builder<K, V>
-
-    override fun get(key: K): V?
-    override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
-    override fun putAll(m: Map<out K, @UnsafeVariance V>): TreapMap<K, V>
-    override fun remove(key: K): TreapMap<K, V>
-    override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
-    override fun clear(): TreapMap<K, V>
+    override fun builder(): Builder<K, @UnsafeVariance V>
 
     fun merge(
         m: Map<out K, V>, 
