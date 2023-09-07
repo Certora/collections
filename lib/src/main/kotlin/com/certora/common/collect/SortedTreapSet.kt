@@ -4,13 +4,13 @@ import com.certora.common.utils.*
 import kotlinx.collections.immutable.PersistentSet
 
 /**
- * A TreapSet specific to Comparable elements.  Iterates in the order defined by the objects.  We store one element
+ * A AbstractTreapSet specific to Comparable elements.  Iterates in the order defined by the objects.  We store one element
  * per Treap node, with the element itself as the Treap key.
  */
 internal sealed class SortedTreapSet<@WithStableHashCodeIfSerialized E : Comparable<E>> private constructor(
     left: SortedTreapSet<E>? = null,
     right: SortedTreapSet<E>? = null
-) : TreapSet<E, SortedTreapSet<E>>(left, right), TreapKey.Sorted<E> {
+) : AbstractTreapSet<E, SortedTreapSet<E>>(left, right), TreapKey.Sorted<E> {
 
     override fun E.toTreapKey() = TreapKey.Sorted.FromKey(this)
     override fun clear() = emptyOf<E>()

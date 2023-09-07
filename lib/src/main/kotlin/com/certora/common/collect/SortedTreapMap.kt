@@ -4,13 +4,13 @@ import com.certora.common.utils.*
 import kotlinx.collections.immutable.PersistentMap
 
 /**
- * A TreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element
+ * A AbstractTreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element
  * per Treap node, with the map key itself as the Treap key, and an additional `value` field
  */
 internal sealed class SortedTreapMap<@WithStableHashCodeIfSerialized K : Comparable<K>, V> private constructor(
     left: SortedTreapMap<K, V>?,
     right: SortedTreapMap<K, V>?
-) : TreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
+) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
 
     override fun K.toTreapKey() = TreapKey.Sorted.FromKey(this)
 

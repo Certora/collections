@@ -4,7 +4,7 @@ import com.certora.common.utils.*
 import kotlinx.collections.immutable.PersistentMap
 
 /**
- * A TreapMap for map keys that do not have a total ordering defined by implementing Comparable.  For those,
+ * A AbstractTreapMap for map keys that do not have a total ordering defined by implementing Comparable.  For those,
  * we use the map keys' hash codes as Treap keys, and deal with collisions by chaining multiple map entries from a
  * single Treap node.
  *
@@ -15,7 +15,7 @@ import kotlinx.collections.immutable.PersistentMap
 internal sealed class HashTreapMap<@WithStableHashCodeIfSerialized K, V> private constructor(
     left: HashTreapMap<K, V>?,
     right: HashTreapMap<K, V>?
-) : TreapMap<K, V, HashTreapMap<K, V>>(left, right), TreapKey.Hashed<K> {
+) : AbstractTreapMap<K, V, HashTreapMap<K, V>>(left, right), TreapKey.Hashed<K> {
 
     override fun K.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun new(key: K, value: V): HashTreapMap<K, V> = Node(key, value)

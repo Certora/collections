@@ -1,10 +1,8 @@
 package com.certora.common.collect
 
-import kotlinx.collections.immutable.PersistentMap
-
-internal class TreapMapBuilder<@WithStableHashCodeIfSerialized K, V, S : TreapMap<K, V, S>>(
+internal class TreapMapBuilder<@WithStableHashCodeIfSerialized K, V, S : AbstractTreapMap<K, V, S>>(
     private var map: S
-) : AbstractMutableMap<K, V>(), PersistentMap.Builder<K, V>, java.io.Serializable {
+) : AbstractMutableMap<K, V>(), TreapMap.Builder<K, V>, java.io.Serializable {
 
     override val size get() = map.size
     override fun isEmpty() = map.isEmpty()

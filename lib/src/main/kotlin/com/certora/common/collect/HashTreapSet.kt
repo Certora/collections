@@ -4,7 +4,7 @@ import com.certora.common.utils.*
 import kotlinx.collections.immutable.PersistentSet
 
 /**
- * A TreapSet for elements that do not have a total ordering defined by implementing Comparable.  For those,
+ * A AbstractTreapSet for elements that do not have a total ordering defined by implementing Comparable.  For those,
  * we use the objects' hash codes as Treap keys, and deal with collisions by chaining multiple elements from a single
  * Treap node.
  *
@@ -15,7 +15,7 @@ import kotlinx.collections.immutable.PersistentSet
 internal sealed class HashTreapSet<@WithStableHashCodeIfSerialized E> private constructor(
     left: HashTreapSet<E>? = null,
     right: HashTreapSet<E>? = null
-) : TreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E> {
+) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E> {
 
     override fun E.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun clear() = emptyOf<E>()

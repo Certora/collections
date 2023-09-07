@@ -7,12 +7,12 @@ import kotlinx.collections.immutable.PersistentSet
  * Base class for Treap-based PersistentSet implementations.  Provides the Set operations; derived classes deal
  * with type-specific behavior such as hash collisions.  See `Treap` for an overview of all of this.
  */
-internal abstract class TreapSet<E, S : TreapSet<E, S>>(
+internal abstract class AbstractTreapSet<E, S : AbstractTreapSet<E, S>>(
     left: S?, 
     right: S?
 ) : PersistentSet<E>, InternSet<E>, Treap<E, S>(left, right) {
     /**
-     * In order to reduce heap space usage, we derive from Treap.  That makes it tricky to have a TreapSet representing
+     * In order to reduce heap space usage, we derive from Treap.  That makes it tricky to have a AbstractTreapSet representing
      * an empty set.  To handle that, we create special subclasses to represent empty sets, and distinguish them
      * via this property.  `treap` returns `this` if this is a "real" node containing data, and `null` if this is
      * an empty node.  We do it this way because it works out very nicely with interacting with the base Treap
@@ -26,8 +26,8 @@ internal abstract class TreapSet<E, S : TreapSet<E, S>>(
     abstract fun new(element: E): S
 
     /**
-     * Casts the given Collection to a TreapSet, if the Collection is already a TreapSet of the same type as 'this'
-     * TreapSet.  For example, if this is a HashTreapSet, and so is the supplied collection.  Otherwise returns null.
+     * Casts the given Collection to a AbstractTreapSet, if the Collection is already a AbstractTreapSet of the same type as 'this'
+     * AbstractTreapSet.  For example, if this is a HashTreapSet, and so is the supplied collection.  Otherwise returns null.
      */
     abstract fun Iterable<E>.toTreapSetOrNull(): S?
 
@@ -46,7 +46,7 @@ internal abstract class TreapSet<E, S : TreapSet<E, S>>(
     }
 
     /**
-     * Converts the supplied set element to a TreapKey appropriate to this type of TreapSet (sorted vs. hashed)
+     * Converts the supplied set element to a TreapKey appropriate to this type of AbstractTreapSet (sorted vs. hashed)
      */
     abstract fun E.toTreapKey(): TreapKey
 
@@ -130,7 +130,7 @@ internal abstract class TreapSet<E, S : TreapSet<E, S>>(
     override fun removeAll(predicate: (E) -> Boolean): S =
         treap.removeAll(predicate.uncheckedAs<(Any?) -> Boolean>()) ?: clear()
 
-    // Require clear() to return a TreapSet
+    // Require clear() to return a AbstractTreapSet
     override abstract fun clear(): S
 
     override fun retainAll(elements: Collection<E>): S = elements.useAsTreap(
@@ -166,7 +166,7 @@ internal abstract class TreapSet<E, S : TreapSet<E, S>>(
  * derived classes use to, e.g, merge hash buckets. Note that we always prefer to return 'this' over 'that', to
  * preserve the object identity invariant described in the `Treap` summary.
  */
-internal infix fun <E, S : TreapSet<E, S>> S?.union(that: S?): S? = when {
+internal infix fun <E, S : AbstractTreapSet<E, S>> S?.union(that: S?): S? = when {
     this == null -> that
     that == null -> this
     this === that -> this
@@ -182,7 +182,7 @@ internal infix fun <E, S : TreapSet<E, S>> S?.union(that: S?): S? = when {
     }
 }
 
-private fun <E, S : TreapSet<E, S>> unionMerge(higher: TreapSet<E, S>, lower: TreapSet<E, S>) =
+private fun <E, S : AbstractTreapSet<E, S>> unionMerge(higher: AbstractTreapSet<E, S>, lower: AbstractTreapSet<E, S>) =
     // Note that the "higher" key can not occur in "lower", because if it did it wouldn't have a higher priority.
     // We don't need to worry about the split's `duplicate` field.
     lower.split(higher).let { lowerSplit ->
@@ -193,7 +193,7 @@ private fun <E, S : TreapSet<E, S>> unionMerge(higher: TreapSet<E, S>, lower: Tr
  * Computes the intersection of two treaps. Note that we always prefer to return 'this' over 'that', to preserve the
  * object identity invariant described in the `Treap` summary.
  */
-internal infix fun <E, S : TreapSet<E, S>> S?.intersect(that: S?): S? = when {
+internal infix fun <E, S : AbstractTreapSet<E, S>> S?.intersect(that: S?): S? = when {
     this == null -> null
     that == null -> null
     this === that -> this
@@ -216,7 +216,7 @@ internal infix fun <E, S : TreapSet<E, S>> S?.intersect(that: S?): S? = when {
     }
 }
 
-private fun <E, S : TreapSet<E, S>> intersectMerge(higher: TreapSet<E, S>, lower: TreapSet<E, S>) =
+private fun <E, S : AbstractTreapSet<E, S>> intersectMerge(higher: AbstractTreapSet<E, S>, lower: AbstractTreapSet<E, S>) =
     // Note that the "higher" key can not occur in "lower", because if it did it wouldn't have a higher priority.
     // We don't need to worry about the split's `duplicate` field.
     lower.split(higher).let { lowerSplit ->
@@ -226,7 +226,7 @@ private fun <E, S : TreapSet<E, S>> intersectMerge(higher: TreapSet<E, S>, lower
 /**
  * Removes the items in `that` from `this`.
  */
-internal infix fun <E, S : TreapSet<E, S>> S?.difference(that: S?): S? = when {
+internal infix fun <E, S : AbstractTreapSet<E, S>> S?.difference(that: S?): S? = when {
     this == null -> null
     that == null -> this
     this === that -> null
@@ -253,7 +253,7 @@ internal infix fun <E, S : TreapSet<E, S>> S?.difference(that: S?): S? = when {
  *
  * ...except that we don't want to do all of the work that would imply, if we can avoid it.
  */
-internal fun <E, S : TreapSet<E, S>> S?.containsAll(that: S?): Boolean = when {
+internal fun <E, S : AbstractTreapSet<E, S>> S?.containsAll(that: S?): Boolean = when {
     that == null -> true
     this == null -> false
     else -> {
@@ -272,7 +272,7 @@ internal fun <E, S : TreapSet<E, S>> S?.containsAll(that: S?): Boolean = when {
  *
  * ...except that we don't want to do all of the work that would imply, if we can avoid it.
  */
-internal fun <E, S : TreapSet<E, S>> S?.containsAny(that: S?): Boolean = when {
+internal fun <E, S : AbstractTreapSet<E, S>> S?.containsAny(that: S?): Boolean = when {
     that == null -> false
     this == null -> false
     else -> {

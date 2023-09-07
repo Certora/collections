@@ -29,7 +29,7 @@ import java.util.concurrent.*
     }
     ```
 
-    See [datasturctures.treap.TreapMap.parallelUpdateValues] for a more realistic example, which includes using
+    See [datasturctures.treap.AbstractTreapMap.parallelUpdateValues] for a more realistic example, which includes using
     [ThresholdForker] to improve the efficiency of the parallel case.
  */
 sealed class Forker private constructor(
@@ -89,7 +89,7 @@ inline fun <R> notForking(f: context(Forker)() -> R): R = f(Forker.NotForking)
 
     ThresholdForker contexts are established using the [maybeForking] or [noForking] functions.
 
-    See See [datasturctures.treap.TreapMap.parallelUpdateValues] for a usage example.
+    See See [datasturctures.treap.AbstractTreapMap.parallelUpdateValues] for a usage example.
  */
 open class ThresholdForker<in T> @PublishedApi internal constructor(
     val threshold: (T) -> Boolean

@@ -3,6 +3,7 @@ package com.certora.common.collect
 import com.certora.common.collect.*
 import com.certora.common.utils.*
 import java.util.Random
+import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.DeserializationStrategy
@@ -240,8 +241,8 @@ abstract class MapTest {
     open fun assertIdenticalJson(expected: String, actual: String) {}
     abstract fun getBaseDeserializer(): DeserializationStrategy<*>?
     abstract fun getDeserializer(): DeserializationStrategy<*>?
-    abstract fun makeMapOfInts(): MutableMap<Int?, Int?>
-    abstract fun makeMapOfInts(other: Map<Int?, Int?>): MutableMap<Int?, Int?>
+    abstract fun makeMapOfInts(): TreapMap<Int?, Int?>
+    abstract fun makeMapOfInts(other: Map<Int?, Int?>): TreapMap<Int?, Int?>
     abstract fun makeBaselineOfInts(): MutableMap<Int?, Int?>
 
     @Test
@@ -275,10 +276,9 @@ abstract class MapTest {
         assertVeryEqual(db, dm)
     }
 
-    fun testMapOf(vararg pairs: Pair<Int, Int>): Map<Int, Int> {
-        val m = makeMapOfInts().uncheckedAs<MutableMap<Int, Int>>()
-        m.putAll(pairs)
-        return m
+    fun testMapOf(vararg pairs: Pair<Int, Int>): TreapMap<Int, Int> {
+        val m = makeMapOfInts().uncheckedAs<TreapMap<Int, Int>>()
+        return m.putAll(pairs.toMap())
     }
 
     @Test
