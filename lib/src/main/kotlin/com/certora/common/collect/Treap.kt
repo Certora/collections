@@ -75,7 +75,15 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     abstract val self: S
 
     /**
-     * Produces a copy of this node, but with differen left and/or right nodes.
+        In order to reduce heap space usage, we derive our collections directly from Treap.  That makes it tricky to
+        have an instance representing an empty map/set.  To handle that, we create special subclasses to represent empty
+        collections, and distinguish them via this property.  `selfNotEmpty` returns `self` if this is a "real" node
+        containing data, and `null` if this is an empty node.
+     */
+    abstract val selfNotEmpty: S?
+
+    /**
+        Produces a copy of this node, but with differen left and/or right nodes.
      */
     @Suppress("NOTHING_TO_INLINE")
     inline fun with(left: S? = this.left, right: S? = this.right): S = when {
@@ -84,23 +92,23 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     }
 
     /**
-     * Derived classes make an appropriate copy of themselves, with the specified right/left nodes.
+        Derived classes make an appropriate copy of themselves, with the specified right/left nodes.
      */
     abstract fun copyWith(left: S?, right: S?): S
 
     /**
-     * Derived classes use this to compare key/value data appropriately.  For example, hashed sets and maps
-     * need to compare all keys/values with the same hash code.
+        Derived classes use this to compare key/value data appropriately.  For example, hashed sets and maps need to
+        compare all keys/values with the same hash code.
      */
     abstract fun shallowEquals(that: S): Boolean
 
     /**
-     * Derived classes use this to report the number of logical items stored in this node due to hash collisions.
+        Derived classes use this to report the number of logical items stored in this node due to hash collisions.
      */
     abstract val shallowSize: Int
 
     /**
-     * Derived classes use these to perform these operations in the face of hash collisions.
+        Derived classes use these to perform these operations in the face of hash collisions.
      */
     abstract infix fun shallowAdd(that: S): S
     abstract fun shallowRemove(element: T): S?
@@ -108,8 +116,8 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     abstract fun shallowComputeHashCode(): Int
 
     /**
-     * This gets called by the JVM deserializer, after deserialization.  It's our chance to validate our invariants,
-     * in case any hash functions have changed since this Treap was serialized.
+        This gets called by the JVM deserializer, after deserialization.  It's our chance to validate our invariants, in
+        case any hash functions have changed since this Treap was serialized.
      */
     protected fun readResolve(): Any? {
         if (left != null) {
@@ -125,9 +133,8 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
 }
 
 /**
- * Splits this treap into two treaps, one with keys less than `key`, and one greater.  Returns both,
- * and if there was a node with the same key, returns that too.  This is a basic building block of other Treap
- * operations.
+    Splits this treap into two treaps, one with keys less than `key`, and one greater.  Returns both, and if there was a
+    node with the same key, returns that too.  This is a basic building block of other Treap operations.
  */
 internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.split(key: TreapKey<T>): Split<T, S> = when {
     this == null -> Split<T, S>(left = null, right = null, duplicate = null)
@@ -135,8 +142,8 @@ internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.split(key: TreapKey<T>
         val c = this.compareKeyTo(key)
         when {
             c > 0 -> {
-                // Split our left.  The RHS of that split is greater than `key`, and less than `this`.  Insert `this`
-                // as the new RHS of the split.
+                // Split our left.  The RHS of that split is greater than `key`, and less than `this`.  Insert `this` as
+                // the new RHS of the split.
                 left.split(key).also { it.right = this.with(left = it.right) }
             }
             c < 0 -> {
@@ -156,8 +163,8 @@ internal class Split<@Treapable T, S : Treap<T, S>>(var left: S?, var right: S?,
 
 
 /**
- * Converse of `split.`  Combines this treap with another treap whose keys are all greater than any key in this treap.
- * Another basic building block.
+    Converse of `split.`  Combines this treap with another treap whose keys are all greater than any key in this treap.
+    Another basic building block.
  */
 internal infix fun <@Treapable T, S : Treap<T, S>> S?.join(greater: S?): S? = when {
     this == null -> greater
@@ -168,8 +175,8 @@ internal infix fun <@Treapable T, S : Treap<T, S>> S?.join(greater: S?): S? = wh
 
 
 /**
- * Adds a single Treap node to this Treap, if its key does not already exist.  We precompute the key hashes for extra
- * speed.  To add multiple nodes, use `union`.
+    Adds a single Treap node to this Treap, if its key does not already exist.  We precompute the key hashes for extra
+    speed.  To add multiple nodes, use `union`.
  */
 internal fun <@Treapable T, S : Treap<T, S>> S?.add(that: S): S = add(that, that.precompute())
 
@@ -177,8 +184,8 @@ private fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.add(that: S, thatKey: T
     that.left != null || that.right != null -> throw IllegalArgumentException("add requires a single treap node")
     this == null -> that
     else -> {
-        // remember, a.comparePriorityTo(b)==0 <=> a.compareKeyTo(b)==0
-        // and therefore if priorities are different, then there will be no duplicate from `split`
+        // remember, a.comparePriorityTo(b)==0 <=> a.compareKeyTo(b)==0, and therefore if priorities are different, then
+        // there will be no duplicate from `split`
         val c = thatKey.comparePriorityTo(this)
         when {
             c == 0 -> this shallowAdd that
@@ -190,7 +197,7 @@ private fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.add(that: S, thatKey: T
 }
 
 /**
- * Removes `element` with key `key`
+    Removes `element` with key `key`
  */
 internal fun <@Treapable T, S : Treap<T, S>> S?.remove(key: TreapKey<T>, element: T): S? = when {
     this == null -> null
@@ -216,7 +223,7 @@ internal infix fun <@Treapable T, S : Treap<T, S>> S?.removeAll(predicate: (T) -
 }
 
 /**
- * Counts the items stored in this Treap.
+    Counts the items stored in this Treap.
  */
 internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.computeSize(): Int = when {
     this == null -> 0
@@ -224,7 +231,7 @@ internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.computeSize(): Int = w
 }
 
 /**
- * Finds a given key in this Treap, and returns the Treap node.  Takes advantage of tail-recursion for speed.
+    Finds a given key in this Treap, and returns the Treap node.  Takes advantage of tail-recursion for speed.
  */
 internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.find(key: TreapKey<T>): S? = when {
     this == null -> null
@@ -242,7 +249,7 @@ internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.find(key: TreapKey<T>): 
 internal fun <@Treapable T, S : Treap<T, S>> S?.containsKey(key: TreapKey<T>): Boolean = (find(key) != null)
 
 /**
- * Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
+    Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
  */
 internal fun <@Treapable T, S : Treap<T, S>> S?.asSequence(): Sequence<S> = when {
     this == null -> sequenceOf<S>()
@@ -263,7 +270,7 @@ internal fun <@Treapable T, S : Treap<T, S>> S?.asSequence(): Sequence<S> = when
 }
 
 /**
- * Compares two treaps for equality, according to the derived class' definition.
+    Compares two treaps for equality, according to the derived class' definition.
  */
 internal fun <@Treapable T, S : Treap<T, S>> S?.deepEquals(that: S?): Boolean = when {
     this === that -> true
@@ -280,8 +287,8 @@ internal fun <@Treapable T, S : Treap<T, S>> S?.computeHashCode(): Int = when {
 }
 
 /**
-  Quickly estimates if this Treap is smaller than a given size, without actually counting the nodes.  Probes the depth
-  along a single path, under the assumption that the tree is balanced.
+    Quickly estimates if this Treap is smaller than a given size, without actually counting the nodes.  Probes the depth
+    along a single path, under the assumption that the tree is balanced.
  */
 internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {
     this == null -> true

@@ -3,8 +3,8 @@ package com.certora.common.collect
 import kotlinx.collections.immutable.PersistentMap
 
 /**
- * A AbstractTreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element
- * per Treap node, with the map key itself as the Treap key, and an additional `value` field
+    A TreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element per
+    Treap node, with the map key itself as the Treap key, and an additional `value` field
  */
 internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private constructor(
     left: SortedTreapMap<K, V>?,
@@ -50,8 +50,8 @@ internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private co
         left: SortedTreapMap<K, V>? = null,
         right: SortedTreapMap<K, V>? = null
     ) : SortedTreapMap<K, V>(left, right) {
-        override val treap get() = this
         override val self get() = this
+        override val selfNotEmpty get() = this
         override val treapKey get() = key
 
         override fun shallowEntrySequence(): Sequence<Map.Entry<K, V>> = sequenceOf(MapEntry(key, value))
@@ -95,9 +95,8 @@ internal sealed class SortedTreapMap<@Treapable K : Comparable<K>, V> private co
     }
 
     private class Empty<@Treapable K : Comparable<K>, V> : SortedTreapMap<K, V>(null, null) {
-         // `Empty<E>` is just a placeholder, and should not be used as a treap
-         override val treap get() = null
          override val self get() = this
+         override val selfNotEmpty get() = null
 
          override fun shallowEntrySequence(): Sequence<Map.Entry<K, V>> = sequenceOf()
 

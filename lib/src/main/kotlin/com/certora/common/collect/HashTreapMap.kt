@@ -3,13 +3,13 @@ package com.certora.common.collect
 import kotlinx.collections.immutable.PersistentMap
 
 /**
- * A AbstractTreapMap for map keys that do not have a total ordering defined by implementing Comparable.  For those,
- * we use the map keys' hash codes as Treap keys, and deal with collisions by chaining multiple map entries from a
- * single Treap node.
- *
- * The HashTreapMap instance itself stores the first entry, and additional entries are chained via MoreKeyValuePairs.
- * This is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be
- * rare enough that these lists will be very small - usually just one element.
+    A TreapMap for map keys that do not have a total ordering defined by implementing Comparable.  For those, we use the
+    map keys' hash codes as Treap keys, and deal with collisions by chaining multiple map entries from a single Treap
+    node.
+
+    The HashTreapMap instance itself stores the first entry, and additional entries are chained via MoreKeyValuePairs.
+    This is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be
+    rare enough that these lists will be very small - usually just one element.
  */
 internal sealed class HashTreapMap<@Treapable K, V> private constructor(
     left: HashTreapMap<K, V>?,
@@ -121,8 +121,8 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
         left: HashTreapMap<K, V>? = null,
         right: HashTreapMap<K, V>? = null
     ) : HashTreapMap<K, V>(left, right), KeyValuePairList<K, V> {
-        override val treap get() = this
         override val self get() = this
+        override val selfNotEmpty get() = this
         override val treapKey get() = key
 
         override fun copyWith(left: HashTreapMap<K, V>?, right: HashTreapMap<K, V>?): HashTreapMap<K, V> = Node(key, value, next, left, right)
@@ -326,9 +326,8 @@ internal sealed class HashTreapMap<@Treapable K, V> private constructor(
     }
 
     private class Empty<@Treapable K, V> : HashTreapMap<K, V>(null, null) {
-        // `Empty<E>` is just a placeholder, and should not be used as a treap
-        override val treap get() = null
         override val self get() = this
+        override val selfNotEmpty get() = null
 
         override fun shallowEntrySequence() = sequenceOf<Map.Entry<K, V>>()
 

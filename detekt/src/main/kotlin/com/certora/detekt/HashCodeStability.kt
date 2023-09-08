@@ -18,8 +18,8 @@ import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.*
 
 /**
- * Enforces hash code stability for types marked with 'utils.StableHashCode' and 'utils.Treapable'.  See those
- * definitions for the rules.
+    Enforces hash code stability for types marked with 'utils.StableHashCode' and 'utils.Treapable'.  See those
+    definitions for the rules.
  */
 @RequiresTypeResolution
 class HashCodeStability(config: Config) : Rule(config) {
@@ -31,7 +31,7 @@ class HashCodeStability(config: Config) : Rule(config) {
     )
 
     /**
-     * If a concrete class implements 'StableHashCode', verify that it does have a stable 'hashCode' implementation.
+        If a concrete class implements 'StableHashCode', verify that it does have a stable 'hashCode' implementation.
      */
     override fun visitClassOrObject(clazz: KtClassOrObject) {
         super.visitClassOrObject(clazz)
@@ -51,9 +51,9 @@ class HashCodeStability(config: Config) : Rule(config) {
             }
 
             /*
-             * "value classes" get their hashCode from the underlying property.
-             * "data classes" have a default hashCode implementation derived from class' properties.
-             * In these cases, check that all relevant properties have stable hash code.
+                - "value classes" get their hashCode from the underlying property.
+                - "data classes" have a default hashCode implementation derived from class' properties.
+                - In these cases, check that all relevant properties have stable hash code.
              */
             desc.isValue ||
             (desc.isData && desc.findDeclaredHashCode(checkSupers = false) == null) -> {
@@ -75,21 +75,25 @@ class HashCodeStability(config: Config) : Rule(config) {
                     report(CodeSmell(issue, Entity.from(clazz), message))
                 } else {
                     /*
-                     * We have a hash code implementation.  Check the body for things that look fishy. This is a very
-                     * simple heuristic: we just look for references to properties that don't have stable hashCode
-                     * implementation, and flag those.  We make an exception for cases where the value is passed to
-                     * 'utils.HashCode.plus', because we know that does produce a stable hash code. So, we flag this:
-                     *
-                     *      enum class E { A, B, C } // enums don't have stable hash codes
-                     *      class C(i: Int, e: E) {
-                     *          override fun hashCode() = 31 * i + e // Oops, referenced 'e' here!
-                     *      }
-                     *
-                     * ...but we allow this:
-                     *
-                     *      class C(i: Int, e: E) {
-                     *          override fun hashCode() = hash { it + i + e } // e is passed to 'HashCode.plus'
-                     *      }
+                        We have a hash code implementation.  Check the body for things that look fishy. This is a very
+                        simple heuristic: we just look for references to properties that don't have stable hashCode
+                        implementation, and flag those.  We make an exception for cases where the value is passed to
+                        'utils.HashCode.plus', because we know that does produce a stable hash code. So, we flag this:
+
+                            ```
+                            enum class E { A, B, C } // enums don't have stable hash codes
+                            class C(i: Int, e: E) {
+                                override fun hashCode() = 31 * i + e // Oops, referenced 'e' here!
+                            }
+                            ```
+
+                        ...but we allow this:
+
+                            ```                     
+                            class C(i: Int, e: E) {
+                                override fun hashCode() = hash { it + i + e } // e is passed to 'HashCode.plus'
+                            }
+                            ```
                      */
                     hashCodeFunc.accept(object : DetektVisitor() {
                         override fun visitReferenceExpression(expression: KtReferenceExpression) {
@@ -109,8 +113,8 @@ class HashCodeStability(config: Config) : Rule(config) {
     }
 
     /**
-     * Check explicit generic type instantiations.  If a type argument requires a stable hash code, make sure the
-     * type parameter provides one.
+        Check explicit generic type instantiations.  If a type argument requires a stable hash code, make sure the type
+        parameter provides one.
      */
     override fun visitTypeReference(typeReference: KtTypeReference) {
         super.visitTypeReference(typeReference)
@@ -131,14 +135,14 @@ class HashCodeStability(config: Config) : Rule(config) {
     }
 
     /**
-     * Check generic function invocation.  This includes generic class constructors.
+        Check generic function invocation.  This includes generic class constructors.
      */
     override fun visitExpression(expression: KtExpression) {
         super.visitExpression(expression)
 
         val resolvedCall = expression.getResolvedCall(bindingContext) ?: return
-        // Only check the call expression itself, not any subexpressions.  We have to walk through the
-        // ResolvedCall data structure, which wraps a lower-level "Call" class, to find the actual call source element.
+        // Only check the call expression itself, not any subexpressions.  We have to walk through the ResolvedCall data
+        // structure, which wraps a lower-level "Call" class, to find the actual call source element.
         if (resolvedCall.call.callElement == expression) {
             val name = resolvedCall.resultingDescriptor.fqNameSafe.asString()
             for ((param, arg) in resolvedCall.typeArguments) {
@@ -149,7 +153,7 @@ class HashCodeStability(config: Config) : Rule(config) {
 
 
     /**
-     * Check that a property has a stable hash code.  If not, try to give a useful error message.
+        Check that a property has a stable hash code.  If not, try to give a useful error message.
      */
     private fun checkPropertyAccess(prop: DeclarationDescriptor, propType: KotlinType, usageClass: ClassDescriptor?, loc: KtElement) {
         val unstableType = findTypeWithUnstableHashCode(propType) ?: return
@@ -168,7 +172,7 @@ class HashCodeStability(config: Config) : Rule(config) {
     }
 
     /*
-     * Check that the type argument is compatible with the type parameter.  If not, try to give a useful error message.
+        Check that the type argument is compatible with the type parameter.  If not, try to give a useful error message.
      */
     private fun checkTypeArgument(arg: KotlinType, param: TypeParameterDescriptor, declName: String, loc: KtElement) {
         if (param.hasStableHashCodeAnnotation && arg.isPossiblySerializable) {
@@ -239,8 +243,8 @@ class HashCodeStability(config: Config) : Rule(config) {
             annotations.hasAnnotation(stableHashCodeAnnotationName)
 
         /*
-         * Given a type, which might be generic, check if it has a stable hash code - and return the type
-         * that makes it unstable, if any.
+            Given a type, which might be generic, check if it has a stable hash code - and return the type that makes it
+            unstable, if any.
          */
         private fun findTypeWithUnstableHashCode(type: KotlinType): KotlinType? = when {
             type.isError -> null // Avoid false positives for unresolvable types
@@ -266,7 +270,7 @@ class HashCodeStability(config: Config) : Rule(config) {
         }
 
         /**
-         * Might this type be serializable?
+            Might this type be serializable?
          */
         val KotlinType.isPossiblySerializable: Boolean get() = when {
             isError -> false // Avoid false positives for unresolvable types
@@ -287,14 +291,14 @@ class HashCodeStability(config: Config) : Rule(config) {
         }
 
         /**
-         * Find 'override fun hashCode()', if there is one, in this class, and maybe its superclasses/interfaces.
+            Find 'override fun hashCode()', if there is one, in this class, and maybe its superclasses/interfaces.
          */
         fun ClassDescriptor.findDeclaredHashCode(checkSupers: Boolean): FunctionDescriptor? {
             return findDeclaredFunction("hashCode", checkSupers) { it.valueParameters.isEmpty() && it.typeParameters.isEmpty() }
         }
 
         /**
-         * Display the name of a type usefully.
+            Display the name of a type usefully.
          */
         val KotlinType.displayName: String
             get() = constructor.declarationDescriptor?.fqNameSafe?.asString() ?: "<$this>"

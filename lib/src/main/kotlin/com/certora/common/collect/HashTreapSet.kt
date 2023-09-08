@@ -3,13 +3,12 @@ package com.certora.common.collect
 import kotlinx.collections.immutable.PersistentSet
 
 /**
- * A AbstractTreapSet for elements that do not have a total ordering defined by implementing Comparable.  For those,
- * we use the objects' hash codes as Treap keys, and deal with collisions by chaining multiple elements from a single
- * Treap node.
- *
- * The HashTreapSet instance itself stores the first element, and additional elements are chained via MoreElements. This
- * is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be rare
- * enough that these lists will be very small - usually just one element.
+    A TreapSet for elements that do not have a total ordering defined by implementing Comparable.  For those, we use the
+    objects' hash codes as Treap keys, and deal with collisions by chaining multiple elements from a single Treap node.
+
+    The HashTreapSet instance itself stores the first element, and additional elements are chained via MoreElements.
+    This is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be
+    rare enough that these lists will be very small - usually just one element.
  */
 internal sealed class HashTreapSet<@Treapable E> private constructor(
     left: HashTreapSet<E>? = null,
@@ -48,8 +47,8 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
         left: HashTreapSet<E>? = null,
         right: HashTreapSet<E>? = null
     ) : HashTreapSet<E>(left, right), ElementList<E> {
-        override val treap get() = this
         override val self get() = this
+        override val selfNotEmpty get() = this
         override val treapKey get() = element
 
         override val shallowSize: Int get() {
@@ -241,7 +240,7 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
         }
 
         override fun iterator(): Iterator<E> = sequence {
-            treap.asSequence().forEach { node ->
+            selfNotEmpty.asSequence().forEach { node ->
                 (node as Node<E>).forEachNodeElement {
                     yield(it)
                 }
@@ -254,9 +253,8 @@ internal sealed class HashTreapSet<@Treapable E> private constructor(
     private class Empty<@Treapable E> : HashTreapSet<E>(null, null) {
         override fun iterator(): Iterator<E> = emptySet<E>().iterator()
 
-        // `Empty<E>` is just a placeholder, and should not be used as a treap
-        override val treap get() = null
         override val self get() = this
+        override val selfNotEmpty get() = null
 
         override val treapKey get() = throw UnsupportedOperationException()
         override fun copyWith(left: HashTreapSet<E>?, right: HashTreapSet<E>?) = throw UnsupportedOperationException()

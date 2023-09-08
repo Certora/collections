@@ -3,8 +3,8 @@ package com.certora.common.collect
 import kotlinx.collections.immutable.PersistentSet
 
 /**
- * A AbstractTreapSet specific to Comparable elements.  Iterates in the order defined by the objects.  We store one element
- * per Treap node, with the element itself as the Treap key.
+    A TreapSet specific to Comparable elements.  Iterates in the order defined by the objects.  We store one element per
+    Treap node, with the element itself as the Treap key.
  */
 internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private constructor(
     left: SortedTreapSet<E>? = null,
@@ -24,9 +24,9 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
         left: SortedTreapSet<E>? = null,
         right: SortedTreapSet<E>? = null
     ) : SortedTreapSet<E>(left, right) {
-        override val treap get() = this
         override val self get() = this
-        override fun iterator(): Iterator<E> = treap.asSequence().map { it.treapKey }.iterator()
+        override val selfNotEmpty get() = this
+        override fun iterator(): Iterator<E> = this.asSequence().map { it.treapKey }.iterator()
 
         override fun shallowEquals(that: SortedTreapSet<E>): Boolean = this.compareKeyTo(that) == 0
         override val shallowSize: Int get() = 1
@@ -53,9 +53,8 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
     private class Empty<@Treapable E : Comparable<E>> : SortedTreapSet<E>(null, null) {
         override fun iterator(): Iterator<E> = emptySet<E>().iterator()
 
-        // `Empty<E>` is just a placeholder, and should not be used as a treap
-        override val treap get() = null
         override val self get() = this
+        override val selfNotEmpty get() = null
 
         override val treapKey get() = throw UnsupportedOperationException()
         override fun copyWith(left: SortedTreapSet<E>?, right: SortedTreapSet<E>?) = throw UnsupportedOperationException()
