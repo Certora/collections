@@ -8,13 +8,14 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.DeserializationStrategy
 import kotlin.test.*
 
-abstract class MapTest {
+/** Tests for [TreapMap]. */
+abstract class TreapMapTest {
 
     open val allowNullKeys = true
-    abstract fun makeMap(): MutableMap<HashTestObject?, Any?>
-    abstract fun makeBaseline(): MutableMap<HashTestObject?, Any?>
-    abstract fun makeMap(other: Map<HashTestObject?,Any?>): MutableMap<HashTestObject?, Any?>
-    abstract fun makeBaseline(other: Map<HashTestObject?,Any?>): MutableMap<HashTestObject?, Any?>
+    abstract fun makeMap(): MutableMap<TestKey?, Any?>
+    abstract fun makeBaseline(): MutableMap<TestKey?, Any?>
+    abstract fun makeMap(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?>
+    abstract fun makeBaseline(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?>
 
     open fun assertOrderedIteration(expected: Iterator<*>, actual: Iterator<*>) { }
 
@@ -40,12 +41,12 @@ abstract class MapTest {
         assertOrderedIteration(expectedValues.iterator(), actualValues.iterator())
     }
 
-    fun <TResult> assertEqualMutation(baseline: MutableMap<HashTestObject?, Any?>, map: MutableMap<HashTestObject?,Any?>, action: MutableMap<HashTestObject?,Any?>.() -> TResult) {
+    fun <TResult> assertEqualMutation(baseline: MutableMap<TestKey?, Any?>, map: MutableMap<TestKey?,Any?>, action: MutableMap<TestKey?,Any?>.() -> TResult) {
         assertEqualResult(baseline, map, action)
         assertVeryEqual(baseline, map)
     }
 
-    fun <TResult> assertEqualResult(baseline: MutableMap<HashTestObject?, Any?>, map: MutableMap<HashTestObject?,Any?>, action: MutableMap<HashTestObject?,Any?>.() -> TResult) {
+    fun <TResult> assertEqualResult(baseline: MutableMap<TestKey?, Any?>, map: MutableMap<TestKey?,Any?>, action: MutableMap<TestKey?,Any?>.() -> TResult) {
         assertEquals(baseline.action(), map.action())
     }
 
@@ -61,7 +62,7 @@ abstract class MapTest {
         val b = makeBaseline()
         val m = makeMap()
 
-        val o1 = HashTestObject(5)
+        val o1 = TestKey(5)
         val v1 = Object()
         assertEqualMutation(b, m) { put(o1, v1) }
         assertEqualResult(b, m) { get(o1) }
@@ -70,7 +71,7 @@ abstract class MapTest {
         assertEqualMutation(b, m) { put(o1, v2) }
         assertEqualResult(b, m) { get(o1) }
 
-        val o2 = HashTestObject(3)
+        val o2 = TestKey(3)
         val v3 = Object()
         assertEqualMutation(b, m) { put(o2, v3) }
         assertEqualResult(b, m) { get(o2) }
@@ -80,7 +81,7 @@ abstract class MapTest {
         assertEqualMutation(b, m) { put(o1, v4) }
         assertEqualMutation(b, m) { put(o2, v5) }
 
-        val o3 = HashTestObject(4)
+        val o3 = TestKey(4)
         val v6 = Object()
         assertEqualMutation(b, m) { put(o3, v6) }
         assertEqualMutation(b, m) { put(o2, v6) }
@@ -91,7 +92,7 @@ abstract class MapTest {
         val b = makeBaseline()
         val m = makeMap()
 
-        val objs = Array<HashTestObject>(5) { HashTestObject(it, code = 0) }
+        val objs = Array<TestKey>(5) { TestKey(it, code = 0) }
         val vals = Array<Any>(5) { Object() }
 
         for (i in objs.indices) {
@@ -127,7 +128,7 @@ abstract class MapTest {
         val rand = Random(1234)
 
         for (i in 1..65550) {
-            val elem = HashTestObject(rand.nextInt())
+            val elem = TestKey(rand.nextInt())
             when (i) {
                 1, 255, 256, 257, 65535, 65536, 65537 -> {
                     assertEqualMutation(b, m) { put(elem, elem) }
@@ -145,7 +146,7 @@ abstract class MapTest {
         val b = makeBaseline()
         val m = makeMap()
 
-        val obj = HashTestObject(1)
+        val obj = TestKey(1)
         val notThere = Object()
         assertEqualResult(b, m) { getOrDefault(obj, notThere) }
         assertEqualResult(b, m) { get(obj) }
@@ -177,7 +178,7 @@ abstract class MapTest {
 
     @Test
     fun copyConstructorEmpty() {
-        val empty = mapOf<HashTestObject?, Any?>()
+        val empty = mapOf<TestKey?, Any?>()
         val b = makeBaseline(empty)
         val m = makeMap(empty)
         assertVeryEqual(b, m)
@@ -186,9 +187,9 @@ abstract class MapTest {
 
     @Test
     fun copyConstructorNonEmpty() {
-        val other = mutableMapOf<HashTestObject?, Any?>()
+        val other = mutableMapOf<TestKey?, Any?>()
         val rand = Random(1234)
-        val elems = Array<HashTestObject>(10000) { HashTestObject(rand.nextInt()) }
+        val elems = Array<TestKey>(10000) { TestKey(rand.nextInt()) }
         for (elem in elems) {
             other[elem] = Object()
         }
@@ -204,7 +205,7 @@ abstract class MapTest {
         val m = makeMap()
 
         for (i in 1..3) {
-            val key = HashTestObject(i)
+            val key = TestKey(i)
             assertEqualMutation(b, m) { put(key, null) }
         }
 
@@ -268,9 +269,9 @@ abstract class MapTest {
         assertIdenticalJson(bs, ms)
 
         @Suppress("UNCHECKED_CAST")
-        val db = Json.decodeFromString(getBaseDeserializer()!!, bs) as Map<HashTestObject?, Any?>
+        val db = Json.decodeFromString(getBaseDeserializer()!!, bs) as Map<TestKey?, Any?>
         @Suppress("UNCHECKED_CAST")
-        val dm = Json.decodeFromString(getDeserializer()!!, ms) as Map<HashTestObject?, Any?>
+        val dm = Json.decodeFromString(getDeserializer()!!, ms) as Map<TestKey?, Any?>
 
         assertVeryEqual(db, dm)
     }

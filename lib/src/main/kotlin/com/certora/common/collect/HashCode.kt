@@ -22,6 +22,9 @@ import kotlin.reflect.KClass
  */
 public inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode): Int = action(HashCode(initial)).code
 
+/** 
+    See [hash].
+ */
 public @JvmInline value class HashCode(@PublishedApi internal val code: Int) {
     @PublishedApi
     internal inline fun add(obj: Any?): HashCode = HashCode(31 * this.code + obj.hashCode())
@@ -34,7 +37,7 @@ public @JvmInline value class HashCode(@PublishedApi internal val code: Int) {
 
 
 /**
-    Helper to generate a stable hash code for a Kotlin "object."  For example:
+    Helper to generate a stable hash code for a Kotlin object.  For example:
 
         ```
         object Foo : HashStableHash {

@@ -10,13 +10,14 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.DeserializationStrategy
 
-abstract class SetTest {
+/** Tests for [TreapSet]. */
+abstract class TreapSetTest {
 
     open val nullKeysAllowed: Boolean get() = true
-    abstract fun makeSet(): MutableSet<HashTestObject?>
-    abstract fun makeBaseline(): MutableSet<HashTestObject?>
-    abstract fun makeSet(other: Collection<HashTestObject?>): MutableSet<HashTestObject?>
-    abstract fun makeBaseline(other: Collection<HashTestObject?>): MutableSet<HashTestObject?>
+    abstract fun makeSet(): MutableSet<TestKey?>
+    abstract fun makeBaseline(): MutableSet<TestKey?>
+    abstract fun makeSet(other: Collection<TestKey?>): MutableSet<TestKey?>
+    abstract fun makeBaseline(other: Collection<TestKey?>): MutableSet<TestKey?>
 
     open fun assertOrderedIteration(expected: Iterator<*>, actual: Iterator<*>) {}
 
@@ -30,18 +31,18 @@ abstract class SetTest {
     }
 
     fun <TResult> assertEqualMutation(
-            baseline: MutableSet<HashTestObject?>,
-            set: MutableSet<HashTestObject?>,
-            action: MutableSet<HashTestObject?>.() -> TResult
+            baseline: MutableSet<TestKey?>,
+            set: MutableSet<TestKey?>,
+            action: MutableSet<TestKey?>.() -> TResult
     ) {
         assertEqualResult(baseline, set, action)
         assertVeryEqual(baseline, set)
     }
 
     fun <TResult> assertEqualResult(
-            baseline: MutableSet<HashTestObject?>,
-            set: MutableSet<HashTestObject?>,
-            action: MutableSet<HashTestObject?>.() -> TResult
+            baseline: MutableSet<TestKey?>,
+            set: MutableSet<TestKey?>,
+            action: MutableSet<TestKey?>.() -> TResult
     ) {
         assertEquals(baseline.action(), set.action())
     }
@@ -58,7 +59,7 @@ abstract class SetTest {
         val b = makeBaseline()
         val s = makeSet()
 
-        val o1 = HashTestObject(5)
+        val o1 = TestKey(5)
         assertEqualResult(b, s) { contains(o1) }
         assertEqualMutation(b, s) { add(o1) }
         assertEqualResult(b, s) { contains(o1) }
@@ -66,7 +67,7 @@ abstract class SetTest {
         assertEqualMutation(b, s) { add(o1) }
         assertEqualResult(b, s) { contains(o1) }
 
-        val o2 = HashTestObject(3)
+        val o2 = TestKey(3)
         assertEqualResult(b, s) { contains(o2) }
         assertEqualMutation(b, s) { add(o2) }
         assertEqualResult(b, s) { contains(o2) }
@@ -78,12 +79,12 @@ abstract class SetTest {
         assertEqualMutation(b, s) { add(o1) }
         assertEqualResult(b, s) { contains(o1) }
 
-        val o3 = HashTestObject(4)
+        val o3 = TestKey(4)
         assertEqualResult(b, s) { contains(o3) }
         assertEqualMutation(b, s) { add(o3) }
         assertEqualResult(b, s) { contains(o3) }
 
-        val o4 = HashTestObject(-908857765)
+        val o4 = TestKey(-908857765)
         assertEqualResult(b, s) { contains(o4) }
         assertEqualMutation(b, s) { add(o4) }
         assertEqualResult(b, s) { contains(o4) }
@@ -94,7 +95,7 @@ abstract class SetTest {
         val b = makeBaseline()
         val s = makeSet()
 
-        val objs = Array<HashTestObject>(5) { HashTestObject(it, code = 0) }
+        val objs = Array<TestKey>(5) { TestKey(it, code = 0) }
         for (o in objs) {
             assertEqualMutation(b, s) { add(o) }
             assertEqualResult(b, s) { contains(o) }
@@ -121,14 +122,14 @@ abstract class SetTest {
         }
     }
 
-    fun randomHashObjectMaybeNull(rand: Random): HashTestObject? {
+    fun randomHashObjectMaybeNull(rand: Random): TestKey? {
         val r = rand.nextInt()
         if (nullKeysAllowed) {
             if (r % 20 == 0) {
                 return null
             }
         }
-        return HashTestObject(r % 2000)
+        return TestKey(r % 2000)
     }
 
     @Test
@@ -158,7 +159,7 @@ abstract class SetTest {
             val b = makeBaseline()
             val s = makeSet()
 
-            assertEqualMutation(b, s) { add(HashTestObject(0)) }
+            assertEqualMutation(b, s) { add(TestKey(0)) }
             assertEqualResult(b, s) { contains(null) }
             assertEqualMutation(b, s) { add(null) }
             assertEqualMutation(b, s) { add(null) }
@@ -176,19 +177,19 @@ abstract class SetTest {
         val b = makeBaseline()
         val s = makeSet()
 
-        assertEqualMutation(b, s) { addAll((1..4).map { HashTestObject(it) }) }
-        assertEqualMutation(b, s) { retainAll((1..4).map { HashTestObject(it) }) }
+        assertEqualMutation(b, s) { addAll((1..4).map { TestKey(it) }) }
+        assertEqualMutation(b, s) { retainAll((1..4).map { TestKey(it) }) }
 
-        assertEqualMutation(b, s) { retainAll((3..6).map { HashTestObject(it) }) }
+        assertEqualMutation(b, s) { retainAll((3..6).map { TestKey(it) }) }
 
-        assertEqualMutation(b, s) { retainAll((5..100).map { HashTestObject(it) }) }
+        assertEqualMutation(b, s) { retainAll((5..100).map { TestKey(it) }) }
 
         assertTrue(s.isEmpty())
     }
 
     @Test
     fun copyConstructorEmptySet() {
-        val empty = setOf<HashTestObject?>()
+        val empty = setOf<TestKey?>()
         val b = makeBaseline(empty)
         val s = makeSet(empty)
         assertVeryEqual(b, s)
@@ -197,7 +198,7 @@ abstract class SetTest {
 
     @Test
     fun copyConstructorEmptyList() {
-        val empty = listOf<HashTestObject?>()
+        val empty = listOf<TestKey?>()
         val b = makeBaseline(empty)
         val s = makeSet(empty)
         assertVeryEqual(b, s)
@@ -206,7 +207,7 @@ abstract class SetTest {
     @Test
     fun copyConstructorNonEmptySet() {
         val rand = Random(1234)
-        val elems = Array<HashTestObject>(10000) { HashTestObject(rand.nextInt()) }
+        val elems = Array<TestKey>(10000) { TestKey(rand.nextInt()) }
         val list = elems.toList()
         val other = makeBaseline(list)
 
@@ -219,7 +220,7 @@ abstract class SetTest {
     @Test
     fun copyConstructorNonEmptyList() {
         val rand = Random(1234)
-        val elems = Array<HashTestObject>(10000) { HashTestObject(rand.nextInt()) }
+        val elems = Array<TestKey>(10000) { TestKey(rand.nextInt()) }
         val other = elems.toList()
 
         val b = makeBaseline(other)
@@ -238,13 +239,13 @@ abstract class SetTest {
             return
         }
         val b = makeBaseline()
-        b.add(HashTestObject(1))
-        b.add(HashTestObject(9897))
-        b.add(HashTestObject(3))
+        b.add(TestKey(1))
+        b.add(TestKey(9897))
+        b.add(TestKey(3))
         if (nullKeysAllowed) {
             b.add(null)
         }
-        b.add(HashTestObject(5))
+        b.add(TestKey(5))
 
         val s = makeSet(b)
 
@@ -254,14 +255,14 @@ abstract class SetTest {
         assertIdenticalJson(bs, ss)
 
         @Suppress("UNCHECKED_CAST")
-        val db = Json.decodeFromString(getBaseDeserializer()!!, bs) as Set<HashTestObject?>
+        val db = Json.decodeFromString(getBaseDeserializer()!!, bs) as Set<TestKey?>
         @Suppress("UNCHECKED_CAST")
-        val ds = Json.decodeFromString(getDeserializer()!!, ss) as Set<HashTestObject?>
+        val ds = Json.decodeFromString(getDeserializer()!!, ss) as Set<TestKey?>
 
         assertVeryEqual(db, ds)
     }
 
-    fun roundTripSerialize(set: MutableSet<HashTestObject?>): MutableSet<HashTestObject?> {
+    fun roundTripSerialize(set: MutableSet<TestKey?>): MutableSet<TestKey?> {
         val bos = ByteArrayOutputStream()
         val oos = ObjectOutputStream(bos)
         oos.writeObject(set)
@@ -272,19 +273,19 @@ abstract class SetTest {
         val ois = ObjectInputStream(bis)
 
         @Suppress("UNCHECKED_CAST")
-        return ois.readObject() as MutableSet<HashTestObject?>
+        return ois.readObject() as MutableSet<TestKey?>
     }
 
     @Test
     fun javaSerialize() {
         val b = makeBaseline()
-        b.add(HashTestObject(1))
-        b.add(HashTestObject(9897))
-        b.add(HashTestObject(3))
+        b.add(TestKey(1))
+        b.add(TestKey(9897))
+        b.add(TestKey(3))
         if (nullKeysAllowed) {
             b.add(null)
         }
-        b.add(HashTestObject(5))
+        b.add(TestKey(5))
 
         val s = makeSet(b)
 

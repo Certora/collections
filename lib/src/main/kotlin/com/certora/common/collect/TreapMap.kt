@@ -2,6 +2,9 @@ package com.certora.common.collect
 
 import kotlinx.collections.immutable.PersistentMap
 
+/**
+    A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
+ */
 public interface TreapMap<@Treapable K, V> : PersistentMap<K, V> {
     override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
     override fun remove(key: K): TreapMap<K, V>
@@ -9,6 +12,9 @@ public interface TreapMap<@Treapable K, V> : PersistentMap<K, V> {
     override fun putAll(m: Map<out K, @UnsafeVariance V>): TreapMap<K, V>
     override fun clear(): TreapMap<K, V>
 
+    /**
+        A [PersistentMap.Builder] that produces a [TreapMap].    
+    */
     public interface Builder<@Treapable K, V>: PersistentMap.Builder<K, V> {
         override fun build(): TreapMap<K, V>
     }
@@ -39,7 +45,7 @@ public interface TreapMap<@Treapable K, V> : PersistentMap<K, V> {
         key: K, 
         value: U?, 
         merger: (V?, U?) -> V?
-    ) : TreapMap<K, V>
+    ): TreapMap<K, V>
 
     public fun zip(
         m: Map<out K, V>

@@ -14,7 +14,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 ) : TreapMap<K, V>, Treap<K, S>(left, right) {
 
     /**
-        Derived classes override to create an apropriate node containing the given entry
+        Derived classes override to create an apropriate node containing the given entry.
      */
     abstract fun new(key: K, value: V): S
 
@@ -45,7 +45,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     }
 
     /**
-        Gets a sequence of map entries just in this Treap node
+        Gets a sequence of map entries just in this Treap node.
      */
     abstract fun shallowEntrySequence(): Sequence<Map.Entry<K, V>>
 
@@ -60,7 +60,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     abstract fun shallowContainsKey(key: K): Boolean
 
     /**
-        Gets the value of the entry with the given key, *in this node only*
+        Gets the value of the entry with the given key, *in this node only*.
      */
     abstract fun shallowGetValue(key: K): V?
 
@@ -68,7 +68,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     abstract fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): S?
 
     /**
-        Applies a merge function to all entries in this Treap node
+        Applies a merge function to all entries in this Treap node.
      */
     abstract fun getShallowMerger(merger: (K, V?, V?) -> V?): (S?, S?) -> S?
 
@@ -324,7 +324,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 }
 
 /**
-    Removes a map entry (`entryKey`, `entryValue`) with key `key`
+    Removes a map entry (`entryKey`, `entryValue`) with key `key`.
  */
 internal fun <@Treapable K, V, S : AbstractTreapMap<K, V, S>> S?.removeEntry(key: TreapKey<K>, entryKey: K, entryValue: V): S? = when {
     this == null -> null

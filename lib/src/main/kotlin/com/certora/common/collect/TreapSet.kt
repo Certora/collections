@@ -2,6 +2,9 @@ package com.certora.common.collect
 
 import kotlinx.collections.immutable.PersistentSet
 
+/**
+    A [PersistentSet] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
+ */
 public interface TreapSet<@Treapable out E> : PersistentSet<E> {
     override fun add(element: @UnsafeVariance E): TreapSet<E>
     override fun addAll(elements: Collection<@UnsafeVariance E>): TreapSet<E>
@@ -11,6 +14,9 @@ public interface TreapSet<@Treapable out E> : PersistentSet<E> {
     override fun retainAll(elements: Collection<@UnsafeVariance E>): TreapSet<E>
     override fun clear(): TreapSet<E>
 
+    /**
+        A [PersistentSet.Builder] that produces a [TreapSet].    
+    */
     public interface Builder<@Treapable E> : PersistentSet.Builder<E> {
         override fun build(): TreapSet<E>
     }

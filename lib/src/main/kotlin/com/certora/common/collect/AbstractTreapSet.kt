@@ -9,7 +9,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     right: S?
 ) : TreapSet<E>, Treap<E, S>(left, right) {
     /**
-        Derived classes override to create an apropriate node containing the given element
+        Derived classes override to create an apropriate node containing the given element.
      */
     abstract fun new(element: E): S
 
@@ -45,12 +45,12 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     abstract fun shallowContains(element: E): Boolean
 
     /**
-        Get an element from this node that is equal to the given object
+        Get an element from this node that is equal to the given object.
      */
     abstract fun shallowFindEqual(element: E): E?
 
     /**
-        Apply the action to each element in this node
+        Apply the action to each element in this node.
      */
     abstract fun shallowForEach(action: (element: E) -> Unit): Unit
 

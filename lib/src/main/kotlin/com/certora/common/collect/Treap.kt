@@ -199,7 +199,7 @@ private fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.add(that: S, thatKey: T
 }
 
 /**
-    Removes `element` with key `key`
+    Removes `element` with key `key`.
  */
 internal fun <@Treapable T, S : Treap<T, S>> S?.remove(key: TreapKey<T>, element: T): S? = when {
     this == null -> null
