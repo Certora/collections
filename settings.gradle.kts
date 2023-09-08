@@ -14,6 +14,6 @@ pluginManagement {
 
 rootProject.name = "Collections"
 
-include("Lib", "DetektRules")
-project(":Lib").projectDir = file("lib")
-project(":DetektRules").projectDir = file("detekt")
+include("common-collections", "common-collections-detekt")
+project(":common-collections").projectDir = file("common-collections")
+project(":common-collections-detekt").projectDir = file("common-collections-detekt")
