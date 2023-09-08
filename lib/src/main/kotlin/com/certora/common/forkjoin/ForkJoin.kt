@@ -28,8 +28,8 @@ import java.util.concurrent.*
     }
     ```
 
-    See [datasturctures.treap.AbstractTreapMap.parallelUpdateValues] for a more realistic example, which includes using
-    [ThresholdForker] to improve the efficiency of the parallel case.
+    See [com.certora.common.collect.AbstractTreapMap.parallelUpdateValues] for a more realistic example, which includes
+    using [ThresholdForker] to improve the efficiency of the parallel case.
  */
 public sealed class Forker private constructor(
     @PublishedApi internal val forking: Boolean
