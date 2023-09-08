@@ -132,15 +132,15 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         selfNotEmpty.find(element.toTreapKey())?.shallowFindEqual(element)
 
     @Suppress("UNCHECKED_CAST")
-    fun single(): E = selfNotEmpty?.getSingleElement() ?: when {
+    override fun single(): E = selfNotEmpty?.getSingleElement() ?: when {
         isEmpty() -> throw NoSuchElementException("Set is empty")
         size > 1 -> throw IllegalArgumentException("Set has more than one element")
         else -> null as E // The single element must have been null!
     }
 
-    fun singleOrNull(): E? = selfNotEmpty?.getSingleElement()
+    override fun singleOrNull(): E? = selfNotEmpty?.getSingleElement()
 
-    fun forEachElement(action: (element: E) -> Unit): Unit {
+    override fun forEachElement(action: (element: E) -> Unit): Unit {
         if (selfNotEmpty != null) { 
             shallowForEach(action) 
             left?.forEachElement(action)
@@ -148,7 +148,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         }
     }
 
-    fun getSingleElement(): E? = when {
+    internal fun getSingleElement(): E? = when {
         left === null && right === null -> shallowGetSingleElement()
         else -> null
     }

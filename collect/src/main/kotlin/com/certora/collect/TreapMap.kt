@@ -5,7 +5,7 @@ import kotlinx.collections.immutable.PersistentMap
 /**
     A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
  */
-public interface TreapMap<@Treapable K, V> : PersistentMap<K, V> {
+public interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
     override fun remove(key: K): TreapMap<K, V>
     override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
@@ -15,7 +15,7 @@ public interface TreapMap<@Treapable K, V> : PersistentMap<K, V> {
     /**
         A [PersistentMap.Builder] that produces a [TreapMap].    
     */
-    public interface Builder<@Treapable K, V>: PersistentMap.Builder<K, V> {
+    public interface Builder<K, V>: PersistentMap.Builder<K, V> {
         override fun build(): TreapMap<K, V>
     }
 
@@ -71,64 +71,64 @@ public fun <@Treapable K, V> Map<K, V>.toHashTreapMap(): TreapMap<K, V> =
 
 
 @Suppress("UNCHECKED_CAST")
-public inline fun <@Treapable K, V> TreapMap<out K, V>.mutate(mutator: (MutableMap<K, V>) -> Unit): TreapMap<K, V> =
+public inline fun <K, V> TreapMap<out K, V>.mutate(mutator: (MutableMap<K, V>) -> Unit): TreapMap<K, V> =
     (this as TreapMap<K, V>).builder().apply(mutator).build()
 
 @Suppress("UNCHECKED_CAST")
-public operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pair: Pair<K, V>): TreapMap<K, V> =
+public operator fun <K, V> TreapMap<out K, V>.plus(pair: Pair<K, V>): TreapMap<K, V> =
     (this as TreapMap<K, V>).put(pair.first, pair.second)
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pairs
+public operator fun <K, V> TreapMap<out K, V>.plus(pairs
 : Iterable<Pair<K, V>>): TreapMap<K, V> = putAll(pairs)
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pairs: Array<out Pair<K, V>>): TreapMap<K, V> = putAll(pairs)
+public operator fun <K, V> TreapMap<out K, V>.plus(pairs: Array<out Pair<K, V>>): TreapMap<K, V> = putAll(pairs)
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.plus(pairs: Sequence<Pair<K, V>>): TreapMap<K, V> = putAll(pairs)
+public operator fun <K, V> TreapMap<out K, V>.plus(pairs: Sequence<Pair<K, V>>): TreapMap<K, V> = putAll(pairs)
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.plus(map: Map<out K, V>): TreapMap<K, V> = putAll(map)
+public operator fun <K, V> TreapMap<out K, V>.plus(map: Map<out K, V>): TreapMap<K, V> = putAll(map)
 
 
 @Suppress("UNCHECKED_CAST")
-public fun <@Treapable K, V> TreapMap<out K, V>.putAll(map: Map<out K, V>): TreapMap<K, V> =
+public fun <K, V> TreapMap<out K, V>.putAll(map: Map<out K, V>): TreapMap<K, V> =
     (this as TreapMap<K, V>).putAll(map)
 
-public fun <@Treapable K, V> TreapMap<out K, V>.putAll(pairs: Iterable<Pair<K, V>>): TreapMap<K, V> =
+public fun <K, V> TreapMap<out K, V>.putAll(pairs: Iterable<Pair<K, V>>): TreapMap<K, V> =
     mutate { it.putAll(pairs) }
 
-public fun <@Treapable K, V> TreapMap<out K, V>.putAll(pairs: Array<out Pair<K, V>>): TreapMap<K, V> =
+public fun <K, V> TreapMap<out K, V>.putAll(pairs: Array<out Pair<K, V>>): TreapMap<K, V> =
     mutate { it.putAll(pairs) }
 
-public fun <@Treapable K, V> TreapMap<out K, V>.putAll(pairs: Sequence<Pair<K, V>>): TreapMap<K, V> =
+public fun <K, V> TreapMap<out K, V>.putAll(pairs: Sequence<Pair<K, V>>): TreapMap<K, V> =
     mutate { it.putAll(pairs) }
 
 
 @Suppress("UNCHECKED_CAST")
-public operator fun <@Treapable K, V> TreapMap<out K, V>.minus(key: K): TreapMap<K, V> =
+public operator fun <K, V> TreapMap<out K, V>.minus(key: K): TreapMap<K, V> =
     (this as TreapMap<K, V>).remove(key)
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.minus(keys: Iterable<K>): TreapMap<K, V> =
+public operator fun <K, V> TreapMap<out K, V>.minus(keys: Iterable<K>): TreapMap<K, V> =
     mutate { it.minusAssign(keys) }
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.minus(keys: Array<out K>): TreapMap<K, V> =
+public operator fun <K, V> TreapMap<out K, V>.minus(keys: Array<out K>): TreapMap<K, V> =
     mutate { it.minusAssign(keys) }
 
-public operator fun <@Treapable K, V> TreapMap<out K, V>.minus(keys: Sequence<K>): TreapMap<K, V> =
+public operator fun <K, V> TreapMap<out K, V>.minus(keys: Sequence<K>): TreapMap<K, V> =
     mutate { it.minusAssign(keys) }
 
-public fun <@Treapable K, V : Any> TreapMap<K, V>.retainAll(predicate: (Map.Entry<K, V>) -> Boolean): TreapMap<K, V> =
+public fun <K, V : Any> TreapMap<K, V>.retainAll(predicate: (Map.Entry<K, V>) -> Boolean): TreapMap<K, V> =
     this.updateValues { k, v -> if (predicate(MapEntry(k, v))) { v } else { null } }
 
-public fun <@Treapable K, V : Any> TreapMap<K, V>.retainAllKeys(predicate: (K) -> Boolean): TreapMap<K, V> =
+public fun <K, V : Any> TreapMap<K, V>.retainAllKeys(predicate: (K) -> Boolean): TreapMap<K, V> =
     this.updateValues { k, v -> if (predicate(k)) { v } else { null } }
 
-public fun <@Treapable K, V : Any> TreapMap<K, V>.retainAllValues(predicate: (V) -> Boolean): TreapMap<K, V> =
+public fun <K, V : Any> TreapMap<K, V>.retainAllValues(predicate: (V) -> Boolean): TreapMap<K, V> =
     this.updateValues { _, v -> if (predicate(v)) { v } else { null } }
 
-public fun <@Treapable K, V : Any> TreapMap<K, V>.removeAll(predicate: (Map.Entry<K, V>) -> Boolean): TreapMap<K, V> =
+public fun <K, V : Any> TreapMap<K, V>.removeAll(predicate: (Map.Entry<K, V>) -> Boolean): TreapMap<K, V> =
     this.retainAll { !predicate(it) }
 
-public fun <@Treapable K, V : Any> TreapMap<K, V>.removeAllKeys(predicate: (K) -> Boolean): TreapMap<K, V> =
+public fun <K, V : Any> TreapMap<K, V>.removeAllKeys(predicate: (K) -> Boolean): TreapMap<K, V> =
     this.retainAllKeys { !predicate(it) }
 
-public fun <@Treapable K, V : Any> TreapMap<K, V>.removeAllValues(predicate: (V) -> Boolean): TreapMap<K, V> =
+public fun <K, V : Any> TreapMap<K, V>.removeAllValues(predicate: (V) -> Boolean): TreapMap<K, V> =
     this.retainAllValues { !predicate(it) }

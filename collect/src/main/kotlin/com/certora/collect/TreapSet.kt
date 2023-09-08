@@ -5,7 +5,7 @@ import kotlinx.collections.immutable.PersistentSet
 /**
     A [PersistentSet] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
  */
-public interface TreapSet<@Treapable out E> : PersistentSet<E> {
+public interface TreapSet<out E> : PersistentSet<E> {
     override fun add(element: @UnsafeVariance E): TreapSet<E>
     override fun addAll(elements: Collection<@UnsafeVariance E>): TreapSet<E>
     override fun remove(element: @UnsafeVariance E): TreapSet<E>
@@ -17,13 +17,16 @@ public interface TreapSet<@Treapable out E> : PersistentSet<E> {
     /**
         A [PersistentSet.Builder] that produces a [TreapSet].    
     */
-    public interface Builder<@Treapable E> : PersistentSet.Builder<E> {
+    public interface Builder<E> : PersistentSet.Builder<E> {
         override fun build(): TreapSet<E>
     }
 
     override fun builder(): Builder<@UnsafeVariance E>
 
+    public fun single(): E
+    public fun singleOrNull(): E?
     public fun findEqual(element: @UnsafeVariance E): E?
+    public fun forEachElement(action: (element: E) -> Unit): Unit
 }
 
 
@@ -52,29 +55,29 @@ public fun CharSequence.toTreapSet(): TreapSet<Char> = treapSetOf<Char>().mutate
 public fun CharSequence.toHashTreapSet(): TreapSet<Char> = hashTreapSetOf<Char>().mutate { this.toCollection(it) }
 
 
-public inline fun <@Treapable T> TreapSet<T>.mutate(mutator: (MutableSet<T>) -> Unit): TreapSet<T> = builder().apply(mutator).build()
+public inline fun <T> TreapSet<T>.mutate(mutator: (MutableSet<T>) -> Unit): TreapSet<T> = builder().apply(mutator).build()
 
-public operator fun <@Treapable E> TreapSet<E>.plus(element: E): TreapSet<E> = add(element)
+public operator fun <E> TreapSet<E>.plus(element: E): TreapSet<E> = add(element)
 
-public operator fun <@Treapable E> TreapSet<E>.minus(element: E): TreapSet<E> = remove(element)
+public operator fun <E> TreapSet<E>.minus(element: E): TreapSet<E> = remove(element)
 
-public operator fun <@Treapable E> TreapSet<E>.plus(elements: Iterable<E>): TreapSet<E> = 
+public operator fun <E> TreapSet<E>.plus(elements: Iterable<E>): TreapSet<E> = 
     if (elements is Collection) { addAll(elements) } else { mutate { it.addAll(elements) }}
 
-public operator fun <@Treapable E> TreapSet<E>.plus(elements: Array<out E>): TreapSet<E> =
+public operator fun <E> TreapSet<E>.plus(elements: Array<out E>): TreapSet<E> =
     mutate { it.addAll(elements) }
 
-public operator fun <@Treapable E> TreapSet<E>.plus(elements: Sequence<E>): TreapSet<E> =
+public operator fun <E> TreapSet<E>.plus(elements: Sequence<E>): TreapSet<E> =
     mutate { it.addAll(elements) }
 
-public operator fun <@Treapable E> TreapSet<E>.minus(elements: Iterable<E>): TreapSet<E> =
+public operator fun <E> TreapSet<E>.minus(elements: Iterable<E>): TreapSet<E> =
     if (elements is Collection) { removeAll(elements) } else { mutate { it.removeAll(elements) }}
 
-public operator fun <@Treapable E> TreapSet<E>.minus(elements: Array<out E>): TreapSet<E> =
+public operator fun <E> TreapSet<E>.minus(elements: Array<out E>): TreapSet<E> =
     mutate { it.removeAll(elements) }
 
-public operator fun <@Treapable E> TreapSet<E>.minus(elements: Sequence<E>): TreapSet<E> =
+public operator fun <E> TreapSet<E>.minus(elements: Sequence<E>): TreapSet<E> =
     mutate { it.removeAll(elements) }
 
-public infix fun <@Treapable E> TreapSet<E>.intersect(elements: Iterable<E>): TreapSet<E> =
+public infix fun <E> TreapSet<E>.intersect(elements: Iterable<E>): TreapSet<E> =
     if (elements is Collection) { retainAll(elements) } else { mutate { it.retainAll(elements) } }
