@@ -1,0 +1,11 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "files.exclude": {
+        "**/bin/": true
+    },
+    "java.compile.nullAnalysis.mode": "automatic",
+    "githubPullRequests.ignoredPullRequestBranches": [
+        "main"
+    ],
+    "sarif-viewer.connectToGithubCodeScanning": "off"
+}
