@@ -14,6 +14,4 @@ pluginManagement {
 
 rootProject.name = "Collections"
 
-include("common-collections", "common-collections-detekt")
-project(":common-collections").projectDir = file("common-collections")
-project(":common-collections-detekt").projectDir = file("common-collections-detekt")
+include("collect", "detekt-treapability")
