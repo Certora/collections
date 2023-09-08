@@ -17,8 +17,7 @@ import org.jetbrains.kotlin.types.*
 import org.jetbrains.kotlin.types.typeUtil.*
 
 /**
-    Enforces hash code stability for types marked with 'utils.StableHashCode' and 'utils.Treapable'.  See those
-    definitions for the rules.
+    Enforces hash code stability for types marked [Treapable].  See [Treapable] for the rules.
  */
 @RequiresTypeResolution
 class Treapability(config: Config) : Rule(config) {
