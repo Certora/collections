@@ -2,10 +2,6 @@ import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val kotlinVersion: String by project
-val javaVersion: String by project
-val detektVersion: String by project
-
 plugins {
 	kotlin("jvm")
 	kotlin("plugin.serialization")
@@ -13,16 +9,13 @@ plugins {
     id("maven-publish")
 }
 
-group = property("group")
-version = property("version")
-
 repositories {
     mavenCentral()
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(javaVersion))
+        languageVersion.set(JavaLanguageVersion.of(property("javaVersion").toString()))
     }
 }
 

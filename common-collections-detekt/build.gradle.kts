@@ -2,11 +2,6 @@ import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-val kotlinVersion: String by project
-val javaVersion: String by project
-val detektVersion: String by project
-val junitVersion: String by project
-
 plugins {
 	kotlin("jvm")
 	kotlin("plugin.serialization")
@@ -18,7 +13,7 @@ repositories {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(javaVersion))
+        languageVersion.set(JavaLanguageVersion.of(property("javaVersion").toString()))
     }
 }
 
@@ -34,6 +29,8 @@ tasks.withType<Test> {
 }
 
 dependencies {
+    val detektVersion: String by project
+    val junitVersion: String by project
     compileOnly("io.gitlab.arturbosch.detekt:detekt-api:$detektVersion")
     compileOnly("io.gitlab.arturbosch.detekt:detekt-core:$detektVersion")
     testImplementation("io.gitlab.arturbosch.detekt:detekt-test:$detektVersion")
