@@ -16,7 +16,12 @@ package com.certora.common.collect
     A type is definitely not serializable if it does not implement Serializable *and* it is final (or sealed, and all
     subclasses are definitely not serializable).
 
-    A class, interface, or object annotated with [Treap]
+    A class, interface, or object annotated with [Treapable] must have a stable hash code (and all subclasses must
+    also).  The [Treapability] rule will report a violation if a class, interface, or object annotated with [Treapable]
+    does not appear to have a stable hash code.  
+
+    The [Treapability] rule will also report a violation if an argument to a [Treapable] type parameter is potentially
+    serializable and does not have a stable hash code.  Some notes on hash code stability:
 
     - The default [Object.hashCode] implementation does not produce a stable hash code; it effecitvely assigns a random
       number to each class instance.  A "naked" class that does not override hashCode will not have a stable hash code.
@@ -38,8 +43,7 @@ package com.certora.common.collect
       and do not allow this to be overridden.  A stable hash code can be obtained from the *name* of the enum instance.
       (We could also use the ordinal, but this has an unnecessary dependence on ordering.)
 
-    - Our analysis considers some known JCL types to have stable hash codes (such as BigIngeter).
-
+    - Our analysis considers some known JVM types to have stable hash codes (such as BigIngeter).
  */
 @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE, AnnotationTarget.CLASS)
 public annotation class Treapable
