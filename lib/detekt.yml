@@ -739,5 +739,5 @@ style:
     excludeImports:
       - 'java.util.*'
 certora-collections:
-  HashCodeStability:
+  Treapability:
     active: true

@@ -66,6 +66,8 @@ package com.certora.common.collect
 
     - We take advantage of the total ordering we impose on Treap priorities, to avoid additional key comparisons. We
       never need to check if two keys are equal, if their nodes' priorities have already been compared.
+
+    - Treaps impose special requirements on keys if they are serialized.  See [Treapable].
 */
 internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     @JvmField val left: S?,

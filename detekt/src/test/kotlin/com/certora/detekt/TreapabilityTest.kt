@@ -7,14 +7,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
 @KotlinCoreEnvironmentTest
-class HashCodeStabilityTest(val env: KotlinCoreEnvironment) {
+class TreapabilityTest(val env: KotlinCoreEnvironment) {
     val library = """
         package com.certora.common.collect
         import java.io.Serializable
 
+        @Treapable
         interface StableHashCode
 
-        @Target(AnnotationTarget.TYPE_PARAMETER)
+        @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.CLASS)
         annotation class Treapable
 
         inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode) = action(HashCode(initial)).code
@@ -41,7 +42,7 @@ class HashCodeStabilityTest(val env: KotlinCoreEnvironment) {
     """
 
     fun failureCount(code: String) =
-        HashCodeStability(TestConfig()).lintWithContext(env, code, library).size
+        Treapability(TestConfig()).lintWithContext(env, code, library).size
 
     @Test
     fun dataClassWithPrimitiveTypePasses() {
@@ -68,6 +69,16 @@ class HashCodeStabilityTest(val env: KotlinCoreEnvironment) {
         val code = """
             import com.certora.common.collect.*
             class A(val n: Int) : StableHashCode
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    fun classWithoutHashCodeFailsDirectlyAnnotated() {
+        val code = """
+            import com.certora.common.collect.*
+            @Treapable
+            class A(val n: Int)
         """
         assertEquals(1, failureCount(code))
     }

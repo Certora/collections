@@ -10,6 +10,6 @@ class CollectionsRuleSetProvider : RuleSetProvider {
 
     override fun instance(config: Config): RuleSet = RuleSet(
         ruleSetId,
-        listOf(HashCodeStability(config))
+        listOf(Treapability(config))
     )
 }

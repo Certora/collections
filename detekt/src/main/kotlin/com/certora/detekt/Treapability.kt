@@ -1,6 +1,5 @@
 package com.certora.detekt
 
-import com.certora.detekt.utils.*
 import io.gitlab.arturbosch.detekt.api.*
 import io.gitlab.arturbosch.detekt.api.internal.RequiresTypeResolution
 import org.jetbrains.kotlin.*
@@ -22,16 +21,17 @@ import org.jetbrains.kotlin.types.typeUtil.*
     definitions for the rules.
  */
 @RequiresTypeResolution
-class HashCodeStability(config: Config) : Rule(config) {
+class Treapability(config: Config) : Rule(config) {
     override val issue = Issue(
         javaClass.simpleName,
         Severity.Defect,
-        "Enforces hash code stability for $stableHashCodeName and @$stableHashCodeAnnotationName.",
+        "Enforces the rules of @$treapableAnnotationName.",
         Debt.TWENTY_MINS
     )
 
     /**
-        If a concrete class implements 'StableHashCode', verify that it does have a stable 'hashCode' implementation.
+        If a concrete class implements a "treapable" interface, verify that it does have a stable 'hashCode' 
+        implementation.
      */
     override fun visitClassOrObject(clazz: KtClassOrObject) {
         super.visitClassOrObject(clazz)
@@ -39,14 +39,14 @@ class HashCodeStability(config: Config) : Rule(config) {
         val desc = bindingContext.getDescriptor(clazz) ?: return
         when {
             !desc.isConcreteClass -> return
-            !desc.implementsInterface(stableHashCodeName) -> return
+            !desc.isAnnotatedTreapable -> return
 
             // Enums are restricted to the default [Object.hashCode], which is not stable.
             desc.isEnum -> {
                 report(CodeSmell(
                     issue,
                     Entity.from(clazz),
-                    "An enum class cannot implement $stableHashCodeName, because enums do not have stable hash codes."
+                    "An enum class cannot be treapable, because enums do not have stable hash codes."
                 ))
             }
 
@@ -188,17 +188,23 @@ class HashCodeStability(config: Config) : Rule(config) {
         type.isEnum ->
             "Enum class '${type.displayName}' cannot have stable hash codes."
         type.isTypeParameter() ->
-            "'${type}' should have @$stableHashCodeAnnotationName."
+            "'${type}' should have @$treapableAnnotationName."
         !onlyIfSerializable || type.isJavaSerializableClass ->
-            "'${type.displayName}' should implement $stableHashCodeName."
+            "'${type.displayName}' should have @$treapableAnnotationName."
         else ->
-            "'${type.displayName}' should be sealed or final, or should implement $stableHashCodeName."
+            "'${type.displayName}' should be sealed or final, or should have @$treapableAnnotationName."
     }
 
     companion object {
-        private val stableHashCodeName = FqName("com.certora.common.collect.StableHashCode")
-        private val stableHashCodeAnnotationName = FqName("com.certora.common.collect.Treapable")
         private val hashCodePlusName = FqName("com.certora.common.collect.HashCode.plus")
+        val treapableAnnotationName = FqName("com.certora.common.collect.Treapable")
+
+        val Annotated.hasTreapableAnnotation: Boolean get() = 
+            annotations.firstOrNull { it.fqName == treapableAnnotationName } != null
+
+        val ClassDescriptor.isAnnotatedTreapable get() = 
+            getAllSuperClassifiers().any { it.hasTreapableAnnotation }
+
 
         // Known types with stable hash codes
         private val safeTypeNames = setOf(
@@ -240,7 +246,7 @@ class HashCodeStability(config: Config) : Rule(config) {
         )
 
         private val TypeParameterDescriptor.hasStableHashCodeAnnotation get() =
-            annotations.hasAnnotation(stableHashCodeAnnotationName)
+            annotations.hasAnnotation(treapableAnnotationName)
 
         /*
             Given a type, which might be generic, check if it has a stable hash code - and return the type that makes it
@@ -249,11 +255,11 @@ class HashCodeStability(config: Config) : Rule(config) {
         private fun findTypeWithUnstableHashCode(type: KotlinType): KotlinType? = when {
             type.isError -> null // Avoid false positives for unresolvable types
             type.isCapturedStarProjection -> null // *-projections are a pass-through - stability is verified elsewhere.
-            type.isAnnotatedTypeArgument(stableHashCodeAnnotationName) -> null
+            type.isAnnotatedTypeArgument(treapableAnnotationName) -> null
             else -> type.classDescriptor.let { desc ->
                 when {
                     desc == null -> type // this shouldn't happen; make sure it ends up in the output
-                    desc.implementsInterface(stableHashCodeName) -> null
+                    desc.isAnnotatedTreapable -> null
                     desc.fqNameSafe in safeTypeNames -> null
                     desc.fqNameSafe in safeCollectionTypeNames ->
                         // Are all of the type arguments safe?

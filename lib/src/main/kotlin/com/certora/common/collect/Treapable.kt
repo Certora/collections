@@ -1,24 +1,45 @@
 package com.certora.common.collect
 
 /**
-    Marks a generic type parameter as needing stable hash codes *if* the type might be involved in serialization. NOTE:
-    It exists specifically for generic collection types (see AbstractTreapSet example below)!
+    When applied to a class or interface, indicates that the class or interface has a stable hash code.  When applied to
+    a generic type parameter, indicates that arguments to the type parameter must have stable hash codes if they might
+    be serialized.
 
-    Such a parameter will accept an argument that either a) is definitely not serializable, or b) has a stable hash
-    code.
+    The internal structure of Treap-based collections is based on the hash codes of the keys stored in the collection.
+    If a Treap is serialized and deserialized, the hash codes of the keys must be the same as they were before
+    serialization, or the Treap will be corrupted.  To prevent this, we use [Treapable] annotations to convey hash code
+    stability requirements, and optionally enforce these requirements with the [Treapability] Detekt rule. 
 
-    A type is definitely not serializable if it doesn't implement Serializable *and* it is final or sealed - and all
-    subclasses are definitely not serializable.
+    A type parameter annotated with [Treapable] requires that all arguments to the type parameter have stable hash code
+    *if* they are also possibly serializable.  
 
-    This allows collection types to rely on stable hash codes for serialization, but otherwise not require them.  E.g.:
+    A type is definitely not serializable if it does not implement Serializable *and* it is final (or sealed, and all
+    subclasses are definitely not serializable).
 
-        ```
-        class AbstractTreapSet<@Treapable T>(): Serializable
-        ```
+    A class, interface, or object annotated with [Treap]
 
-    `AbstractTreapSet` can rely on hashCode stability in its serialization code, because if T is serializable, it also
-    has a stable hash code.  But we're free to instantiate `AbstractTreapSet<UnstableType>`, as long as `UnstableType`
-    definitely not serializable.
+    - The default [Object.hashCode] implementation does not produce a stable hash code; it effecitvely assigns a random
+      number to each class instance.  A "naked" class that does not override hashCode will not have a stable hash code.
+
+    - Kotlin/JVM primitive types (Int, Char, etc.) do have stable hash codes.
+
+    - Kotlin/JVM Strings have stable hash codes.
+
+    - Kotlin "data classes" provide a hashCode implementation which is stable as long as the properties in the data
+      class' primary constructor all have stable hash codes.
+
+    - Kotlin "object" types do not provide stable hash codes by default; they get the random number from the underlying
+      [Object.hashCode] implementation.
+
+    - Classes which implement [Collection] or [Map] are required to have stable hash codes (as part of the semantics of
+      those interfaces), so long as the elements stored in those collections also have stable hash codes.
+
+    - Kotlin/JVM "enum classes" do not have stable hash codes.  They use the default [Object.hashCode] implementation,
+      and do not allow this to be overridden.  A stable hash code can be obtained from the *name* of the enum instance.
+      (We could also use the ordinal, but this has an unnecessary dependence on ordering.)
+
+    - Our analysis considers some known JCL types to have stable hash codes (such as BigIngeter).
+
  */
-@Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE)
+@Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE, AnnotationTarget.CLASS)
 public annotation class Treapable
