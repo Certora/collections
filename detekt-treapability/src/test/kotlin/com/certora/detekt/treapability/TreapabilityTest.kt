@@ -18,10 +18,10 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
         @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.CLASS)
         annotation class Treapable
 
-        inline fun hash(initial: Int = 0, action: (HashCode) -> HashCode) = action(HashCode(initial)).code
-        @JvmInline value class HashCode(val code: Int) {
+        inline fun hash(initial: Int = 0, action: (TreapableHashCode) -> TreapableHashCode) = action(TreapableHashCode(initial)).code
+        @JvmInline value class TreapableHashCode(val code: Int) {
             @PublishedApi
-            internal inline fun add(obj: Any?) = HashCode(31 * this.code + obj.hashCode())
+            internal inline fun add(obj: Any?) = TreapableHashCode(31 * this.code + obj.hashCode())
 
             inline infix operator fun <@Treapable T> plus(obj: T) = add(obj)
             inline infix operator fun plus(clazz: Class<*>?) = add(clazz?.name)

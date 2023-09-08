@@ -1,7 +1,7 @@
 package com.certora.collect
 
-@PublishedApi
-internal class MutableMapEntry<K, V>(
+/** Simple implementation of MutableMap.Entry. */
+public class MutableMapEntry<K, V>(
     private val map: MutableMap<K, V>,
     override val key: K
 ) : AbstractMapEntry<K, V>(), MutableMap.MutableEntry<K, V> {

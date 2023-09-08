@@ -23,6 +23,7 @@ public interface TreapSet<out E> : PersistentSet<E> {
 
     override fun builder(): Builder<@UnsafeVariance E>
 
+    public fun containsAny(elements: Iterable<@UnsafeVariance E>): Boolean
     public fun single(): E
     public fun singleOrNull(): E?
     public fun findEqual(element: @UnsafeVariance E): E?

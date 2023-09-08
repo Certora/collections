@@ -97,7 +97,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         { elements.all { this.contains(it) }}
     )
 
-    fun containsAny(elements: Iterable<E>): Boolean = elements.useAsTreap(
+    override fun containsAny(elements: Iterable<E>): Boolean = elements.useAsTreap(
         { elementsTreap -> selfNotEmpty.containsAny(elementsTreap) },
         { elements.any { this.contains(it) }}
     )
