@@ -1,7 +1,7 @@
 package com.certora.collect
 
-internal class TreapSetBuilder<@Treapable E, S : AbstractTreapSet<E, S>>(
-    private var set: S
+internal class TreapSetBuilder<@Treapable E>(
+    private var set: TreapSet<E>
 ) : AbstractMutableSet<E>(), TreapSet.Builder<E>, java.io.Serializable {
 
     override fun hashCode() = set.hashCode()
@@ -44,7 +44,7 @@ internal class TreapSetBuilder<@Treapable E, S : AbstractTreapSet<E, S>>(
         }
     }
 
-    private fun update(newSet: S): Boolean {
+    private fun update(newSet: TreapSet<E>): Boolean {
         if (newSet !== set) {
             set = newSet
             return true

@@ -19,7 +19,8 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
         override fun build(): TreapMap<K, V>
     }
 
-    override fun builder(): Builder<K, @UnsafeVariance V>
+    @Suppress("Treapability")
+    override fun builder(): Builder<K, @UnsafeVariance V> = TreapMapBuilder(this)
 
     public fun merge(
         m: Map<out K, V>, 

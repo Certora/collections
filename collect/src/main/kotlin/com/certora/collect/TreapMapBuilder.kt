@@ -1,7 +1,7 @@
 package com.certora.collect
 
-internal class TreapMapBuilder<@Treapable K, V, S : AbstractTreapMap<K, V, S>>(
-    private var map: S
+internal class TreapMapBuilder<@Treapable K, V>(
+    private var map: TreapMap<K, V>
 ) : AbstractMutableMap<K, V>(), TreapMap.Builder<K, V>, java.io.Serializable {
 
     override val size get() = map.size
@@ -38,7 +38,7 @@ internal class TreapMapBuilder<@Treapable K, V, S : AbstractTreapMap<K, V, S>>(
         return oldMap.get(key)
     }
 
-    override fun build(): S = map
+    override fun build(): TreapMap<K, V> = map
 
     private inner class EntryIterator : MutableIterator<MutableMap.MutableEntry<K, V>> {
         val mapIterator = map.entries.iterator()

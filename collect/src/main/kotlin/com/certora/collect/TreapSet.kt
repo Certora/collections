@@ -21,7 +21,8 @@ public interface TreapSet<out E> : PersistentSet<E> {
         override fun build(): TreapSet<E>
     }
 
-    override fun builder(): Builder<@UnsafeVariance E>
+    @Suppress("Treapability")
+    override fun builder(): Builder<@UnsafeVariance E> = TreapSetBuilder(this)
 
     public fun containsAny(elements: Iterable<@UnsafeVariance E>): Boolean
     public fun single(): E

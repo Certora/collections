@@ -137,7 +137,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 
     override abstract fun clear(): S
 
-    override fun builder(): TreapMapBuilder<K, V, S> = TreapMapBuilder<K, V, S>(self)
+    override fun builder(): TreapMapBuilder<K, V> = TreapMapBuilder(self)
 
     override val entries: ImmutableSet<Map.Entry<K, V>>
         get() = object : AbstractSet<Map.Entry<K, V>>(), ImmutableSet<Map.Entry<K, V>> {
@@ -187,16 +187,16 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
         )
 
     private fun fallbackMerge(m: Map<out K, V>, merger: (K, V?, V?) -> V?): S {
-        val newThis = clear().builder()
+        var newThis = clear()
         for (k in this.keys.asSequence() + m.keys.asSequence()) {
             if (k !in newThis) {
-                when (val merged = merger(k, this[k], m[k])) {
+                newThis = when (val merged = merger(k, this[k], m[k])) {
                     null -> newThis.remove(k)
                     else -> newThis.put(k, merged)
                 }
             }
         }
-        return newThis.build()
+        return newThis
     }
 
     /**
