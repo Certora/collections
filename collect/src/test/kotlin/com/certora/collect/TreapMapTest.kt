@@ -11,6 +11,8 @@ import kotlin.test.*
 /** Tests for [TreapMap]. */
 abstract class TreapMapTest {
 
+    abstract fun makeKey(value: Int, code: Int = value.hashCode()): TestKey
+
     open val allowNullKeys = true
     abstract fun makeMap(): MutableMap<TestKey?, Any?>
     abstract fun makeBaseline(): MutableMap<TestKey?, Any?>
@@ -62,7 +64,7 @@ abstract class TreapMapTest {
         val b = makeBaseline()
         val m = makeMap()
 
-        val o1 = TestKey(5)
+        val o1 = makeKey(5)
         val v1 = Object()
         assertEqualMutation(b, m) { put(o1, v1) }
         assertEqualResult(b, m) { get(o1) }
@@ -71,7 +73,7 @@ abstract class TreapMapTest {
         assertEqualMutation(b, m) { put(o1, v2) }
         assertEqualResult(b, m) { get(o1) }
 
-        val o2 = TestKey(3)
+        val o2 = makeKey(3)
         val v3 = Object()
         assertEqualMutation(b, m) { put(o2, v3) }
         assertEqualResult(b, m) { get(o2) }
@@ -81,7 +83,7 @@ abstract class TreapMapTest {
         assertEqualMutation(b, m) { put(o1, v4) }
         assertEqualMutation(b, m) { put(o2, v5) }
 
-        val o3 = TestKey(4)
+        val o3 = makeKey(4)
         val v6 = Object()
         assertEqualMutation(b, m) { put(o3, v6) }
         assertEqualMutation(b, m) { put(o2, v6) }
@@ -92,7 +94,7 @@ abstract class TreapMapTest {
         val b = makeBaseline()
         val m = makeMap()
 
-        val objs = Array<TestKey>(5) { TestKey(it, code = 0) }
+        val objs = Array<TestKey>(5) { makeKey(it, code = 0) }
         val vals = Array<Any>(5) { Object() }
 
         for (i in objs.indices) {
@@ -128,7 +130,7 @@ abstract class TreapMapTest {
         val rand = Random(1234)
 
         for (i in 1..65550) {
-            val elem = TestKey(rand.nextInt())
+            val elem = makeKey(rand.nextInt())
             when (i) {
                 1, 255, 256, 257, 65535, 65536, 65537 -> {
                     assertEqualMutation(b, m) { put(elem, elem) }
@@ -146,7 +148,7 @@ abstract class TreapMapTest {
         val b = makeBaseline()
         val m = makeMap()
 
-        val obj = TestKey(1)
+        val obj = makeKey(1)
         val notThere = Object()
         assertEqualResult(b, m) { getOrDefault(obj, notThere) }
         assertEqualResult(b, m) { get(obj) }
@@ -189,7 +191,7 @@ abstract class TreapMapTest {
     fun copyConstructorNonEmpty() {
         val other = mutableMapOf<TestKey?, Any?>()
         val rand = Random(1234)
-        val elems = Array<TestKey>(10000) { TestKey(rand.nextInt()) }
+        val elems = Array<TestKey>(10000) { makeKey(rand.nextInt()) }
         for (elem in elems) {
             other[elem] = Object()
         }
@@ -205,7 +207,7 @@ abstract class TreapMapTest {
         val m = makeMap()
 
         for (i in 1..3) {
-            val key = TestKey(i)
+            val key = makeKey(i)
             assertEqualMutation(b, m) { put(key, null) }
         }
 

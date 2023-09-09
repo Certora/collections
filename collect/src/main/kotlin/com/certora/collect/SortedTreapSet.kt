@@ -12,8 +12,12 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
 ) : AbstractTreapSet<E, SortedTreapSet<E>>(left, right), TreapKey.Sorted<E> {
 
     override fun E.toTreapKey() = TreapKey.Sorted.FromKey(this)
-    override fun clear() = emptyOf<E>()
     override fun new(element: E): SortedTreapSet<E> = Node(element)
+
+    override fun add(element: E): TreapSet<E> = when {
+        element is PrefersHashTreap -> HashTreapSet(element as E) + this
+        else -> selfNotEmpty.add(new(element))
+    }
 
     override fun Iterable<E>.toTreapSetOrNull(): SortedTreapSet<E>? =
         (this as? SortedTreapSet<E>)
@@ -79,6 +83,8 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
         private val _empty = Empty<Nothing>()
         @Suppress("UNCHECKED_CAST")
         fun <@Treapable E : Comparable<E>> emptyOf() = _empty as SortedTreapSet<E>
+
+        operator fun <@Treapable E : Comparable<E>> invoke(element: E): SortedTreapSet<E> = Node(element)
     }
 }
 

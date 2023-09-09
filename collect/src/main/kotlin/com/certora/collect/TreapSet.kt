@@ -32,30 +32,14 @@ public interface TreapSet<out E> : PersistentSet<E> {
 }
 
 
-public fun <@Treapable T : Comparable<T>> treapSetOf(): TreapSet<T> = SortedTreapSet.emptyOf<T>()
-public fun <@Treapable T : Comparable<T>> treapSetOf(element: T): TreapSet<T> = treapSetOf<T>().add(element)
-public fun <@Treapable T : Comparable<T>> treapSetOf(vararg elements: T): TreapSet<T> = treapSetOf<T>().mutate { it.addAll(elements) }
+public fun <@Treapable T> treapSetOf(): TreapSet<T> = EmptyTreapSet()
+public fun <@Treapable T> treapSetOf(element: T): TreapSet<T> = treapSetOf<T>().add(element)
+public fun <@Treapable T> treapSetOf(vararg elements: T): TreapSet<T> = treapSetOf<T>().mutate { it.addAll(elements) }
 
-public fun <@Treapable T> hashTreapSetOf(): TreapSet<T> = HashTreapSet.emptyOf<T>()
-public fun <@Treapable T> hashTreapSetOf(element: T): TreapSet<T> = hashTreapSetOf<T>().add(element)
-public fun <@Treapable T> hashTreapSetOf(vararg elements: T): TreapSet<T> = hashTreapSetOf<T>().mutate { it.addAll(elements) }
-
-public fun <@Treapable T : Comparable<T>> Iterable<T>.toTreapSet(): TreapSet<T> =
-    this as? SortedTreapSet<T>
-    ?: (this as? TreapSet.Builder<T>)?.build() as? SortedTreapSet<T>
-    ?: treapSetOf<T>() + this
-
-public fun <@Treapable T> Iterable<T>.toHashTreapSet(): TreapSet<T> =
-    this as? HashTreapSet<T>
-    ?: (this as? TreapSet.Builder<T>)?.build() as? HashTreapSet<T>
-    ?: hashTreapSetOf<T>() + this
-
-public fun <@Treapable T : Comparable<T>> Sequence<T>.toTreapSet(): TreapSet<T> = treapSetOf<T>() + this
-public fun <@Treapable T : Comparable<T>> Sequence<@Treapable T>.toHashTreapSet(): TreapSet<T> = hashTreapSetOf<T>() + this
+public fun <@Treapable T> Iterable<T>.toTreapSet(): TreapSet<T> = treapSetOf<T>() + this
+public fun <@Treapable T> Sequence<T>.toTreapSet(): TreapSet<T> = treapSetOf<T>() + this
 
 public fun CharSequence.toTreapSet(): TreapSet<Char> = treapSetOf<Char>().mutate { this.toCollection(it) }
-public fun CharSequence.toHashTreapSet(): TreapSet<Char> = hashTreapSetOf<Char>().mutate { this.toCollection(it) }
-
 
 public inline fun <T> TreapSet<T>.mutate(mutator: (MutableSet<T>) -> Unit): TreapSet<T> = builder().apply(mutator).build()
 

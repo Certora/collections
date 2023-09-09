@@ -102,28 +102,25 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         { elements.any { this.contains(it) }}
     )
 
-    override fun add(element: E): S = selfNotEmpty.add(new(element))
-
-    override fun addAll(elements: Collection<E>): S = elements.useAsTreap(
+    override fun addAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
         { elementsTreap -> (selfNotEmpty union elementsTreap) ?: clear() },
-        { elements.fold(self) { t, e -> t.add(e)}}
+        { elements.fold(this as TreapSet<E>) { t, e -> t.add(e)}}
     )
 
-    override fun remove(element: E): S =
+    override fun remove(element: E): TreapSet<E> =
         selfNotEmpty.remove(element.toTreapKey(), element) ?: clear()
 
-    override fun removeAll(elements: Collection<E>): S = elements.useAsTreap(
+    override fun removeAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
         { elementsTreap -> (selfNotEmpty difference elementsTreap) ?: clear() },
-        { elements.fold(self) { t, e -> t.remove(e) }}
+        { elements.fold(self as TreapSet<E>) { t, e -> t.remove(e) }}
     )
 
-    override fun removeAll(predicate: (E) -> Boolean): S =
+    override fun removeAll(predicate: (E) -> Boolean): TreapSet<E> =
         selfNotEmpty.removeAll(predicate) ?: clear()
 
-    // Require clear() to return a AbstractTreapSet
-    override abstract fun clear(): S
+    override fun clear() = EmptyTreapSet<E>()
 
-    override fun retainAll(elements: Collection<E>): S = elements.useAsTreap(
+    override fun retainAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
         { elementsTreap -> (selfNotEmpty intersect elementsTreap) ?: clear() },
         { this.removeAll { it !in elements } }
     )

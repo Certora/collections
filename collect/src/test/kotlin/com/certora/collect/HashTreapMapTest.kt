@@ -5,6 +5,7 @@ import kotlinx.serialization.DeserializationStrategy
 
 /** Tests for [HashTreapMap]. */
 class HashTreapMapTest: TreapMapTest() {
+    override fun makeKey(value: Int, code: Int) = HashTestKey(value, code)
     override fun makeMap(): MutableMap<TestKey?, Any?> = hashTreapMapOf<TestKey?, Any?>().builder()
     override fun makeBaseline(): MutableMap<TestKey?, Any?> = HashMap()
     override fun makeMap(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?> = makeMap().apply { putAll(other) }

@@ -13,11 +13,14 @@ import kotlinx.serialization.DeserializationStrategy
 /** Tests for [TreapSet]. */
 abstract class TreapSetTest {
 
+    abstract fun makeKey(value: Int, code: Int = value.hashCode()): TestKey
     open val nullKeysAllowed: Boolean get() = true
-    abstract fun makeSet(): MutableSet<TestKey?>
+
+    fun makeSet(): MutableSet<TestKey?> = treapSetOf<TestKey?>().builder()
     abstract fun makeBaseline(): MutableSet<TestKey?>
-    abstract fun makeSet(other: Collection<TestKey?>): MutableSet<TestKey?>
-    abstract fun makeBaseline(other: Collection<TestKey?>): MutableSet<TestKey?>
+
+    fun makeSet(other: Collection<TestKey?>): MutableSet<TestKey?> = makeSet().also { it += other }
+    fun makeBaseline(other: Collection<TestKey?>): MutableSet<TestKey?> = makeSet().also { it += other }
 
     open fun assertOrderedIteration(expected: Iterator<*>, actual: Iterator<*>) {}
 
@@ -59,7 +62,7 @@ abstract class TreapSetTest {
         val b = makeBaseline()
         val s = makeSet()
 
-        val o1 = TestKey(5)
+        val o1 = makeKey(5)
         assertEqualResult(b, s) { contains(o1) }
         assertEqualMutation(b, s) { add(o1) }
         assertEqualResult(b, s) { contains(o1) }
@@ -67,7 +70,7 @@ abstract class TreapSetTest {
         assertEqualMutation(b, s) { add(o1) }
         assertEqualResult(b, s) { contains(o1) }
 
-        val o2 = TestKey(3)
+        val o2 = makeKey(3)
         assertEqualResult(b, s) { contains(o2) }
         assertEqualMutation(b, s) { add(o2) }
         assertEqualResult(b, s) { contains(o2) }
@@ -79,12 +82,12 @@ abstract class TreapSetTest {
         assertEqualMutation(b, s) { add(o1) }
         assertEqualResult(b, s) { contains(o1) }
 
-        val o3 = TestKey(4)
+        val o3 = makeKey(4)
         assertEqualResult(b, s) { contains(o3) }
         assertEqualMutation(b, s) { add(o3) }
         assertEqualResult(b, s) { contains(o3) }
 
-        val o4 = TestKey(-908857765)
+        val o4 = makeKey(-908857765)
         assertEqualResult(b, s) { contains(o4) }
         assertEqualMutation(b, s) { add(o4) }
         assertEqualResult(b, s) { contains(o4) }
@@ -95,7 +98,7 @@ abstract class TreapSetTest {
         val b = makeBaseline()
         val s = makeSet()
 
-        val objs = Array<TestKey>(5) { TestKey(it, code = 0) }
+        val objs = Array<TestKey>(5) { makeKey(it, code = 0) }
         for (o in objs) {
             assertEqualMutation(b, s) { add(o) }
             assertEqualResult(b, s) { contains(o) }
@@ -129,7 +132,7 @@ abstract class TreapSetTest {
                 return null
             }
         }
-        return TestKey(r % 2000)
+        return makeKey(r % 2000)
     }
 
     @Test
@@ -159,7 +162,7 @@ abstract class TreapSetTest {
             val b = makeBaseline()
             val s = makeSet()
 
-            assertEqualMutation(b, s) { add(TestKey(0)) }
+            assertEqualMutation(b, s) { add(makeKey(0)) }
             assertEqualResult(b, s) { contains(null) }
             assertEqualMutation(b, s) { add(null) }
             assertEqualMutation(b, s) { add(null) }
@@ -177,12 +180,12 @@ abstract class TreapSetTest {
         val b = makeBaseline()
         val s = makeSet()
 
-        assertEqualMutation(b, s) { addAll((1..4).map { TestKey(it) }) }
-        assertEqualMutation(b, s) { retainAll((1..4).map { TestKey(it) }) }
+        assertEqualMutation(b, s) { addAll((1..4).map { makeKey(it) }) }
+        assertEqualMutation(b, s) { retainAll((1..4).map { makeKey(it) }) }
 
-        assertEqualMutation(b, s) { retainAll((3..6).map { TestKey(it) }) }
+        assertEqualMutation(b, s) { retainAll((3..6).map { makeKey(it) }) }
 
-        assertEqualMutation(b, s) { retainAll((5..100).map { TestKey(it) }) }
+        assertEqualMutation(b, s) { retainAll((5..100).map { makeKey(it) }) }
 
         assertTrue(s.isEmpty())
     }
@@ -207,7 +210,7 @@ abstract class TreapSetTest {
     @Test
     fun copyConstructorNonEmptySet() {
         val rand = Random(1234)
-        val elems = Array<TestKey>(10000) { TestKey(rand.nextInt()) }
+        val elems = Array<TestKey>(10000) { makeKey(rand.nextInt()) }
         val list = elems.toList()
         val other = makeBaseline(list)
 
@@ -220,7 +223,7 @@ abstract class TreapSetTest {
     @Test
     fun copyConstructorNonEmptyList() {
         val rand = Random(1234)
-        val elems = Array<TestKey>(10000) { TestKey(rand.nextInt()) }
+        val elems = Array<TestKey>(10000) { makeKey(rand.nextInt()) }
         val other = elems.toList()
 
         val b = makeBaseline(other)
@@ -239,13 +242,11 @@ abstract class TreapSetTest {
             return
         }
         val b = makeBaseline()
-        b.add(TestKey(1))
-        b.add(TestKey(9897))
-        b.add(TestKey(3))
-        if (nullKeysAllowed) {
-            b.add(null)
-        }
-        b.add(TestKey(5))
+        b.add(makeKey(1))
+        b.add(makeKey(9897))
+        b.add(makeKey(3))
+        b.add(null)
+        b.add(makeKey(5))
 
         val s = makeSet(b)
 
@@ -279,13 +280,13 @@ abstract class TreapSetTest {
     @Test
     fun javaSerialize() {
         val b = makeBaseline()
-        b.add(TestKey(1))
-        b.add(TestKey(9897))
-        b.add(TestKey(3))
+        b.add(makeKey(1))
+        b.add(makeKey(9897))
+        b.add(makeKey(3))
         if (nullKeysAllowed) {
             b.add(null)
         }
-        b.add(TestKey(5))
+        b.add(makeKey(5))
 
         val s = makeSet(b)
 
