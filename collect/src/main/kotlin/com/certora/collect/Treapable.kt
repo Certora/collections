@@ -1,9 +1,7 @@
 package com.certora.collect
 
 /**
-    When applied to a class or interface, indicates that the class or interface has a stable hash code.  When applied to
-    a generic type parameter, indicates that arguments to the type parameter must have stable hash codes if they might
-    be serialized.
+    Marks a type (or type parameter) as being suitable for use as a key/element of a Treap-based collection.
 
     The internal structure of Treap-based collections is based on the hash codes of the keys stored in the collection.
     If a Treap is serialized and deserialized, the hash codes of the keys must be the same as they were before
