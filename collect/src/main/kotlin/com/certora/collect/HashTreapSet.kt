@@ -18,7 +18,7 @@ internal class HashTreapSet<@Treapable E>(
     override fun E.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun new(element: E): HashTreapSet<E> = HashTreapSet(element)
 
-    override fun add(element: E): TreapSet<E> = selfNotEmpty.add(new(element))
+    override fun add(element: E): TreapSet<E> = self.add(new(element))
 
     override fun Iterable<E>.toTreapSetOrNull(): HashTreapSet<E>? =
         (this as? HashTreapSet<E>)
@@ -33,7 +33,6 @@ internal class HashTreapSet<@Treapable E>(
     }
 
     override val self get() = this
-    override val selfNotEmpty get() = this
     override val treapKey get() = element
 
     override val shallowSize: Int get() {
@@ -220,7 +219,7 @@ internal class HashTreapSet<@Treapable E>(
     }
 
     override fun iterator(): Iterator<E> = sequence {
-        selfNotEmpty.asTreapSequence().forEach { node ->
+        self.asTreapSequence().forEach { node ->
             node.forEachNodeElement {
                 yield(it)
             }

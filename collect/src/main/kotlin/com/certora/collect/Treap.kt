@@ -77,14 +77,6 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     abstract val self: S
 
     /**
-        In order to reduce heap space usage, we derive our collections directly from Treap.  That makes it tricky to
-        have an instance representing an empty map/set.  To handle that, we create special subclasses to represent empty
-        collections, and distinguish them via this property.  `selfNotEmpty` returns `self` if this is a "real" node
-        containing data, and `null` if this is an empty node.
-     */
-    abstract val selfNotEmpty: S?
-
-    /**
         Produces a copy of this node, but with differen left and/or right nodes.
      */
     @Suppress("NOTHING_TO_INLINE")
@@ -114,25 +106,7 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
      */
     abstract infix fun shallowAdd(that: S): S
     abstract fun shallowRemove(element: T): S?
-    abstract fun shallowRemoveAll(predicate: (T) -> Boolean): S?
     abstract fun shallowComputeHashCode(): Int
-
-    /**
-        This gets called by the JVM deserializer, after deserialization.  It's our chance to validate our invariants, in
-        case any hash functions have changed since this Treap was serialized.
-     */
-    protected fun readResolve(): Any? {
-        if (left != null) {
-            check(left.compareKeyTo(this) < 0) { "Treap key comparison logic changed: ${left.treapKey} >= ${this.treapKey}" }
-            check(left.comparePriorityTo(this) < 0) { "Treap key priority hash logic changed: ${left.treapKey} >= ${this.treapKey} "}
-        }
-        if (right != null) {
-            check(right.compareKeyTo(this) > 0) { "Treap key comparison logic changed: ${right.treapKey} <= ${this.treapKey}" }
-            check(right.comparePriorityTo(this) < 0) { "Treap key priority hash logic changed: ${right.treapKey} >= ${this.treapKey} "}
-        }
-        return this
-    }
-
 
     /**
         Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
@@ -150,6 +124,30 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
                 current = current.right
             }
         }
+    }
+
+    /**
+        Counts the items stored in this Treap.
+    */
+    fun computeSize(): Int = shallowSize + (left?.computeSize() ?: 0) + (right?.computeSize() ?: 0)
+
+    fun containsKey(key: TreapKey<T>): Boolean = (self.find(key) != null)
+
+
+    /**
+        This gets called by the JVM deserializer, after deserialization.  It's our chance to validate our invariants, in
+        case any hash functions have changed since this Treap was serialized.
+     */
+    protected fun readResolve(): Any? {
+        if (left != null) {
+            check(left.compareKeyTo(this) < 0) { "Treap key comparison logic changed: ${left.treapKey} >= ${this.treapKey}" }
+            check(left.comparePriorityTo(this) < 0) { "Treap key priority hash logic changed: ${left.treapKey} >= ${this.treapKey} "}
+        }
+        if (right != null) {
+            check(right.compareKeyTo(this) > 0) { "Treap key comparison logic changed: ${right.treapKey} <= ${this.treapKey}" }
+            check(right.comparePriorityTo(this) < 0) { "Treap key priority hash logic changed: ${right.treapKey} >= ${this.treapKey} "}
+        }
+        return this
     }
 }
 
@@ -197,7 +195,7 @@ internal infix fun <@Treapable T, S : Treap<T, S>> S?.join(greater: S?): S? = wh
 
 /**
     Adds a single Treap node to this Treap, if its key does not already exist.  We precompute the key hashes for extra
-    speed.  To add multiple nodes, use `union`.
+    speed.
  */
 internal fun <@Treapable T, S : Treap<T, S>> S?.add(that: S): S = add(that, that.precompute())
 
@@ -233,24 +231,6 @@ internal fun <@Treapable T, S : Treap<T, S>> S?.remove(key: TreapKey<T>, element
     }
 }
 
-internal infix fun <@Treapable T, S : Treap<T, S>> S?.removeAll(predicate: (T) -> Boolean): S? = when {
-    this == null -> null
-    else -> {
-        val newThis = this.shallowRemoveAll(predicate)
-        val newLeft = left.removeAll(predicate)
-        val newRight = right.removeAll(predicate)
-        newThis?.with(newLeft, newRight) ?: (newLeft join newRight)
-    }
-}
-
-/**
-    Counts the items stored in this Treap.
- */
-internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.computeSize(): Int = when {
-    this == null -> 0
-    else -> shallowSize + left.computeSize() + right.computeSize()
-}
-
 /**
     Finds a given key in this Treap, and returns the Treap node.  Takes advantage of tail-recursion for speed.
  */
@@ -266,8 +246,6 @@ internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.find(key: TreapKey<T>): 
         }
     }
 }
-
-internal fun <@Treapable T, S : Treap<T, S>> S?.containsKey(key: TreapKey<T>): Boolean = (find(key) != null)
 
 /**
     Compares two treaps for equality, according to the derived class' definition.

@@ -47,10 +47,10 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
         calls `fallback.`  Used to implement optimized operations over two compatible Treaps, with a fallback when
         needed.
      */
-    private inline fun <R> Map<out K, V>.useAsTreap(action: (S?) -> R, fallback: () -> R): R {
+    private inline fun <R> Map<out K, V>.useAsTreap(action: (S) -> R, fallback: () -> R): R {
         val treapMap = this.toTreapMapOrNull()
         return if (treapMap != null) {
-            action(treapMap.selfNotEmpty)
+            action(treapMap.self)
         } else {
             fallback()
         }
@@ -109,7 +109,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 
     private fun toString(o: Any?): String = if (o === this) { "(this Map)" } else { o.toString() }
 
-    override fun hashCode() = selfNotEmpty.computeHashCode()
+    override fun hashCode() = self.computeHashCode()
 
     @Suppress("UNCHECKED_CAST")
     override fun equals(other: Any?) : Boolean {
@@ -118,34 +118,34 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
             otherMap == null -> false
             otherMap === this -> true
             else -> otherMap.useAsTreap(
-                { otherTreap -> this.selfNotEmpty.deepEquals(otherTreap) },
+                { otherTreap -> this.self.deepEquals(otherTreap) },
                 { other.size == this.size && other.entries.all { this.containsEntry(it) }}
             )
         }
     }
 
-    override val size: Int get() = selfNotEmpty.computeSize()
-    override fun isEmpty(): Boolean = selfNotEmpty == null
+    override val size: Int get() = computeSize()
+    override fun isEmpty(): Boolean = false
 
     override fun containsKey(key: K) =
-        selfNotEmpty.find(key.toTreapKey())?.shallowContainsKey(key) ?: false
+        self.find(key.toTreapKey())?.shallowContainsKey(key) ?: false
 
     override fun containsValue(value: V) = values.contains(value)
 
     override fun get(key: K): V? =
-        selfNotEmpty.find(key.toTreapKey())?.shallowGetValue(key)
+        self.find(key.toTreapKey())?.shallowGetValue(key)
 
     override fun put(key: K, value: V): AbstractTreapMap<K, V, S> =
-        selfNotEmpty.add(new(key, value))
+        self.add(new(key, value))
 
     override fun putAll(m: Map<out K, V>): TreapMap<K, V> =
         m.entries.fold(this as TreapMap<K, V>) { t, e -> t.put(e.key, e.value) }
 
     override fun remove(key: K):  TreapMap<K, V> =
-        selfNotEmpty.remove(key.toTreapKey(), key) ?: clear()
+        self.remove(key.toTreapKey(), key) ?: clear()
 
     override fun remove(key: K, value: V): TreapMap<K, V> =
-        selfNotEmpty.removeEntry(key.toTreapKey(), key, value) ?: clear()
+        self.removeEntry(key.toTreapKey(), key, value) ?: clear()
 
     override fun clear(): TreapMap<K, V> = treapMapOf<K, V>()
 
@@ -179,7 +179,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
      */
     override fun merge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
         m.useAsTreap(
-            { otherTreap -> selfNotEmpty.mergeWith(otherTreap, getShallowMerger(merger)) ?: clear() },
+            { otherTreap -> self.mergeWith(otherTreap, getShallowMerger(merger)) ?: clear() },
             { fallbackMerge(m, merger) }
         )
 
@@ -194,7 +194,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
      */
     override fun parallelMerge(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
         m.useAsTreap(
-            { otherTreap -> selfNotEmpty.parallelMergeWith(otherTreap, parallelThresholdLog2, getShallowMerger(merger)) ?: clear() },
+            { otherTreap -> self.parallelMergeWith(otherTreap, parallelThresholdLog2, getShallowMerger(merger)) ?: clear() },
             { fallbackMerge(m, merger) }
         )
 
@@ -283,7 +283,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
        ```
      */
     override fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?): TreapMap<K, V> {
-        return selfNotEmpty.updateEntry(key.toTreapKey().precompute(), key, value, merger, ::new) ?: clear()
+        return self.updateEntry(key.toTreapKey().precompute(), key, value, merger, ::new) ?: clear()
     }
 
     /**

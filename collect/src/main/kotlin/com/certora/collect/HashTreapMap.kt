@@ -98,7 +98,6 @@ internal class HashTreapMap<@Treapable K, V>(
     }
 
     override val self get() = this
-    override val selfNotEmpty get() = this
     override val treapKey get() = key
 
     override fun copyWith(left: HashTreapMap<K, V>?, right: HashTreapMap<K, V>?): HashTreapMap<K, V> = HashTreapMap(key, value, next, left, right)
@@ -161,24 +160,6 @@ internal class HashTreapMap<@Treapable K, V>(
                     HashTreapMap(firstPair.key, firstPair.value, firstPair.next, this.left, this.right)
                 }
             }
-        }
-    }
-
-    override fun shallowRemoveAll(predicate: (K) -> Boolean): HashTreapMap<K, V>? {
-        var newPairs: KeyValuePairList.More<K, V>? = null
-        var removed = false
-        this.forEachPair {
-            if (predicate(it.key)) {
-                removed = true
-            } else {
-                newPairs = KeyValuePairList.More(it.key, it.value, newPairs)
-            }
-        }
-        val firstPair = newPairs
-        return when {
-            !removed -> this
-            firstPair == null -> null
-            else -> HashTreapMap(firstPair.key, firstPair.value, firstPair.next, this.left, this.right)
         }
     }
 

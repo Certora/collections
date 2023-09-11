@@ -25,10 +25,10 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         otherwise calls `fallback.`  Used to implement optimized operations over two compatible Treaps, with a fallback
         when needed.
      */
-    private inline fun <R> Iterable<E>.useAsTreap(action: (S?) -> R, fallback: () -> R): R {
+    private inline fun <R> Iterable<E>.useAsTreap(action: (S) -> R, fallback: () -> R): R {
         val treapSet = this.toTreapSetOrNull()
         return if (treapSet != null) {
-            action(treapSet.selfNotEmpty)
+            action(treapSet.self)
         } else {
             fallback()
         }
@@ -59,6 +59,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     abstract infix fun shallowUnion(that: S): S
     abstract infix fun shallowIntersect(that: S): S?
     abstract infix fun shallowDifference(that: S): S?
+    abstract fun shallowRemoveAll(predicate: (E) -> Boolean): S?
     abstract fun shallowContainsAll(elements: S): Boolean
     abstract fun shallowContainsAny(elements: S): Boolean
 
@@ -66,9 +67,9 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Set opreations start here
 
-    override val size: Int get() = selfNotEmpty.computeSize()
+    override val size: Int get() = self.computeSize()
 
-    override fun isEmpty(): Boolean = selfNotEmpty == null
+    override fun isEmpty(): Boolean = false
 
     override fun builder(): TreapSet.Builder<E> = TreapSetBuilder(self)
 
@@ -82,67 +83,71 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         this === other -> true
         other !is Set<*> -> false
         else -> (other as Set<E>).useAsTreap(
-            { otherTreap -> this.selfNotEmpty.deepEquals(otherTreap) },
+            { otherTreap -> this.self.deepEquals(otherTreap) },
             { this.size == other.size && this.containsAll(other) }
         )
     }
 
-    override fun hashCode(): Int = selfNotEmpty.computeHashCode()
+    override fun hashCode(): Int = self.computeHashCode()
 
     override fun contains(element: E): Boolean =
-        selfNotEmpty.find(element.toTreapKey())?.shallowContains(element) ?: false
+        self.find(element.toTreapKey())?.shallowContains(element) ?: false
 
     override fun containsAll(elements: Collection<E>): Boolean = elements.useAsTreap(
-        { elementsTreap -> selfNotEmpty.containsAll(elementsTreap) },
+        { elementsTreap -> self.containsAll(elementsTreap) },
         { elements.all { this.contains(it) }}
     )
 
     override fun containsAny(elements: Iterable<E>): Boolean = elements.useAsTreap(
-        { elementsTreap -> selfNotEmpty.containsAny(elementsTreap) },
+        { elementsTreap -> self.containsAny(elementsTreap) },
         { elements.any { this.contains(it) }}
     )
 
     override fun addAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
-        { elementsTreap -> (selfNotEmpty union elementsTreap) ?: clear() },
+        { elementsTreap -> (self union elementsTreap) ?: clear() },
         { elements.fold(this as TreapSet<E>) { t, e -> t.add(e)}}
     )
 
     override fun remove(element: E): TreapSet<E> =
-        selfNotEmpty.remove(element.toTreapKey(), element) ?: clear()
+        self.remove(element.toTreapKey(), element) ?: clear()
 
     override fun removeAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
-        { elementsTreap -> (selfNotEmpty difference elementsTreap) ?: clear() },
+        { elementsTreap -> (self difference elementsTreap) ?: clear() },
         { elements.fold(self as TreapSet<E>) { t, e -> t.remove(e) }}
     )
 
     override fun removeAll(predicate: (E) -> Boolean): TreapSet<E> =
-        selfNotEmpty.removeAll(predicate) ?: clear()
+        removeAllKeys(predicate) ?: clear()
+
+    private fun removeAllKeys(predicate: (E) -> Boolean): S? {
+        val newLeft = left?.removeAllKeys(predicate)
+        val newRight = right?.removeAllKeys(predicate)
+        return this.shallowRemoveAll(predicate)?.with(newLeft, newRight) ?: (newLeft join newRight)
+    }
 
     override fun clear() = EmptyTreapSet<E>()
 
     override fun retainAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
-        { elementsTreap -> (selfNotEmpty intersect elementsTreap) ?: clear() },
+        { elementsTreap -> self.intersectWith(elementsTreap) ?: clear() },
         { this.removeAll { it !in elements } }
     )
 
     override fun findEqual(element: E): E? =
-        selfNotEmpty.find(element.toTreapKey())?.shallowFindEqual(element)
+        self.find(element.toTreapKey())?.shallowFindEqual(element)
 
     @Suppress("UNCHECKED_CAST")
-    override fun single(): E = selfNotEmpty?.getSingleElement() ?: when {
+    override fun single(): E = getSingleElement() ?: when {
         isEmpty() -> throw NoSuchElementException("Set is empty")
         size > 1 -> throw IllegalArgumentException("Set has more than one element")
         else -> null as E // The single element must have been null!
     }
 
-    override fun singleOrNull(): E? = selfNotEmpty?.getSingleElement()
+    override fun singleOrNull(): E? = getSingleElement()
 
     override fun forEachElement(action: (element: E) -> Unit): Unit {
-        if (selfNotEmpty != null) { 
-            shallowForEach(action) 
-            left?.forEachElement(action)
-            right?.forEachElement(action)
-        }
+        left?.forEachElement(action)
+        shallowForEach(action) 
+        right?.forEachElement(action)
     }
 
     internal fun getSingleElement(): E? = when {
@@ -183,7 +188,7 @@ private fun <@Treapable E, S : AbstractTreapSet<E, S>> unionMerge(higher: Abstra
     Computes the intersection of two treaps. Note that we always prefer to return 'this' over 'that', to preserve the
     object identity invariant described in the `Treap` summary.
  */
-internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.intersect(that: S?): S? = when {
+internal fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.intersectWith(that: S?): S? = when {
     this == null -> null
     that == null -> null
     this === that -> this
@@ -194,8 +199,8 @@ internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.intersect(that:
             c > 0 -> intersectMerge(this, that)
             c < 0 -> intersectMerge(that, this)
             else -> {
-                val newLeft = this.left intersect that.left
-                val newRight = this.right intersect that.right
+                val newLeft = this.left.intersectWith(that.left)
+                val newRight = this.right.intersectWith(that.right)
                 val newThis = this.shallowIntersect(that)
                 when {
                     newThis == null -> newLeft join newRight
@@ -210,7 +215,7 @@ private fun <@Treapable E, S : AbstractTreapSet<E, S>> intersectMerge(higher: Ab
     // Note that the "higher" key can not occur in "lower", because if it did it wouldn't have a higher priority. We
     // don't need to worry about the split's `duplicate` field.
     lower.split(higher).let { lowerSplit ->
-        (higher.left intersect lowerSplit.left) join (higher.right intersect lowerSplit.right)
+        higher.left.intersectWith(lowerSplit.left) join higher.right.intersectWith(lowerSplit.right)
     }
 
 /**

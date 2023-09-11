@@ -39,7 +39,6 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
         sequenceOf(MapEntry(this.key, this.value to that.value))
 
     override val self get() = this
-    override val selfNotEmpty get() = this
     override val treapKey get() = key
 
     override fun shallowEntrySequence(): Sequence<Map.Entry<K, V>> = sequenceOf(MapEntry(key, value))
@@ -48,7 +47,6 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
     override val shallowSize get() = 1
     override fun shallowRemove(element: K): SortedTreapMap<K, V>? = null
     override fun shallowRemoveEntry(key: K, value: V): SortedTreapMap<K, V>? = this.takeIf { this.value != value }
-    override fun shallowRemoveAll(predicate: (K) -> Boolean): SortedTreapMap<K, V>? = this.takeIf { !predicate(this.key) }
     override fun shallowGetValue(key: K): V = value
     override fun shallowEquals(that: SortedTreapMap<K, V>): Boolean = this.value == that.value
     override fun shallowComputeHashCode(): Int = AbstractMapEntry.hashCode(key, value)
