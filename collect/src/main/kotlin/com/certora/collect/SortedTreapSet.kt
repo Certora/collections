@@ -30,7 +30,7 @@ internal sealed class SortedTreapSet<@Treapable E : Comparable<E>> private const
     ) : SortedTreapSet<E>(left, right) {
         override val self get() = this
         override val selfNotEmpty get() = this
-        override fun iterator(): Iterator<E> = this.asSequence().map { it.treapKey }.iterator()
+        override fun iterator(): Iterator<E> = this.asTreapSequence().map { it.treapKey }.iterator()
 
         override fun shallowEquals(that: SortedTreapSet<E>): Boolean = this.compareKeyTo(that) == 0
         override val shallowSize: Int get() = 1

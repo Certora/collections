@@ -4,16 +4,16 @@ package com.certora.collect
     A TreapSet for elements that do not have a total ordering defined by implementing Comparable.  For those, we use the
     objects' hash codes as Treap keys, and deal with collisions by chaining multiple elements from a single Treap node.
 
-    The HashTreapSet instance itself stores the first element, and additional elements are chained via MoreElements.
+    The HashTreapSet instance itself stores the first element, and additional elements are chained via More.
     This is just a simple linked list, so operations on it are either O(N) or O(N^2), but collisions are assumed to be
     rare enough that these lists will be very small - usually just one element.
  */
 internal class HashTreapSet<@Treapable E>(
     override val element: E,
-    override val next: SetElementList.MoreElements<E>? = null,
+    override val next: ElementList.More<E>? = null,
     left: HashTreapSet<E>? = null,
     right: HashTreapSet<E>? = null
-) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E>, SetElementList<E> {
+) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E>, ElementList<E> {
 
     override fun E.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun new(element: E): HashTreapSet<E> = HashTreapSet(element)
@@ -24,7 +24,7 @@ internal class HashTreapSet<@Treapable E>(
         (this as? HashTreapSet<E>)
         ?: (this as? TreapSet.Builder<E>)?.build() as? HashTreapSet<E>
 
-    private inline fun SetElementList<E>?.forEachNodeElement(action: (E) -> Unit) {
+    private inline fun ElementList<E>?.forEachNodeElement(action: (E) -> Unit) {
         var current = this
         while (current != null) {
             action(current.element)
@@ -49,7 +49,7 @@ internal class HashTreapSet<@Treapable E>(
 
     fun withElement(element: E) = when {
         this.shallowContains(element) -> this
-        else -> HashTreapSet(this.element, SetElementList.MoreElements(element, this.next), this.left, this.right)
+        else -> HashTreapSet(this.element, ElementList.More(element, this.next), this.left, this.right)
     }
 
     override fun shallowEquals(that: HashTreapSet<E>): Boolean {
@@ -220,7 +220,7 @@ internal class HashTreapSet<@Treapable E>(
     }
 
     override fun iterator(): Iterator<E> = sequence {
-        selfNotEmpty.asSequence().forEach { node ->
+        selfNotEmpty.asTreapSequence().forEach { node ->
             node.forEachNodeElement {
                 yield(it)
             }
@@ -230,12 +230,12 @@ internal class HashTreapSet<@Treapable E>(
     override fun shallowGetSingleElement(): E? = element.takeIf { next == null }
 }
 
-internal interface SetElementList<E> {
+internal interface ElementList<E> {
     val element: E
-    val next: MoreElements<E>?
+    val next: More<E>?
 
-    class MoreElements<E>(
+    class More<E>(
         override val element: E,
-        override val next: MoreElements<E>?
-    ) : SetElementList<E>, java.io.Serializable
+        override val next: More<E>?
+    ) : ElementList<E>, java.io.Serializable
 }

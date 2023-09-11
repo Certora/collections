@@ -28,7 +28,19 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     /**
         Converts the given Map to a AbstractTreapMap of the same type as 'this'.  May copy the map.
      */
-    fun Map<out K, V>.toTreapMap(): AbstractTreapMap<K, V, S> = toTreapMapOrNull() ?: this@AbstractTreapMap.clear().putAll(this)
+    fun Map<out K, V>.toTreapMapIfNotEmpty(): AbstractTreapMap<K, V, S>? = 
+        toTreapMapOrNull() ?: when {
+            isEmpty() -> null
+            else -> {
+                val i = entries.iterator()
+                var m: AbstractTreapMap<K, V, S> = i.next().let { (k, v) -> new(k, v) }
+                while (i.hasNext()) {
+                    val (k, v) = i.next()
+                    m = m.put(k, v)
+                }
+                m
+            }
+        }
 
     /**
         Given a map, calls the supplied `action` if the collection is a Treap of the same type as this Treap, otherwise
@@ -85,7 +97,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     /**
         Gets a sequence of all map entries in this Map.
      */
-    fun entrySequence() = selfNotEmpty.asSequence().flatMap { it.shallowEntrySequence() }
+    fun entrySequence() = asTreapSequence().flatMap { it.shallowEntrySequence() }
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,19 +135,19 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     override fun get(key: K): V? =
         selfNotEmpty.find(key.toTreapKey())?.shallowGetValue(key)
 
-    override fun put(key: K, value: V): S =
+    override fun put(key: K, value: V): AbstractTreapMap<K, V, S> =
         selfNotEmpty.add(new(key, value))
 
-    override fun putAll(m: Map<out K, V>): S =
-        m.entries.fold(self) { t, e -> t.put(e.key, e.value) }
+    override fun putAll(m: Map<out K, V>): TreapMap<K, V> =
+        m.entries.fold(this as TreapMap<K, V>) { t, e -> t.put(e.key, e.value) }
 
-    override fun remove(key: K): S =
+    override fun remove(key: K):  TreapMap<K, V> =
         selfNotEmpty.remove(key.toTreapKey(), key) ?: clear()
 
-    override fun remove(key: K, value: V): S =
+    override fun remove(key: K, value: V): TreapMap<K, V> =
         selfNotEmpty.removeEntry(key.toTreapKey(), key, value) ?: clear()
 
-    override abstract fun clear(): S
+    override fun clear(): TreapMap<K, V> = treapMapOf<K, V>()
 
     override fun builder(): TreapMapBuilder<K, V> = TreapMapBuilder(self)
 
@@ -165,7 +177,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the
         new values for each key.
      */
-    override fun merge(m: Map<out K, V>, merger: (K, V?, V?) -> V?): S =
+    override fun merge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap -> selfNotEmpty.mergeWith(otherTreap, getShallowMerger(merger)) ?: clear() },
             { fallbackMerge(m, merger) }
@@ -180,13 +192,13 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 
         @param[merger] The merge function to apply to each pair of entries.  Must be pure and thread-safe.
      */
-    override fun parallelMerge(m: Map<out K, V>, parallelThresholdLog2: Int, merger: (K, V?, V?) -> V?): S =
+    override fun parallelMerge(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap -> selfNotEmpty.parallelMergeWith(otherTreap, parallelThresholdLog2, getShallowMerger(merger)) ?: clear() },
             { fallbackMerge(m, merger) }
         )
 
-    private fun fallbackMerge(m: Map<out K, V>, merger: (K, V?, V?) -> V?): S {
+    private fun fallbackMerge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
         var newThis = clear()
         for (k in this.keys.asSequence() + m.keys.asSequence()) {
             if (k !in newThis) {
@@ -202,7 +214,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
     /**
         Applies a transform to each entry, producing new values.
      */
-    override fun updateValues(transform: (K, V) -> V?): S = when {
+    override fun updateValues(transform: (K, V) -> V?): TreapMap<K, V> = when {
         isEmpty() -> self
         else -> notForking(this) {
             updateValuesImpl(transform) ?: clear()
@@ -217,7 +229,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
 
         @param[transform] The transform to apply to each entry.  Must be pure and thread-safe.
      */
-    override fun parallelUpdateValues(parallelThresholdLog2: Int, transform: (K, V) -> V?): S = when {
+    override fun parallelUpdateValues(parallelThresholdLog2: Int, transform: (K, V) -> V?): TreapMap<K, V> = when {
         isEmpty() -> self
         else -> maybeForking(self, threshold = { it.isApproximatelySmallerThanLog2(parallelThresholdLog2) }) {
             updateValuesImpl(transform) ?: clear()
@@ -270,7 +282,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
        }
        ```
      */
-    override fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?): S {
+    override fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?): TreapMap<K, V> {
         return selfNotEmpty.updateEntry(key.toTreapKey().precompute(), key, value, merger, ::new) ?: clear()
     }
 
@@ -282,15 +294,16 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
         fun <T> Iterator<T>.nextOrNull() = if (hasNext()) { next() } else { null }
 
         // Iterate over the two maps' treap sequences.  We ensure that each sequence uses the same key ordering, by
-        // converting `m` to a AbstractTreapMap of this map's type, if necessary. Note that we can't use entrySequence,
-        // because HashTreapMap's entrySequence is only partially ordered.
-        val thisIt = selfNotEmpty.asSequence().iterator()
-        val thatIt = m.toTreapMap().selfNotEmpty.asSequence().iterator()
+        // converting `m` to a TreapMap of this map's type, if necessary. Note that we can't use entrySequence, because
+        // HashTreapMap's entrySequence is only partially ordered.
+        val thisIt = asTreapSequence().iterator()
+        val that: Treap<K, S>? = m.toTreapMapIfNotEmpty()
+        val thatIt = that?.asTreapSequence()?.iterator()
 
         var thisCurrent = thisIt.nextOrNull()
-        var thatCurrent = thatIt.nextOrNull()
+        var thatCurrent = thatIt?.nextOrNull()
 
-        while (thisCurrent != null && thatCurrent != null) {
+        while (thisCurrent != null && thatIt != null && thatCurrent != null) {
             val c = thisCurrent.compareKeyTo(thatCurrent)
             when {
                 c < 0 -> {
@@ -312,7 +325,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, S : AbstractTreapMap<K
             yieldAll(thisCurrent.shallowZipThisOnly())
             thisCurrent = thisIt.nextOrNull()
         }
-        while (thatCurrent != null) {
+        while (thatIt != null && thatCurrent != null) {
             yieldAll(thatCurrent.shallowZipThatOnly())
             thatCurrent = thatIt.nextOrNull()
         }

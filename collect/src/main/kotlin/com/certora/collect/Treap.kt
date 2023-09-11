@@ -132,6 +132,25 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
         }
         return this
     }
+
+
+    /**
+        Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
+    */
+    fun asTreapSequence(): Sequence<S> = sequence<S> {
+        val stack = ArrayDeque<S>()
+        var current: S? = this@Treap.self
+        while (stack.isNotEmpty() || current != null) {
+            if (current != null) {
+                stack.addFirst(current)
+                current = current.left
+            } else {
+                current = stack.removeFirst()
+                yield(current)
+                current = current.right
+            }
+        }
+    }
 }
 
 /**
@@ -249,27 +268,6 @@ internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.find(key: TreapKey<T>): 
 }
 
 internal fun <@Treapable T, S : Treap<T, S>> S?.containsKey(key: TreapKey<T>): Boolean = (find(key) != null)
-
-/**
-    Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
- */
-internal fun <@Treapable T, S : Treap<T, S>> S?.asSequence(): Sequence<S> = when {
-    this == null -> sequenceOf<S>()
-    else -> sequence<S> {
-        val stack = ArrayDeque<S>()
-        var current: S? = this@asSequence.self
-        while (stack.isNotEmpty() || current != null) {
-            if (current != null) {
-                stack.addFirst(current)
-                current = current.left
-            } else {
-                current = stack.removeFirst()
-                yield(current)
-                current = current.right
-            }
-        }
-    }
-}
 
 /**
     Compares two treaps for equality, according to the derived class' definition.

@@ -23,12 +23,12 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun builder(): Builder<K, @UnsafeVariance V> = TreapMapBuilder(this)
 
     public fun merge(
-        m: Map<out K, V>, 
+        m: Map<K, V>, 
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
     
     public fun parallelMerge(
-        m: Map<out K, V>, 
+        m: Map<K, V>, 
         parallelThresholdLog2: Int = 4, 
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
@@ -53,23 +53,10 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     ): Sequence<Map.Entry<K, Pair<V?, V?>>>
 }
 
-public fun <@Treapable K : Comparable<K>, V> treapMapOf(): TreapMap<K, V> = SortedTreapMap.emptyOf<K, V>()
-public fun <@Treapable K : Comparable<K>, V> treapMapOf(vararg pairs: Pair<K, V>): TreapMap<K, V> = treapMapOf<K,V>().mutate { it += pairs }
+public fun <@Treapable K, V> treapMapOf(): TreapMap<K, V> = EmptyTreapMap<K, V>()
+public fun <@Treapable K, V> treapMapOf(vararg pairs: Pair<K, V>): TreapMap<K, V> = treapMapOf<K,V>().mutate { it += pairs }
 
-public fun <@Treapable K, V> hashTreapMapOf(): TreapMap<K, V> = HashTreapMap.emptyOf<K, V>()
-public fun <@Treapable K, V> hashTreapMapOf(vararg pairs: Pair<K, V>): TreapMap<K, V> = hashTreapMapOf<K,V>().mutate { it += pairs }
-
-
-public fun <@Treapable K : Comparable<K>, V> Map<K, V>.toTreapMap(): TreapMap<K, V> =
-    this as? SortedTreapMap<K, V>
-    ?: (this as? TreapMap.Builder<K, V>)?.build() as? SortedTreapMap<K, V>
-    ?: treapMapOf<K, V>().putAll(this)
-
-public fun <@Treapable K, V> Map<K, V>.toHashTreapMap(): TreapMap<K, V> =
-    this as? HashTreapMap<K, V>
-    ?: (this as? TreapMap.Builder<K, V>)?.build() as? HashTreapMap<K, V>
-    ?: hashTreapMapOf<K, V>().putAll(this)
-
+public fun <@Treapable K, V> Map<K, V>.toTreapMap(): TreapMap<K, V> = treapMapOf<K, V>() + this
 
 @Suppress("UNCHECKED_CAST")
 public inline fun <K, V> TreapMap<out K, V>.mutate(mutator: (MutableMap<K, V>) -> Unit): TreapMap<K, V> =

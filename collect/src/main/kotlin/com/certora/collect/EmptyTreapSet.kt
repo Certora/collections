@@ -1,6 +1,6 @@
 package com.certora.collect
 
-internal class EmptyTreapSet<@Treapable E> : TreapSet<E> {
+internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E> {
     override val size = 0
     override fun isEmpty() = true
 
@@ -26,12 +26,19 @@ internal class EmptyTreapSet<@Treapable E> : TreapSet<E> {
     @Suppress("Treapability", "UNCHECKED_CAST")
     override fun add(element: E): TreapSet<E> = when (element) {
         is PrefersHashTreap -> HashTreapSet(element)
-        is Comparable<*> -> SortedTreapSet<Comparable<Comparable<*>>>(element as Comparable<Comparable<*>>) as TreapSet<E>
+        is Comparable<*> -> 
+            SortedTreapSet<Comparable<Comparable<*>>>(element as Comparable<Comparable<*>>) as TreapSet<E>
         else -> HashTreapSet(element)
     }
 
-    override fun addAll(elements: Collection<E>): TreapSet<E> = 
-        elements.fold(this as TreapSet<E>) { set, element -> set.add(element) }
+    @Suppress("UNCHECKED_CAST")
+    override fun addAll(elements: Collection<E>): TreapSet<E> = when {
+        elements.isEmpty() -> this
+        elements is TreapSet<*> -> elements as TreapSet<E>
+        elements is TreapSet.Builder<*> -> elements.build() as TreapSet<E>
+        else -> elements.fold(this as TreapSet<E>) { set, element -> set.add(element) }
+    }
+        
 
     companion object {
         private val instance = EmptyTreapSet<Nothing>()
