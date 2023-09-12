@@ -94,12 +94,12 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         self.find(element.toTreapKey())?.shallowContains(element) ?: false
 
     override fun containsAll(elements: Collection<E>): Boolean = elements.useAsTreap(
-        { elementsTreap -> self.containsAll(elementsTreap) },
+        { elementsTreap -> self.containsAllKeys(elementsTreap) },
         { elements.all { this.contains(it) }}
     )
 
     override fun containsAny(elements: Iterable<E>): Boolean = elements.useAsTreap(
-        { elementsTreap -> self.containsAny(elementsTreap) },
+        { elementsTreap -> self.containsAnyKeys(elementsTreap) },
         { elements.any { this.contains(it) }}
     )
 
@@ -248,14 +248,14 @@ internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.difference(that
 
     ...except that we don't want to do all of the work that would imply, if we can avoid it.
  */
-internal fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.containsAll(that: S?): Boolean = when {
+internal fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.containsAllKeys(that: S?): Boolean = when {
     that == null -> true
     this == null -> false
     else -> {
         this.split(that).let {
             it.duplicate?.shallowContainsAll(that) == true &&
-            it.left.containsAll(that.left) &&
-            it.right.containsAll(that.right)
+            it.left.containsAllKeys(that.left) &&
+            it.right.containsAllKeys(that.right)
         }
     }
 }
@@ -267,14 +267,14 @@ internal fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.containsAll(that: S?)
 
     ...except that we don't want to do all of the work that would imply, if we can avoid it.
  */
-internal fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.containsAny(that: S?): Boolean = when {
+internal fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.containsAnyKeys(that: S?): Boolean = when {
     that == null -> false
     this == null -> false
     else -> {
         that.split(this).let {
             it.duplicate?.let { this.shallowContainsAny(it) } == true ||
-            this.left.containsAny(it.left) ||
-            this.right.containsAny(it.right)
+            this.left.containsAnyKeys(it.left) ||
+            this.right.containsAnyKeys(it.right)
         }
     }
 }

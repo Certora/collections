@@ -19,6 +19,8 @@ internal class HashTreapMap<@Treapable K, V>(
     right: HashTreapMap<K, V>? = null
 ) : AbstractTreapMap<K, V, HashTreapMap<K, V>>(left, right), TreapKey.Hashed<K>, KeyValuePairList<K, V> {
 
+    override fun hashCode() = computeHashCode()
+
     override fun K.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun new(key: K, value: V): HashTreapMap<K, V> = HashTreapMap(key, value)
 

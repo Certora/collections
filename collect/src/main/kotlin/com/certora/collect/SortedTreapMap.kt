@@ -13,6 +13,8 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
     right: SortedTreapMap<K, V>? = null
 ) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
 
+    override fun hashCode() = computeHashCode()
+
     override fun K.toTreapKey() = TreapKey.Sorted.FromKey(this)
 
     override fun new(key: K, value: V): SortedTreapMap<K, V> = SortedTreapMap(key, value)
