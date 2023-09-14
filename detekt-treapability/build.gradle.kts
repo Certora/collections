@@ -9,22 +9,6 @@ plugins {
     id("maven-publish")
 }
 
-repositories {
-    mavenCentral()
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(property("javaVersion").toString()))
-    }
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        allWarningsAsErrors = true
-    }
-}
-
 tasks.withType<Test> {
     useJUnitPlatform()
     testLogging.showStandardStreams = true

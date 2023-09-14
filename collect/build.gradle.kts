@@ -1,6 +1,5 @@
 import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.*
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	kotlin("jvm")
@@ -8,23 +7,6 @@ plugins {
 	id("io.github.detekt.gradle.compiler-plugin")
     id("java-library")
     id("maven-publish")
-}
-
-repositories {
-    mavenCentral()
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(property("javaVersion").toString()))
-    }
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        allWarningsAsErrors = true
-        freeCompilerArgs += "-Xcontext-receivers"
-    }
 }
 
 kotlin {

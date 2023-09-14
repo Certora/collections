@@ -3,9 +3,9 @@
 	"tasks": [
 		{
 			"type": "gradle",
-			"id": "collectionsbuildCollections",
-			"script": "build",
-			"description": "Assembles and tests this project.",
+			"id": "/home/eric/certora/collectionsbuildAndPublishToMavenLocalCollections",
+			"script": "buildAndPublishToMavenLocal",
+			"description": "",
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -20,7 +20,7 @@
 			"problemMatcher": [
 				"$gradle"
 			],
-			"label": "gradle: build"
+			"label": "gradle: buildAndPublishToMavenLocal"
 		}
 	]
 }
