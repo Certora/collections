@@ -1,5 +1,7 @@
 package com.certora.collect
 
+import kotlinx.collections.immutable.PersistentSet
+
 internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E> {
     override val size = 0
     override fun isEmpty() = true
@@ -35,11 +37,10 @@ internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E> {
     override fun addAll(elements: Collection<E>): TreapSet<E> = when {
         elements.isEmpty() -> this
         elements is TreapSet<*> -> elements as TreapSet<E>
-        elements is TreapSet.Builder<*> -> elements.build() as TreapSet<E>
+        elements is PersistentSet.Builder<*> -> elements.build() as TreapSet<E>
         else -> elements.fold(this as TreapSet<E>) { set, element -> set.add(element) }
     }
         
-
     companion object {
         private val instance = EmptyTreapSet<Nothing>()
         @Suppress("UNCHECKED_CAST")

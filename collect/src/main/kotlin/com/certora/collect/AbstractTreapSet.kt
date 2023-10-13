@@ -104,7 +104,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
     )
 
     override fun addAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
-        { elementsTreap -> (self union elementsTreap) ?: clear() },
+        { elementsTreap -> (self treapUnion elementsTreap) ?: clear() },
         { elements.fold(this as TreapSet<E>) { t, e -> t.add(e)}}
     )
 
@@ -157,11 +157,11 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
 }
 
 /**
-    Computes the union of two TreapSets.  When nodes have equal keys, they are combined by calling `shallowUnion`, which
+    Computes the treapUnion of two TreapSets.  When nodes have equal keys, they are combined by calling `shallowUnion`, which
     derived classes use to, e.g, merge hash buckets. Note that we always prefer to return 'this' over 'that', to
     preserve the object identity invariant described in the `Treap` summary.
  */
-internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.union(that: S?): S? = when {
+internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.treapUnion(that: S?): S? = when {
     this == null -> that
     that == null -> this
     this === that -> this
@@ -181,7 +181,7 @@ private fun <@Treapable E, S : AbstractTreapSet<E, S>> unionMerge(higher: Abstra
     // Note that the "higher" key can not occur in "lower", because if it did it wouldn't have a higher priority. We
     // don't need to worry about the split's `duplicate` field.
     lower.split(higher).let { lowerSplit ->
-        higher.with(higher.left union lowerSplit.left, higher.right union lowerSplit.right)
+        higher.with(higher.left treapUnion lowerSplit.left, higher.right treapUnion lowerSplit.right)
     }
 
 /**
@@ -244,7 +244,7 @@ internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.difference(that
 /**
     Checks if this Treap contains all items in another Treap.  This should be equivalent to:
 
-        (this union that) === this
+        (this treapUnion that) === this
 
     ...except that we don't want to do all of the work that would imply, if we can avoid it.
  */

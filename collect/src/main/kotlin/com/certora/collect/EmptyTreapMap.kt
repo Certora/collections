@@ -2,6 +2,7 @@ package com.certora.collect
 
 import kotlinx.collections.immutable.ImmutableCollection
 import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentSetOf
 
 internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K, V> {
@@ -64,7 +65,7 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
     override fun putAll(m: Map<out K, V>): TreapMap<K, V> = when {
         m.isEmpty() -> this
         m is TreapMap<*, *> -> m as TreapMap<K, V>
-        m is TreapMap.Builder<*, *> -> m.build() as TreapMap<K, V>
+        m is PersistentMap.Builder<*, *> -> m.build() as TreapMap<K, V>
         else -> m.entries.fold(this as TreapMap<K, V>) { map, (key, value) -> map.put(key, value) }
     }
 
