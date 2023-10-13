@@ -37,6 +37,9 @@ public fun <@Treapable T> treapSetOf(): TreapSet<T> = EmptyTreapSet()
 public fun <@Treapable T> treapSetOf(element: T): TreapSet<T> = treapSetOf<T>().add(element)
 public fun <@Treapable T> treapSetOf(vararg elements: T): TreapSet<T> = treapSetOf<T>().mutate { it.addAll(elements) }
 
+public fun <@Treapable T> treapSetOfNotNull(element: T?): TreapSet<T> = if (element != null) { treapSetOf(element) } else { treapSetOf() }
+public fun <@Treapable T> treapSetOfNotNull(vararg elements: T?): TreapSet<T> = treapSetOf<T>() + elements.filterNotNull()
+
 public fun <@Treapable T> treapSetBuilderOf(): TreapSet.Builder<T> = treapSetOf<T>().builder()
 public fun <@Treapable T> treapSetBuilderOf(vararg elements: T): TreapSet.Builder<T> = treapSetOf<T>().builder().apply { addAll(elements) }
 
