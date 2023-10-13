@@ -15,6 +15,8 @@ internal class HashTreapSet<@Treapable E>(
     right: HashTreapSet<E>? = null
 ) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E>, ElementList<E> {
 
+    override fun hashCode(): Int = computeHashCode()
+
     override fun E.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun new(element: E): HashTreapSet<E> = HashTreapSet(element)
 

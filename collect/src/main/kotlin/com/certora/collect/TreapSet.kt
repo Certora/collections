@@ -5,6 +5,7 @@ import kotlinx.collections.immutable.PersistentSet
 /**
     A [PersistentSet] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
  */
+@Treapable
 public interface TreapSet<out T> : PersistentSet<T> {
     override fun add(element: @UnsafeVariance T): TreapSet<T>
     override fun addAll(elements: Collection<@UnsafeVariance T>): TreapSet<T>

@@ -12,6 +12,8 @@ internal class SortedTreapSet<@Treapable E : Comparable<E>>(
     right: SortedTreapSet<E>? = null
 ) : AbstractTreapSet<E, SortedTreapSet<E>>(left, right), TreapKey.Sorted<E> {
 
+    override fun hashCode(): Int = computeHashCode()
+
     override fun E.toTreapKey() = TreapKey.Sorted.FromKey(this)
     override fun new(element: E): SortedTreapSet<E> = SortedTreapSet(element)
 

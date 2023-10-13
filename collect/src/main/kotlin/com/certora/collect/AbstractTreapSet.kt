@@ -88,8 +88,6 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
         )
     }
 
-    override fun hashCode(): Int = self.computeHashCode()
-
     override fun contains(element: E): Boolean =
         self.find(element.toTreapKey())?.shallowContains(element) ?: false
 
