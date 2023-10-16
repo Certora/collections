@@ -14,6 +14,4 @@ pluginManagement {
 
 rootProject.name = "Collections"
 
-include("Lib", "DetektRules")
-project(":Lib").projectDir = file("lib")
-project(":DetektRules").projectDir = file("detekt")
+include("collect", "detekt-treapability")

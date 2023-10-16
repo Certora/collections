@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "gradle",
+			"id": "/home/eric/certora/collectionsbuildAndPublishToMavenLocalCollections",
+			"script": "buildAndPublishToMavenLocal",
+			"description": "",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"project": "Collections",
+			"buildFile": "${workspaceFolder}/build.gradle.kts",
+			"rootProject": "Collections",
+			"projectFolder": "${workspaceFolder}",
+			"workspaceFolder": "${workspaceFolder}",
+			"args": "",
+			"javaDebug": false,
+			"problemMatcher": [
+				"$gradle"
+			],
+			"label": "gradle: buildAndPublishToMavenLocal"
+		}
+	]
+}
