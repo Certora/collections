@@ -1,8 +1,8 @@
 package com.certora.collect
 
-import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.*
 
-internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E> {
+internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E>, java.io.Serializable {
     override val size = 0
     override fun isEmpty() = true
 

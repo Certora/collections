@@ -1,11 +1,8 @@
 package com.certora.collect
 
-import kotlinx.collections.immutable.ImmutableCollection
-import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.*
 
-internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K, V> {
+internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K, V>, java.io.Serializable {
     override val size get() = 0
     override fun isEmpty() = true
 
