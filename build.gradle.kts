@@ -9,18 +9,16 @@ plugins {
 	id("io.github.detekt.gradle.compiler-plugin")
     id("java-library")
 	id("maven-publish")
-	id("com.palantir.git-version") version "3.0.0"
 }
 
 subprojects {
 	apply(plugin = "java-library")
-	apply(plugin = "com.palantir.git-version")
 	apply(plugin = "maven-publish")
-	
+
 	repositories {
 		mavenCentral()
 	}
-	
+
 	java {
 		toolchain {
 			languageVersion.set(JavaLanguageVersion.of(property("javaVersion").toString()))
@@ -39,7 +37,6 @@ subprojects {
 		}
 	}
 
-
 	publishing {
 		publications {
 			repositories {
@@ -55,9 +52,7 @@ subprojects {
 
 			withType<MavenPublication> {
 				version = if (project.hasProperty("release")) {
-					val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
-					val details = versionDetails()
-					"${details.lastTag}"
+					"${project.version}"
 				} else {
 					"${project.version}-SNAPSHOT"
 				}
@@ -74,9 +69,8 @@ subprojects {
 						developerConnection.set("scm:git:ssh://github.com/Certora/collections.git")
 						url.set("https://github.com/Certora/collections/")
 					}
-				}            
+				}
 			}
 		}
 	}
-
 }
