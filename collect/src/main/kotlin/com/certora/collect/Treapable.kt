@@ -6,17 +6,17 @@ package com.certora.collect
     The internal structure of Treap-based collections is based on the hash codes of the keys stored in the collection.
     If a Treap is serialized and deserialized, the hash codes of the keys must be the same as they were before
     serialization, or the Treap will be corrupted.  To prevent this, we use [Treapable] annotations to convey hash code
-    stability requirements, and optionally enforce these requirements with the [Treapability] Detekt rule. 
+    stability requirements, and optionally enforce these requirements with the [Treapability] Detekt rule.
 
     A type parameter annotated with [Treapable] requires that all arguments to the type parameter have stable hash code
-    *if* they are also possibly serializable.  
+    *if* they are also possibly serializable.
 
     A type is definitely not serializable if it does not implement Serializable *and* it is final (or sealed, and all
     subclasses are definitely not serializable).
 
     A class, interface, or object annotated with [Treapable] must have a stable hash code (and all subclasses must
     also).  The [Treapability] rule will report a violation if a class, interface, or object annotated with [Treapable]
-    does not appear to have a stable hash code.  
+    does not appear to have a stable hash code.
 
     The [Treapability] rule will also report a violation if an argument to a [Treapable] type parameter is potentially
     serializable and does not have a stable hash code.  Some notes on hash code stability:
@@ -41,7 +41,7 @@ package com.certora.collect
       and do not allow this to be overridden.  A stable hash code can be obtained from the *name* of the enum instance.
       (We could also use the ordinal, but this has an unnecessary dependence on ordering.)
 
-    - Our analysis considers some known JVM types to have stable hash codes (such as BigIngeter).
+    - Our analysis assumes some known JVM types to have stable hash codes (such as BigIngeter).
  */
 @Target(AnnotationTarget.TYPE_PARAMETER, AnnotationTarget.TYPE, AnnotationTarget.CLASS)
 public annotation class Treapable
