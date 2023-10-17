@@ -3,7 +3,7 @@ package com.certora.collect
 import kotlinx.collections.immutable.PersistentSet
 
 /**
-    A [PersistentSet] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
+    A [PersistentSet] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.
  */
 @Treapable
 public interface TreapSet<out T> : PersistentSet<T> {
@@ -16,7 +16,7 @@ public interface TreapSet<out T> : PersistentSet<T> {
     override fun clear(): TreapSet<T>
 
     /**
-        A [PersistentSet.Builder] that produces a [TreapSet].    
+        A [PersistentSet.Builder] that produces a [TreapSet].
     */
     public interface Builder<T> : PersistentSet.Builder<T> {
         override fun build(): TreapSet<T>
@@ -25,16 +25,48 @@ public interface TreapSet<out T> : PersistentSet<T> {
     @Suppress("Treapability")
     override fun builder(): Builder<@UnsafeVariance T> = TreapSetBuilder(this)
 
+    /**
+        Checks if this set contains any of the given [elements].  This is equivalent to, but more efficient than,
+        `this.intersect(elements).isNotEmpty()`.
+     */
     public fun containsAny(elements: Iterable<@UnsafeVariance T>): Boolean
+
+    /**
+        If this set contains exactly one element, returns that element.  Otherwise, throws [NoSuchElementException].
+     */
     public fun single(): T
+
+    /**
+        If this set contains exactly one element, returns that element.  Otherwise, returns null.
+     */
     public fun singleOrNull(): T?
+
+    /**
+        If this set contains an element that compares equal to the specified [element], returns that element instance.
+        This is useful for implementing intern tables, for example.
+     */
     public fun findEqual(element: @UnsafeVariance T): T?
+
+    /**
+        Calls [action] for each element in the set.  This traverses the treap without allocating temporary storage,
+        which may be more efficient than [forEach].
+     */
     public fun forEachElement(action: (element: T) -> Unit): Unit
 }
 
-
+/**
+    Returns an empty [TreapSet<T>]
+ */
 public fun <@Treapable T> treapSetOf(): TreapSet<T> = EmptyTreapSet()
+
+/**
+    Returns a new [TreapSet<T>] containing the given element.
+ */
 public fun <@Treapable T> treapSetOf(element: T): TreapSet<T> = treapSetOf<T>().add(element)
+
+/**
+    Returns a new [TreapSet<T>] containing the given elements.
+ */
 public fun <@Treapable T> treapSetOf(vararg elements: T): TreapSet<T> = treapSetOf<T>().mutate { it.addAll(elements) }
 
 public fun <@Treapable T> treapSetOfNotNull(element: T?): TreapSet<T> = if (element != null) { treapSetOf(element) } else { treapSetOf() }
