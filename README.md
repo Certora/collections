@@ -1,32 +1,21 @@
 # Certora Collections
 
-Efficient functional collections for Kotlin.
+Memory-efficient immutable collections for Kotlin.
 
-TODO: need a better name
+## Motivation
 
-Certora Collections provides data structure implementations for Kotlin that are designed for efficient functional programming.
-These data structures are immutable and persistent, and designed for minimal memory usage when used in a functional
-style. They also include other features that we have found helpful in implementing the Certora Prover, such as efficient
-joining/merging of maps, parallel operations, etc.
+Kotlin makes it quite easy and natural to manipulate immutable data structures. However, the standard library does not
+provide efficient implementations of immutable collections.
+[kotlinx.collections.immutable](https://github.com/Kotlin/kotlinx.collections.immutable) provides a set of interfaces
+that are designed to be implemented by efficient immutable collections, along with a reference implementation. However,
+in developing the Certora Prover, we found that the reference implementation did not make the right performance
+tradeoffs for our use cases.
 
-We build on the interfaces introduced in
-[kotlinx.collections.immutable](https://github.com/Kotlin/kotlinx.collections.immutable), but provide a different
-underlying implementation based on "[treaps](https://en.wikipedia.org/wiki/Treap)," which are probabilistically balanced
-binary search trees (BSTs).
+Most `Set` and `Map` implementations, including the ones mentioned previously, are optimized primarily for speed of
+operations on single elements of the collection, e.g., adding an element to a `Set` or looking up a single value in a
+`Map`. However, in many use cases the more performance-critical operations are those that operate over the whole data
+structure, such computing set unions or intersection of two sets, or merging two maps.
 
-Currently we provide set and map implementations.
-
-# Motivation
-
-
-
-
-
-TODO: describe why we use treaps, what are the benefits, etc.
-
-
-## Usage
-
-...how to get the package in Gradle
-
-## Docs
+The Certora Collections library provides `Set` and `Map` implementations which are optimized primarily for such
+operations.  Further, we optimize heavily for memory usage over speed of operations on single elements.  We also provide
+some additional features that we have found useful in the Certora Prover, such as efficient parallel operations.
