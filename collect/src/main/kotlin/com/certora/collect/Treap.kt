@@ -36,9 +36,7 @@ package com.certora.collect
     keys in Maps.  For types that do not implement Comparable, we use the object's hashCode() function to generate a
     Treap key.  We thus sort all elements/keys by their hash codes.  We resolve collisions by chaining off of the Treap
     node.  This results in a bifurcation of Set and Map implementations, into SortedTreapSet and HashTreapSet,
-    SortedTreapMap and HashTreapMap.  To make this more manageable at use sites, we We provide AutoPersistentSet and
-    AutoPersistentMap, which are empty set/map objects that expand into the appropriate sorted/hashed structure based on
-    the actual key types encountered.
+    SortedTreapMap and HashTreapMap.
 
     Some other notes:
 
@@ -55,10 +53,8 @@ package com.certora.collect
     - To ensure "persistence" of these data structures, all instances of Treap are deeply immutable.  "Mutation" is
       always done by making a new instance.  We go to lengths to avoid this, and also to throw out any copies if they
       turn out to be unnecessary, so that we maximize our chances of reusing existing memory allocations, in the hope of
-      keeping memory small.  Typically a union of two Sets, for example, will reuse a substantial portion of both sets.
-
-    - Most Treap operations are written as extension methods, so that they can deal with null "this" values.  This makes
-      things much more convenient, but is a bit odd, and is another reason this stuff is isolated in its own package.
+      keeping memory small.  Often a union of two large Sets, for example, will reuse a substantial portion of both
+      sets.
 
     - Most Treap operations are defined recursively.  This should not lead to stack overflow, as Treaps are very likely
       to be mostly balanced.  The expected (ideal) depth of a Treap is O(log2(N)), so we don't expect to see Treaps that

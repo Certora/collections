@@ -62,7 +62,7 @@ internal interface TreapKey<@Treapable K> {
     abstract fun precompute(): TreapKey<K>
 
     /**
-        A TreapKey whose underlying key implement Comparable.  This allows us to sort the Treap naturally.
+        A TreapKey whose underlying key implements Comparable.  This allows us to sort the Treap naturally.
      */
     interface Sorted<@Treapable K : Comparable<K>> : TreapKey<K> {
         abstract override val treapKey: K
