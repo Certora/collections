@@ -55,7 +55,7 @@ public interface TreapSet<out T> : PersistentSet<T> {
 }
 
 /**
-    Returns an empty [TreapSet<T>]
+    Returns an empty [TreapSet<T>].
  */
 public fun <@Treapable T> treapSetOf(): TreapSet<T> = EmptyTreapSet()
 
