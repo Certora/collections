@@ -1,5 +1,7 @@
 # Certora Collections
 
+[![](https://jitpack.io/v/certora/collections.svg)](https://jitpack.io/#certora/collections)
+
 Memory-efficient immutable collections for Kotlin.
 
 ## Motivation
@@ -19,3 +21,18 @@ structure, such computing set unions or intersection of two sets, or merging two
 The Certora Collections library provides `Set` and `Map` implementations which are optimized primarily for such
 operations.  Further, we optimize heavily for memory usage over speed of operations on single elements.  We also provide
 some additional features that we have found useful in the Certora Prover, such as efficient parallel operations.
+
+## Usage
+
+[![](https://jitpack.io/v/certora/collections.svg)](https://jitpack.io/#certora/collections)<br/>
+The Certora Collections library is available on [JitPack](https://jitpack.io/#certora/collections).
+
+### API
+
+The API builds on the interfaces provided by [kotlinx.collections.immutable].  See The Kotlin Immutable Collections
+[proposal](https://github.com/Kotlin/kotlinx.collections.immutable/blob/master/proposal.md).  We provide some additional
+interfaces above the `PersistentMap` and `PersistentSet` interfaces provided by `kotlinx.collections.immutable`:
+
+- 
+
+
