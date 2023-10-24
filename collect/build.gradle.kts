@@ -17,20 +17,6 @@ detekt {
     config.setFrom("detekt.yml")
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("certora-collections") {
-            from(components["java"])
-
-            pom {
-                name.set("Certrora Collections")
-                description.set("Efficient collection types for Kotlin")
-                url.set("http://www.github.com/Certora/collections")
-            }
-        }
-    }
-}
-
 dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
     detektPlugins(project(":detekt-treapability"))
