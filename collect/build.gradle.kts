@@ -18,11 +18,6 @@ detekt {
     config.setFrom("detekt.yml")
 }
 
-java {
-  withJavadocJar()
-  // withSourcesJar() // if you want sources?
-}
-
 dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
     detektPlugins(project(":detekt-treapability"))
@@ -31,8 +26,16 @@ dependencies {
 	testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 }
 
-// tasks.register<Jar>("dokkaJar") {
-//     dependsOn(tasks.dokkaHtml)
-//     from(tasks.dokkaHtml.flatMap { it.outputDirectory })
-//     archiveClassifier.set("javadoc")
-// }
+tasks.register<Jar>("dokkaJar") {
+    dependsOn(tasks.dokkaHtml)
+    from(tasks.dokkaHtml.flatMap { it.outputDirectory })
+    archiveClassifier.set("javadoc")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("javadoc") {
+            artifact(tasks["dokkaJar"])
+        }
+    }
+}
