@@ -9,11 +9,16 @@ plugins {
 	id("io.github.detekt.gradle.compiler-plugin")
     id("java-library")
 	id("maven-publish")
+    id("pl.allegro.tech.build.axion-release")
 }
 
 subprojects {
 	apply(plugin = "java-library")
 	apply(plugin = "maven-publish")
+    apply(plugin = "pl.allegro.tech.build.axion-release")
+
+    group = "com.github.certora.collections"
+    version = scmVersion.version
 
 	repositories {
 		mavenCentral()
@@ -37,40 +42,11 @@ subprojects {
 		}
 	}
 
-	publishing {
-		publications {
-			repositories {
-				maven {
-					name = "GitHubPackages"
-					url = URI("https://maven.pkg.github.com/Certora/collections")
-					credentials {
-						username = System.getenv("GITHUB_ACTOR")
-						password = System.getenv("GITHUB_TOKEN")
-					}
-				}
-			}
-
-			withType<MavenPublication> {
-				version = if (project.hasProperty("release")) {
-					"${project.version}"
-				} else {
-					"${project.version}-SNAPSHOT"
-				}
-
-				pom {
-					licenses {
-						license {
-							name.set("MIT License")
-							url.set("https://github.com/Certora/collections/blob/4bc9da2c8197aea0ed3ad8b32b5a3dbcd69e725e/LICENSE")
-						}
-					}
-					scm {
-						connection.set("scm:git:https://github.com/Certora/collections.git")
-						developerConnection.set("scm:git:ssh://github.com/Certora/collections.git")
-						url.set("https://github.com/Certora/collections/")
-					}
-				}
-			}
-		}
-	}
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                from(components["java"])
+            }
+        }
+    }
 }

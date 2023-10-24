@@ -14,14 +14,6 @@ tasks.withType<Test> {
     testLogging.showStandardStreams = true
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("certora-common-collections-detekt") {
-            from(components["java"])
-        }
-    }
-}
-
 dependencies {
     val detektVersion: String by project
     val junitVersion: String by project
