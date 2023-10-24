@@ -5,9 +5,6 @@ import java.net.URI
 
 plugins {
 	kotlin("jvm")
-	kotlin("plugin.serialization")
-	id("io.github.detekt.gradle.compiler-plugin")
-    id("java-library")
 	id("maven-publish")
     id("pl.allegro.tech.build.axion-release")
 }

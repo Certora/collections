@@ -3,10 +3,8 @@ import org.gradle.kotlin.dsl.*
 
 plugins {
 	kotlin("jvm")
-	kotlin("plugin.serialization")
 	id("io.github.detekt.gradle.compiler-plugin")
     id("java-library")
-    id("maven-publish")
 }
 
 kotlin {
