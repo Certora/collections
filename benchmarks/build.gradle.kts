@@ -26,10 +26,34 @@ benchmark {
 
     configurations {
         named("main") {
-            
+            warmups = 7
+            iterations = 7
+            iterationTime = 500
+            iterationTimeUnit = "ms"
+            param("size", "1", "10", "100", "1000", "10000")
+            param("immutablePercentage", /*"95", "30", */"0")
+            param("hashCodeType", "random", "collision")
+            param("implementation", "hash", "tree")
         }
-        register("smoke") {
 
+        register("fast") {
+            warmups = 7
+            iterations = 7
+            iterationTime = 500
+            iterationTimeUnit = "ms"
+            param("size", "1000")
+            param("immutablePercentage", "0")
+            param("hashCodeType", "random")
+
+            // include("immutableMap.Get.get$")
+            // include("immutableMap.Iterate.iterateKeys$")
+            // include("immutableMap.Put.put$")
+            // include("immutableMap.Remove.remove$")
+
+            include("immutableSet.Add.add$")
+            // include("immutableSet.Contains.contains$")
+            // include("immutableSet.Iterate.iterate$")
+            // include("immutableSet.Remove.remove$")
         }
     }
 }

@@ -16,7 +16,7 @@ import kotlin.math.log
 
 fun <K, V> emptyPersistentMap(implementation: String): PersistentMap<K, V> = when (implementation) {
     HASH_IMPL -> persistentHashMapOf()
-    ORDERED_IMPL -> persistentMapOf()
+    TREAP_IMPL -> persistentMapOf()
     else -> throw AssertionError("Unknown PersistentMap implementation: $implementation")
 }
 
