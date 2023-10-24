@@ -34,7 +34,8 @@ tasks.register<Jar>("dokkaJar") {
 
 publishing {
     publications {
-        create<MavenPublication>("javadoc") {
+        create<MavenPublication>("maven") {
+            from(components["java"])
             artifact(tasks["dokkaJar"])
         }
     }
