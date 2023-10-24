@@ -2,7 +2,7 @@
 
 [![](https://jitpack.io/v/certora/collections.svg)](https://jitpack.io/#certora/collections)
 
-Memory-efficient immutable collections for Kotlin.
+Fast, memory-efficient immutable collections for Kotlin.
 
 ## Motivation
 
@@ -33,6 +33,6 @@ The API builds on the interfaces provided by [kotlinx.collections.immutable].  S
 [proposal](https://github.com/Kotlin/kotlinx.collections.immutable/blob/master/proposal.md).  We provide some additional
 interfaces above the `PersistentMap` and `PersistentSet` interfaces provided by `kotlinx.collections.immutable`:
 
-- 
+-
 
 
