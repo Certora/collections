@@ -14,18 +14,15 @@ open class ParallelMerge {
     var hashCodeType = ""
 
     @Param("100", "100000")
-    var parallelMergeWork = ""
+    var parallelMergeWork: Int = 0
 
     private var lhs = treapMapOf<IntWrapper, String>()
     private var lhsSmall = treapMapOf<IntWrapper, String>()
     private var rhs = treapMapOf<IntWrapper, String>()
     private var rhsSmall = treapMapOf<IntWrapper, String>()
-    private var parallelMergeWorkCount = 0
 
     @Setup
     fun prepare() {
-        parallelMergeWorkCount = parallelMergeWork.toInt()
-
         val keys = generateKeys(hashCodeType, 2 * size)
         lhs = treapMapPut(keys.take(size))
         lhsSmall = treapMapPut(keys.take((size / 1000) + 1))
@@ -40,7 +37,7 @@ open class ParallelMerge {
     fun parallel(sink: Blackhole) = lhs.parallelMerge(rhs) { _, a, b -> parallelWork(sink, a, b) }
 
     private fun <V> parallelWork(sink: Blackhole, a: V?, b: V?): V? {
-        repeat(parallelMergeWorkCount) { sink.consume(it) }
+        repeat(parallelMergeWork) { sink.consume(it) }
         return a ?: b
     }
 }

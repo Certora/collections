@@ -89,5 +89,16 @@ benchmark {
             include("immutableMap.Merge")
             include("immutableMap.ParallelMerge")
         }
+
+        register("mapUpdateValues") {
+            warmups = 5
+            iterations = 5
+            iterationTime = 500
+            iterationTimeUnit = "ms"
+            param("size", "10", "10000")
+            param("hashCodeType", "random")
+
+            include("immutableMap.UpdateValues")
+        }
     }
 }
