@@ -2,25 +2,30 @@ package benchmarks.immutableMap
 
 import benchmarks.*
 import com.certora.collect.*
-import kotlinx.collections.immutable.*
 import kotlinx.benchmark.*
 import kotlinx.collections.immutable.persistentMapOf
 
 @State(Scope.Benchmark)
-open class Merge {
+open class ParallelMerge {
     @Param(BM_1, BM_10, BM_100, BM_1000, BM_10000, BM_100000, BM_1000000)
     var size: Int = 0
 
     @Param(ASCENDING_HASH_CODE, RANDOM_HASH_CODE, COLLISION_HASH_CODE)
     var hashCodeType = ""
 
+    @Param("100", "100000")
+    var parallelMergeWork = ""
+
     private var lhs = treapMapOf<IntWrapper, String>()
     private var lhsSmall = treapMapOf<IntWrapper, String>()
     private var rhs = treapMapOf<IntWrapper, String>()
     private var rhsSmall = treapMapOf<IntWrapper, String>()
+    private var parallelMergeWorkCount = 0
 
     @Setup
     fun prepare() {
+        parallelMergeWorkCount = parallelMergeWork.toInt()
+
         val keys = generateKeys(hashCodeType, 2 * size)
         lhs = treapMapPut(keys.take(size))
         lhsSmall = treapMapPut(keys.take((size / 1000) + 1))
@@ -29,11 +34,13 @@ open class Merge {
     }
 
     @Benchmark
-    fun mergeEqualSize() = lhs.merge(rhs) { _, a, b -> a ?: b }
+    fun nonParallel(sink: Blackhole) = lhs.merge(rhs) { _, a, b -> parallelWork(sink, a, b) }
 
     @Benchmark
-    fun mergeSmallIntoLarge() = lhs.merge(rhsSmall) { _, a, b -> a ?: b }
+    fun parallel(sink: Blackhole) = lhs.parallelMerge(rhs) { _, a, b -> parallelWork(sink, a, b) }
 
-    @Benchmark
-    fun mergeLargeIntoSmall() = lhsSmall.merge(rhs) { _, a, b -> a ?: b }
+    private fun <V> parallelWork(sink: Blackhole, a: V?, b: V?): V? {
+        repeat(parallelMergeWorkCount) { sink.consume(it) }
+        return a ?: b
+    }
 }

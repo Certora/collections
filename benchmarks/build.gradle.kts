@@ -87,6 +87,7 @@ benchmark {
             param("hashCodeType", "random")
 
             include("immutableMap.Merge")
+            include("immutableMap.ParallelMerge")
         }
     }
 }
