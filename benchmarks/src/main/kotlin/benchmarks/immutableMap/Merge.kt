@@ -1,17 +1,13 @@
-/*
- * Copyright 2016-2021 JetBrains s.r.o.
- * Use of this source code is governed by the Apache 2.0 License that can be found in the LICENSE.txt file.
- */
-
 package benchmarks.immutableMap
 
 import benchmarks.*
-import kotlinx.collections.immutable.PersistentMap
+import com.certora.collect.*
+import kotlinx.collections.immutable.*
 import kotlinx.benchmark.*
 import kotlinx.collections.immutable.persistentMapOf
 
 @State(Scope.Benchmark)
-open class PutAll {
+open class Merge {
     @Param(BM_1, BM_10, BM_100, BM_1000, BM_10000, BM_100000, BM_1000000)
     var size: Int = 0
 
@@ -36,17 +32,31 @@ open class PutAll {
     }
 
     @Benchmark
-    fun putAllEqualSize(): PersistentMap<IntWrapper, String> {
-        return lhs.putAll(rhs)
-    }
+    fun mergeEqualSize() = lhs.merge(rhs) { _, a, b -> a ?: b }
 
     @Benchmark
-    fun putAllSmallIntoLarge(): PersistentMap<IntWrapper, String> {
-        return lhs.putAll(rhsSmall)
-    }
+    fun mergeSmallIntoLarge() = lhs.merge(rhsSmall) { _, a, b -> a ?: b }
 
     @Benchmark
-    fun putAllLargeIntoSmall(): PersistentMap<IntWrapper, String> {
-        return lhsSmall.putAll(rhs)
+    fun mergeLargeIntoSmall() = lhsSmall.merge(rhs) { _, a, b -> a ?: b }
+
+    private fun <K, V> Map<K, V>.merge(m: Map<K, V>, merger: (K, V?, V?) -> V?): Map<K, V> = when(this) {
+        is TreapMap<*, *> -> (this as TreapMap<K, V>).merge(m, merger)
+        else -> mutableMapOf<K, V>().also { result ->
+            this.forEach { (k, v) ->
+                when (val vv = merger(k, v, m[k])) {
+                    null -> {}
+                    else -> result[k] = vv
+                }
+            }
+            m.forEach { (k, v) ->
+                if (k !in this) {
+                    when (val vv = merger(k, this[k], v)) {
+                        null -> {}
+                        else -> result[k] = vv
+                    }
+                }
+            }
+        }
     }
 }

@@ -33,5 +33,5 @@ private fun generateIntWrappers(hashCodeType: String, size: Int): List<IntWrappe
 fun generateKeys(hashCodeType: String, size: Int) = generateIntWrappers(hashCodeType, size)
 fun generateElements(hashCodeType: String, size: Int) = generateIntWrappers(hashCodeType, size)
 
-const val HASH_IMPL = "hash"
+const val HAMT_IMPL = "hamt"
 const val TREAP_IMPL = "treap"

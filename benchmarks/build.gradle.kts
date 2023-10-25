@@ -26,34 +26,67 @@ benchmark {
 
     configurations {
         named("main") {
-            warmups = 7
-            iterations = 7
+            warmups = 5
+            iterations = 5
             iterationTime = 500
             iterationTimeUnit = "ms"
             param("size", "1", "10", "100", "1000", "10000")
-            param("immutablePercentage", /*"95", "30", */"0")
+            param("immutablePercentage", "0")
             param("hashCodeType", "random", "collision")
-            param("implementation", "hash", "tree")
         }
 
         register("fast") {
-            warmups = 7
-            iterations = 7
+            warmups = 5
+            iterations = 5
             iterationTime = 500
             iterationTimeUnit = "ms"
             param("size", "1000")
             param("immutablePercentage", "0")
             param("hashCodeType", "random")
 
-            // include("immutableMap.Get.get$")
-            // include("immutableMap.Iterate.iterateKeys$")
-            // include("immutableMap.Put.put$")
-            // include("immutableMap.Remove.remove$")
+            include("immutableMap.Get.get$")
+            include("immutableMap.Iterate.iterateKeys$")
+            include("immutableMap.Put.put$")
+            include("immutableMap.Remove.remove$")
 
             include("immutableSet.Add.add$")
-            // include("immutableSet.Contains.contains$")
-            // include("immutableSet.Iterate.iterate$")
-            // include("immutableSet.Remove.remove$")
+            include("immutableSet.Contains.contains$")
+            include("immutableSet.Iterate.iterate$")
+            include("immutableSet.Remove.remove$")
+        }
+
+        register("setIteration") {
+            warmups = 5
+            iterations = 5
+            iterationTime = 500
+            iterationTimeUnit = "ms"
+            param("size", "1000")
+            param("hashCodeType", "random")
+
+            include("immutableSet.Iterate.iterate$")
+            include("immutableSet.ForEachElement.iterate$")
+        }
+
+        register("setOperators") {
+            warmups = 5
+            iterations = 5
+            iterationTime = 500
+            iterationTimeUnit = "ms"
+            param("size", "10", "10000")
+            param("hashCodeType", "random")
+
+            include("immutableSet.SetOperators")
+        }
+
+        register("mapMerge") {
+            warmups = 5
+            iterations = 5
+            iterationTime = 500
+            iterationTimeUnit = "ms"
+            param("size", "10", "10000")
+            param("hashCodeType", "random")
+
+            include("immutableMap.Merge")
         }
     }
 }

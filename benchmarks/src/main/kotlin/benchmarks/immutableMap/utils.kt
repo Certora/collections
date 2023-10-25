@@ -7,7 +7,7 @@
 package benchmarks.immutableMap
 
 import benchmarks.*
-import com.certora.collect.treapMapOf
+import com.certora.collect.*
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
 import kotlin.math.ceil
@@ -15,13 +15,21 @@ import kotlin.math.log
 
 
 fun <K, V> emptyPersistentMap(implementation: String): PersistentMap<K, V> = when (implementation) {
-    HASH_IMPL -> persistentHashMapOf()
+    HAMT_IMPL -> persistentHashMapOf()
     TREAP_IMPL -> treapMapOf()
     else -> throw AssertionError("Unknown PersistentMap implementation: $implementation")
 }
 
 fun <K> persistentMapPut(implementation: String, keys: List<K>): PersistentMap<K, String> {
     var map = emptyPersistentMap<K, String>(implementation)
+    for (key in keys) {
+        map = map.put(key, "some value")
+    }
+    return map
+}
+
+fun <K> treapMapPut(keys: List<K>): TreapMap<K, String> {
+    var map = treapMapOf<K, String>()
     for (key in keys) {
         map = map.put(key, "some value")
     }
