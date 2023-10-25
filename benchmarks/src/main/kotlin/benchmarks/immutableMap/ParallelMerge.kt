@@ -13,8 +13,8 @@ open class ParallelMerge {
     @Param(ASCENDING_HASH_CODE, RANDOM_HASH_CODE, COLLISION_HASH_CODE)
     var hashCodeType = ""
 
-    @Param("100", "100000")
-    var parallelMergeWork: Int = 0
+    @Param("0", "100000")
+    var parallelWork: Int = 0
 
     private var lhs = treapMapOf<IntWrapper, String>()
     private var lhsSmall = treapMapOf<IntWrapper, String>()
@@ -37,7 +37,7 @@ open class ParallelMerge {
     fun parallel(sink: Blackhole) = lhs.parallelMerge(rhs) { _, a, b -> parallelWork(sink, a, b) }
 
     private fun <V> parallelWork(sink: Blackhole, a: V?, b: V?): V? {
-        repeat(parallelMergeWork) { sink.consume(it) }
+        repeat(parallelWork) { sink.consume(it) }
         return a ?: b
     }
 }

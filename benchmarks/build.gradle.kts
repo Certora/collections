@@ -99,6 +99,7 @@ benchmark {
             param("hashCodeType", "random")
 
             include("immutableMap.UpdateValues")
+            include("immutableMap.ParallelUpdateValues")
         }
     }
 }
