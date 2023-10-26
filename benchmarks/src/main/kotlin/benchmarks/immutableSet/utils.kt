@@ -15,7 +15,7 @@ import kotlin.math.log
 
 
 fun <E> emptyPersistentSet(implementation: String): PersistentSet<E> = when (implementation) {
-    HAMT_IMPL -> persistentHashSetOf()
+    HAMT_IMPL, ORDERED_HAMT_IMPL -> persistentHashSetOf()
     TREAP_IMPL -> treapSetOf()
     else -> throw AssertionError("Unknown PersistentSet implementation: $implementation")
 }

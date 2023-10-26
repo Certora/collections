@@ -8,13 +8,13 @@ package benchmarks.immutableMap
 
 import benchmarks.*
 import com.certora.collect.*
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentHashMapOf
+import kotlinx.collections.immutable.*
 import kotlin.math.ceil
 import kotlin.math.log
 
 
 fun <K, V> emptyPersistentMap(implementation: String): PersistentMap<K, V> = when (implementation) {
+    ORDERED_HAMT_IMPL -> persistentMapOf()
     HAMT_IMPL -> persistentHashMapOf()
     TREAP_IMPL -> treapMapOf()
     else -> throw AssertionError("Unknown PersistentMap implementation: $implementation")
