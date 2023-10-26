@@ -16,9 +16,9 @@ detekt {
 }
 
 dependencies {
-	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:${property("immutableCollectionsVersion")}")
     detektPlugins(project(":detekt-treapability"))
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-	testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+	testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${property("serializationVersion")}")
 }

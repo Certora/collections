@@ -3,6 +3,7 @@ import org.gradle.kotlin.dsl.*
 
 plugins {
 	kotlin("jvm")
+    kotlin("plugin.serialization")
     kotlin("plugin.allopen")
     id("java-library")
     id("org.jetbrains.kotlinx.benchmark")
@@ -14,8 +15,11 @@ allOpen {
 }
 
 dependencies {
-	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+	implementation(kotlin("reflect"))
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${property("serializationVersion")}")
+	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:${property("immutableCollectionsVersion")}")
     implementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:${property("benchmarkVersion")}")
+    implementation("org.openjdk.jol:jol-core:0.17")
     implementation(project(":collect"))
 }
 
@@ -30,7 +34,7 @@ benchmark {
             iterations = 5
             iterationTime = 500
             iterationTimeUnit = "ms"
-            param("size", "1", "10", "100", "1000", "10000")
+            param("size", "1", "10", "100", "10000")
             param("immutablePercentage", "0")
             param("hashCodeType", "random", "collision")
         }
@@ -102,4 +106,11 @@ benchmark {
             include("immutableMap.ParallelUpdateValues")
         }
     }
+}
+
+
+task("sizesBenchmark", JavaExec::class) {
+    main = "benchmarks.SizesKt"
+    args = listOf("$buildDir/reports/benchmarks/size")
+    classpath = sourceSets["main"].runtimeClasspath
 }
