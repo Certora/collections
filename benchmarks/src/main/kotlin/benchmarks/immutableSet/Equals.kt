@@ -32,6 +32,10 @@ open class Equals {
         sameSet = persistentSetAdd(implementation, keys.take(size))
         slightlyDifferentSet = sameSet.add(keys[size]).remove(keys[0])
         veryDifferentSet = persistentSetAdd(implementation, keys.drop(size))
+
+        check(sameSet == persistentSet)
+        check(slightlyDifferentSet != persistentSet)
+        check(veryDifferentSet != persistentSet)
     }
 
     @Benchmark

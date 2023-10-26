@@ -4,6 +4,8 @@ import kotlinx.collections.immutable.*
 
 class FakePersistentMap<K, V>(val value: Map<K, V>) : PersistentMap<K, V>, Map<K, V> by value {
     class Builder<K, V>(val value: MutableMap<K, V>) : PersistentMap.Builder<K, V>, MutableMap<K, V> by value {
+        override fun equals(other: Any?) = value == other
+        override fun hashCode() = value.hashCode()
         override fun build() = FakePersistentMap(value)
     }
 

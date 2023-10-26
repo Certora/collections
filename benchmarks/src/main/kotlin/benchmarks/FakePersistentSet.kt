@@ -4,6 +4,8 @@ import kotlinx.collections.immutable.*
 
 class FakePersistentSet<T>(val value: Set<T>) : PersistentSet<T>, Set<T> by value {
     class Builder<T>(val value: MutableSet<T>) : PersistentSet.Builder<T>, MutableSet<T> by value {
+        override fun equals(other: Any?) = value == other
+        override fun hashCode() = value.hashCode()
         override fun build() = FakePersistentSet(value)
     }
 

@@ -32,6 +32,10 @@ open class Equals {
         sameMap = persistentMapPut(implementation, keys.take(size))
         slightlyDifferentMap = sameMap.put(keys[size], "different value").remove(keys[0])
         veryDifferentMap = persistentMapPut(implementation, keys.drop(size))
+
+        check(sameMap == persistentMap)
+        check(slightlyDifferentMap != persistentMap)
+        check(veryDifferentMap != persistentMap)
     }
 
     @Benchmark
