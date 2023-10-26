@@ -8,15 +8,16 @@ package benchmarks.immutableSet
 
 import benchmarks.*
 import com.certora.collect.*
-import kotlinx.collections.immutable.PersistentSet
-import kotlinx.collections.immutable.persistentHashSetOf
+import kotlinx.collections.immutable.*
 import kotlin.math.ceil
 import kotlin.math.log
 
 
 fun <E> emptyPersistentSet(implementation: String): PersistentSet<E> = when (implementation) {
-    HAMT_IMPL, ORDERED_HAMT_IMPL -> persistentHashSetOf()
+    ORDERED_HAMT_IMPL -> persistentSetOf()
+    HAMT_IMPL -> persistentHashSetOf()
     TREAP_IMPL -> treapSetOf()
+    HASH_MAP_IMPL -> fakePersistentSetOf()
     else -> throw AssertionError("Unknown PersistentSet implementation: $implementation")
 }
 

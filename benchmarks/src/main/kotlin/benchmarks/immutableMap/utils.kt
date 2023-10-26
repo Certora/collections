@@ -17,6 +17,7 @@ fun <K, V> emptyPersistentMap(implementation: String): PersistentMap<K, V> = whe
     ORDERED_HAMT_IMPL -> persistentMapOf()
     HAMT_IMPL -> persistentHashMapOf()
     TREAP_IMPL -> treapMapOf()
+    HASH_MAP_IMPL -> fakePersistentMapOf()
     else -> throw AssertionError("Unknown PersistentMap implementation: $implementation")
 }
 

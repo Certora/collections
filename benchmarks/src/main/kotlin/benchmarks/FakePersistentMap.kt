@@ -7,6 +7,9 @@ class FakePersistentMap<K, V>(val value: Map<K, V>) : PersistentMap<K, V>, Map<K
         override fun build() = FakePersistentMap(value)
     }
 
+    override fun equals(other: Any?) = value == other
+    override fun hashCode() = value.hashCode()
+
     override fun clear() = FakePersistentMap(emptyMap<K, V>())
     override fun builder() = Builder(value.toMutableMap())
     override fun put(key: K, value: V) = FakePersistentMap(this.value + (key to value))

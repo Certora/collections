@@ -7,6 +7,9 @@ class FakePersistentSet<T>(val value: Set<T>) : PersistentSet<T>, Set<T> by valu
         override fun build() = FakePersistentSet(value)
     }
 
+    override fun equals(other: Any?) = value == other
+    override fun hashCode() = value.hashCode()
+
     override fun builder() = Builder(value.toMutableSet())
     override fun clear() = FakePersistentSet(emptySet<T>())
     override fun add(element: T) = FakePersistentSet(value + element)

@@ -6,14 +6,14 @@ import kotlinx.benchmark.*
 
 @State(Scope.Benchmark)
 open class SetOperators {
-    @Param(BM_1, BM_10, BM_100, BM_1000, BM_10000, BM_100000, BM_1000000)
-    var size: Int = 0
+    @Param(ASCENDING_HASH_CODE, RANDOM_HASH_CODE, COLLISION_HASH_CODE, NON_EXISTING_HASH_CODE)
+    var hashCodeType = ""
 
     @Param(HAMT_IMPL, ORDERED_HAMT_IMPL, TREAP_IMPL)
     var implementation = ""
 
-    @Param(ASCENDING_HASH_CODE, RANDOM_HASH_CODE, COLLISION_HASH_CODE, NON_EXISTING_HASH_CODE)
-    var hashCodeType = ""
+    @Param(BM_1, BM_10, BM_100, BM_1000, BM_10000, BM_100000, BM_1000000)
+    var size: Int = 0
 
     private var original = persistentSetOf<IntWrapper>()
     private var disjoint = persistentSetOf<IntWrapper>()
@@ -44,14 +44,14 @@ open class SetOperators {
         intersectingFromOriginal = (original - subset) + disjoint
     }
 
-    @Benchmark fun unionDisjoint() = original union disjoint
-    @Benchmark fun unionEqual() = original union equal
-    @Benchmark fun unionSubset() = original union subset
-    @Benchmark fun unionSubsetFromOriginal() = original union subsetFromOriginal
-    @Benchmark fun unionSuperset() = original union superset
-    @Benchmark fun unionSupersetFromOriginal() = original union superset
-    @Benchmark fun unionIntersecting() = original union intersecting
-    @Benchmark fun unionIntersectingFromOriginal() = original union intersectingFromOriginal
+    @Benchmark fun unionDisjoint() = original + disjoint
+    @Benchmark fun unionEqual() = original + equal
+    @Benchmark fun unionSubset() = original + subset
+    @Benchmark fun unionSubsetFromOriginal() = original + subsetFromOriginal
+    @Benchmark fun unionSuperset() = original + superset
+    @Benchmark fun unionSupersetFromOriginal() = original + superset
+    @Benchmark fun unionIntersecting() = original + intersecting
+    @Benchmark fun unionIntersectingFromOriginal() = original + intersectingFromOriginal
 
     @Benchmark fun intersectDisjoint() = original intersect disjoint
     @Benchmark fun intersectEqual() = original intersect equal
@@ -62,12 +62,12 @@ open class SetOperators {
     @Benchmark fun intersectIntersecting() = original intersect intersecting
     @Benchmark fun intersectIntersectingFromOriginal() = original intersect intersectingFromOriginal
 
-    @Benchmark fun subtractDisjoint() = original subtract disjoint
-    @Benchmark fun subtractEqual() = original subtract equal
-    @Benchmark fun subtractSubset() = original subtract subset
-    @Benchmark fun subtractSubsetFromOriginal() = original subtract subsetFromOriginal
-    @Benchmark fun subtractSuperset() = original subtract superset
-    @Benchmark fun subtractSupersetFromOriginal() = original subtract superset
-    @Benchmark fun subtractIntersecting() = original subtract intersecting
-    @Benchmark fun subtractIntersectingFromOriginal() = original subtract intersectingFromOriginal
+    @Benchmark fun subtractDisjoint() = original - disjoint
+    @Benchmark fun subtractEqual() = original - equal
+    @Benchmark fun subtractSubset() = original - subset
+    @Benchmark fun subtractSubsetFromOriginal() = original - subsetFromOriginal
+    @Benchmark fun subtractSuperset() = original - superset
+    @Benchmark fun subtractSupersetFromOriginal() = original - superset
+    @Benchmark fun subtractIntersecting() = original - intersecting
+    @Benchmark fun subtractIntersectingFromOriginal() = original - intersectingFromOriginal
 }

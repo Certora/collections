@@ -32,12 +32,24 @@ benchmark {
     configurations {
         named("main") {
             warmups = 5
-            iterations = 5
-            iterationTime = 500
+            iterations = 10
+            iterationTime = 100
             iterationTimeUnit = "ms"
-            param("size", "1", "10", "100", "10000")
+            param("size", "10", "1000", "10000")
             param("immutablePercentage", "0")
-            param("hashCodeType", "random", "collision")
+            param("hashCodeType", "random")
+            param("implementation", "treap")
+        }
+
+        register("compare") {
+            warmups = 5
+            iterations = 10
+            iterationTime = 100
+            iterationTimeUnit = "ms"
+            param("size", "10", "1000", "10000")
+            param("immutablePercentage", "0")
+            param("hashCodeType", "random")
+            param("implementation", "hash_map", "hamt", "treap")
         }
 
         register("fast") {
@@ -74,11 +86,12 @@ benchmark {
 
         register("setOperators") {
             warmups = 5
-            iterations = 5
-            iterationTime = 500
+            iterations = 10
+            iterationTime = 100
             iterationTimeUnit = "ms"
-            param("size", "10", "10000")
+            param("size", "10", "1000", "10000")
             param("hashCodeType", "random")
+            param("implementation", "hash_map", "hamt", "treap")
 
             include("immutableSet.SetOperators")
         }

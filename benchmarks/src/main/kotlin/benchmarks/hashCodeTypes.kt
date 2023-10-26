@@ -36,3 +36,4 @@ fun generateElements(hashCodeType: String, size: Int) = generateIntWrappers(hash
 const val ORDERED_HAMT_IMPL = "ordered_hamt"
 const val HAMT_IMPL = "hamt"
 const val TREAP_IMPL = "treap"
+const val HASH_MAP_IMPL = "hash_map"
