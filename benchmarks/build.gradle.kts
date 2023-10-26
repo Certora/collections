@@ -31,100 +31,56 @@ benchmark {
 
     configurations {
         named("main") {
-            warmups = 5
-            iterations = 10
-            iterationTime = 100
-            iterationTimeUnit = "ms"
             param("size", "10", "1000", "10000")
-            param("immutablePercentage", "0")
             param("hashCodeType", "random")
             param("implementation", "treap")
         }
 
         register("compare") {
-            warmups = 5
-            iterations = 10
-            iterationTime = 100
-            iterationTimeUnit = "ms"
-            param("size", "10", "1000", "10000")
-            param("immutablePercentage", "0")
-            param("hashCodeType", "random")
-            param("implementation", "hash_map", "hamt", "treap")
-        }
-
-        register("fast") {
-            warmups = 5
-            iterations = 5
-            iterationTime = 500
-            iterationTimeUnit = "ms"
-            param("size", "1000")
-            param("immutablePercentage", "0")
-            param("hashCodeType", "random")
-
-            include("immutableMap.Get.get$")
-            include("immutableMap.Iterate.iterateKeys$")
-            include("immutableMap.Put.put$")
-            include("immutableMap.Remove.remove$")
-
-            include("immutableSet.Add.add$")
-            include("immutableSet.Contains.contains$")
-            include("immutableSet.Iterate.iterate$")
-            include("immutableSet.Remove.remove$")
-        }
-
-        register("setIteration") {
-            warmups = 5
-            iterations = 5
-            iterationTime = 500
-            iterationTimeUnit = "ms"
-            param("size", "1000")
-            param("hashCodeType", "random")
-
-            include("immutableSet.Iterate.iterate$")
-            include("immutableSet.ForEachElement.iterate$")
-        }
-
-        register("setOperators") {
-            warmups = 5
-            iterations = 10
-            iterationTime = 100
-            iterationTimeUnit = "ms"
             param("size", "10", "1000", "10000")
             param("hashCodeType", "random")
             param("implementation", "hash_map", "hamt", "treap")
+        }
 
-            include("immutableSet.SetOperators")
+        register("named") {
+            param("size", "10", "1000", "10000")
+            param("hashCodeType", "random")
+            param("implementation", "hash_map", "hamt", "treap")
+            include("${project.findProperty("benchmark")}")
         }
 
         register("mapMerge") {
-            warmups = 5
-            iterations = 5
-            iterationTime = 500
-            iterationTimeUnit = "ms"
             param("size", "10", "10000")
             param("hashCodeType", "random")
+            param("implementation", "treap")
 
             include("immutableMap.Merge")
             include("immutableMap.ParallelMerge")
         }
 
         register("mapUpdateValues") {
-            warmups = 5
-            iterations = 5
-            iterationTime = 500
-            iterationTimeUnit = "ms"
             param("size", "10", "10000")
             param("hashCodeType", "random")
+            param("implementation", "treap")
 
             include("immutableMap.UpdateValues")
             include("immutableMap.ParallelUpdateValues")
+        }
+
+        configureEach {
+            warmups = 5
+            iterations = 10
+            iterationTime = 100
+            iterationTimeUnit = "ms"
+            param("immutablePercentage", "0")
         }
     }
 }
 
 
 task("sizesBenchmark", JavaExec::class) {
-    main = "benchmarks.SizesKt"
+    main = "benchmarks.size.RunnerKt"
+    jvmArgs = listOf("-Djdk.attach.allowAttachSelf", "-XX:+EnableDynamicAgentLoading")
     args = listOf("$buildDir/reports/benchmarks/size")
     classpath = sourceSets["main"].runtimeClasspath
 }
