@@ -1,11 +1,75 @@
+@file:OptIn(ExperimentalSerializationApi::class)
 package benchmarks
 
 import com.certora.collect.*
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.*
-import kotlinx.serialization.json.*
+import kotlinx.serialization.csv.Csv
 import org.openjdk.jol.info.GraphLayout;
 import java.nio.file.*
+import java.util.IdentityHashMap
+
+val scenarioSizes = (1..256).asSequence() + sequenceOf(512, 1024, 2048, 4096, 8192, 16384, 32768)
+
+val maps = sequence {
+    yield(MapCase("Empty", 0) { sequenceOf(empty()) })
+    scenarioSizes.forEach {
+        yield(MapCase("Fresh", it) { sequenceOf(empty() + (1..it).map { key(it) to DummyValue }) })
+    }
+}
+
+val sets = sequence {
+    yield(SetCase("Empty", 0) { sequenceOf(empty()) })
+    scenarioSizes.forEach {
+        yield(SetCase("Fresh", it) { sequenceOf((1..it).toSet()) })
+    }
+    scenarioSizes.forEach { yield(SetCase("IntersectEqual", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield(fresh intersect (1..it).toSet())
+    }})}
+    scenarioSizes.forEach { yield(SetCase("IntersectEqualReverse", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield((1..it).toSet() intersect fresh)
+    }})}
+    scenarioSizes.forEach { yield(SetCase("IntersectFirstHalf", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield(fresh intersect (1..it/2).toSet())
+    }})}
+    scenarioSizes.forEach { yield(SetCase("IntersectFirstHalfReverse", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield((1..it/2).toSet() intersect fresh)
+    }})}
+    scenarioSizes.forEach { yield(SetCase("IntersectHalf", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield(fresh intersect (1..it step 2).toSet())
+    }})}
+    scenarioSizes.forEach { yield(SetCase("IntersectSparse", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield(fresh intersect (1..it step 32).toSet())
+    }})}
+    scenarioSizes.forEach { yield(SetCase("IntersectIntersecting", it) { sequence {
+        val fresh = (1..it).toSet()
+        yield(fresh)
+        yield(fresh intersect (it/2..it+it/2).toSet())
+    }})}
+    scenarioSizes.forEach { yield(SetCase("UnionSmall", it) { sequence {
+        val smalls = manySmall(it, 16)
+        yieldAll(smalls)
+        yield(smalls.reduce { a, b -> a + b })
+    }})}
+}
+
+context(SetCase.Context)
+fun IntRange.toSet(): PersistentSet<Any> = empty() + this.map { key(it) }.toSet()
+
+context(SetCase.Context)
+fun manySmall(size: Int, unit: Int) = (1..size step unit).map { (it..it+unit).toSet() }
 
 data class ComparableSizeKey(val value: Int) : Comparable<ComparableSizeKey> {
     override fun compareTo(other: ComparableSizeKey): Int = value.compareTo(other.value)
@@ -16,131 +80,151 @@ data class HashableSizeKey(val value: Int)
 object DummyValue
 
 
-data class Maps(
-    val scenario: String,
-    val maps: Map<String, Map<Any, Any>>,
-    val scenarioSize: Int = maps.values.first().size
-)
 
-data class Sets(
-    val scenario: String,
-    val sets: Map<String, Set<Any>>,
-    val scenarioSize: Int = sets.values.first().size
-)
-
-class MapSizeTestContext(
-    val empty: () -> PersistentMap<Any, Any>,
-    val key: (Int) -> Any
-)
-
-class SetSizeTestContext(
-    val empty: () -> PersistentSet<Any>,
-    val key: (Int) -> Any
-)
-
-fun map(name: String, test: MapSizeTestContext.() -> PersistentMap<Any, Any>) = Maps(
-    name,
-    mapOf(
-        "HashMap" to MapSizeTestContext(empty = { fakePersistentMapOf() }, key = { HashableSizeKey(it) }).test(),
-        "PersistentHashMap" to MapSizeTestContext(empty = { persistentHashMapOf() }, key = { HashableSizeKey(it) }).test(),
-        "HashTreapMap" to MapSizeTestContext(empty = { treapMapOf() }, key = { HashableSizeKey(it) }).test(),
-        "SortedTreapMap" to MapSizeTestContext(empty = { treapMapOf() }, key = { ComparableSizeKey(it) }).test(),
-    )
-)
-
-fun set(name: String, test: SetSizeTestContext.() -> PersistentSet<Any>) = Sets(
-    name,
-    mapOf(
-        "HashSet" to SetSizeTestContext(empty = { fakePersistentSetOf() }, key = { HashableSizeKey(it) }).test(),
-        "PersistentHashSet" to SetSizeTestContext(empty = { persistentHashSetOf() }, key = { HashableSizeKey(it) }).test(),
-        "HashTreapSet" to SetSizeTestContext(empty = { treapSetOf() }, key = { HashableSizeKey(it) }).test(),
-        "SortedTreapSet" to SetSizeTestContext(empty = { treapSetOf() }, key = { ComparableSizeKey(it) }).test(),
-    )
-)
-
-val maps = sequence {
-    yield(map("Empty") { empty() })
-    (1..100).forEach {
-        yield(map("Fresh") { empty() + (1..it).map { key(it) to DummyValue } })
-    }
-}
-
-val sets = sequence {
-    yield(set("Empty") { empty() })
-    (1..100).forEach {
-        yield(set("Fresh") { empty() + (1..it).map { key(it) } })
-    }
-}
-
-fun <K, V> Map<K, V>.layout(): GraphLayout {
-    if (this is FakePersistentMap<*, *>) {
-        return this.value.layout()
-    } else {
-        val keysAndValues = GraphLayout.parseInstance(*(this.keys + this.values).toTypedArray())
-        return GraphLayout.parseInstance(this).subtract(keysAndValues)
-    }
-}
-
-fun <T> Set<T>.layout(): GraphLayout {
-    if (this is FakePersistentSet<*>) {
-        return this.value.layout()
-    } else {
-        val keysAndValues = GraphLayout.parseInstance(*(this.toList() as List<Any?>).toTypedArray())
-        return GraphLayout.parseInstance(this).subtract(keysAndValues)
-    }
-}
-
-fun GraphLayout.process(scenario: String, scenarioSize: Int, outputDir: Path): Long {
-    toImage(outputDir.resolve("$scenario.$scenarioSize.png").toString())
-    return totalSize()
-}
-
-@Serializable
-data class MapSizes(
+data class MapCase(
     val scenario: String,
     val scenarioSize: Int,
-    val mapSizes: Map<String, Long>,
-)
+    val hashMap: Sequence<PersistentMap<Any, Any>>,
+    val persistentHashMap: Sequence<PersistentMap<Any, Any>>,
+    val hashTreapMap: Sequence<PersistentMap<Any, Any>>,
+    val sortedTreapMap: Sequence<PersistentMap<Any, Any>>,
+) {
+    class Context(
+        val empty: () -> PersistentMap<Any, Any>,
+        val key: (Int) -> Any
+    )
 
-@Serializable
-data class SetSizes(
+    constructor(scenario: String, scenarioSize: Int, test: Context.() -> Sequence<PersistentMap<Any, Any>>) : this(
+        scenario = scenario,
+        scenarioSize = scenarioSize,
+        hashMap = Context({ fakePersistentMapOf() }, { HashableSizeKey(it) }).test(),
+        persistentHashMap = Context({ persistentHashMapOf() }, { HashableSizeKey(it) }).test(),
+        hashTreapMap = Context({ treapMapOf() }, { HashableSizeKey(it) }).test(),
+        sortedTreapMap = Context({ treapMapOf() }, { ComparableSizeKey(it) }).test(),
+    )
+
+    @Serializable
+    data class Sizes(
+        val scenario: String,
+        val scenarioSize: Int,
+        val hashMap: Long,
+        val persistentHashMap: Long,
+        val hashTreapMap: Long,
+        val sortedTreapMap: Long,
+    )
+
+    private fun Sequence<Map<*, *>>.computeSize(): Long {
+        val unwrapped = this.map { (it as? FakePersistentMap<*, *>)?.value ?: it }.toList()
+
+        val keysAndValues = IdentityHashMap<Any, Any>()
+        unwrapped.forEach {
+            it.keys.forEach { keysAndValues[it] = DummyValue }
+            it.values.forEach { keysAndValues[it] = DummyValue }
+        }
+
+        return GraphLayout.parseInstance(*unwrapped.toTypedArray())
+            .subtract(GraphLayout.parseInstance(*keysAndValues.keys.toTypedArray()))
+            .totalSize()
+    }
+
+    val sizes get() = Sizes(
+        scenario = scenario,
+        scenarioSize = scenarioSize,
+        hashMap = hashMap.computeSize(),
+        persistentHashMap = persistentHashMap.computeSize(),
+        hashTreapMap = hashTreapMap.computeSize(),
+        sortedTreapMap = sortedTreapMap.computeSize(),
+    )
+}
+
+data class SetCase(
     val scenario: String,
     val scenarioSize: Int,
-    val setSizes: Map<String, Long>,
-)
+    val hashSet: Sequence<PersistentSet<Any>>,
+    val persistentHashSet: Sequence<PersistentSet<Any>>,
+    val persistentOrderedSet: Sequence<PersistentSet<Any>>,
+    val hashTreapSet: Sequence<PersistentSet<Any>>,
+    val sortedTreapSet: Sequence<PersistentSet<Any>>,
+) {
+    class Context(
+        val empty: () -> PersistentSet<Any>,
+        val key: (Int) -> Any
+    )
 
-@Serializable
-data class Sizes(
-    val sets: List<SetSizes>,
-    val maps: List<MapSizes>
-)
+    constructor(scenario: String, scenarioSize: Int, test: Context.() -> Sequence<PersistentSet<Any>>) : this(
+        scenario = scenario,
+        scenarioSize = scenarioSize,
+        hashSet = Context({ fakePersistentSetOf() }, { HashableSizeKey(it) }).test(),
+        persistentHashSet = Context({ persistentHashSetOf() }, { HashableSizeKey(it) }).test(),
+        persistentOrderedSet = Context({ persistentSetOf() }, { HashableSizeKey(it) }).test(),
+        hashTreapSet = Context({ treapSetOf() }, { HashableSizeKey(it) }).test(),
+        sortedTreapSet = Context({ treapSetOf() }, { ComparableSizeKey(it) }).test(),
+    )
 
+    @Serializable
+    data class Sizes(
+        val scenario: String,
+        val scenarioSize: Int,
+        val hashSet: Long,
+        val persistentHashSet: Long,
+        val persistentOrderedSet: Long,
+        val hashTreapSet: Long,
+        val sortedTreapSet: Long,
+    )
+
+    private fun Sequence<Set<*>>.computeSize(): Long {
+        val unwrapped = this.map { (it as? FakePersistentSet<*>)?.value ?: it }.toList()
+
+        val keys = IdentityHashMap<Any, Any>()
+        unwrapped.forEach {
+            it.forEach { keys[it] = DummyValue }
+        }
+
+        return GraphLayout.parseInstance(*unwrapped.toTypedArray())
+            .subtract(GraphLayout.parseInstance(*keys.keys.toTypedArray()))
+            .totalSize()
+    }
+
+    val sizes get() = Sizes(
+        scenario = scenario,
+        scenarioSize = scenarioSize,
+        hashSet = hashSet.computeSize(),
+        persistentHashSet = persistentHashSet.computeSize(),
+        persistentOrderedSet = persistentOrderedSet.computeSize(),
+        hashTreapSet = hashTreapSet.computeSize(),
+        sortedTreapSet = sortedTreapSet.computeSize(),
+    )
+}
 
 /** Computes the sizes of various sets and maps, for comparison. Invoked by the `sizesBenchmark` Gradle task. */
 fun main(args: Array<String>) {
     val outputDir = Path.of(args[0])
     Files.createDirectories(outputDir)
 
-    val sizes = Sizes(
-        sets = sets.map {
-            SetSizes(
-                scenario = it.scenario,
-                scenarioSize = it.scenarioSize,
-                setSizes = it.sets.mapValues { (_, set) -> set.layout().process(it.scenario, it.scenarioSize, outputDir) }
+    val csv = Csv { hasHeaderRecord = true }
+
+
+    println("Computing set sizes...")
+    val sizes = sets.map { it.sizes }.toList().groupBy { it.scenario }
+    sizes.forEach {
+        val setsFile = outputDir.resolve("sets-${it.key}.csv")
+        Files.writeString(
+            setsFile,
+            csv.encodeToString(
+                it.value.toList()
             )
-        }.toList(),
-        maps = maps.map {
-            MapSizes(
-                scenario = it.scenario,
-                scenarioSize = it.scenarioSize,
-                mapSizes = it.maps.mapValues { (_, map) -> map.layout().process(it.scenario, it.scenarioSize, outputDir) }
-            )
-        }.toList()
+        )
+        println("Wrote $setsFile")
+    }
+
+    println("Computing map sizes...")
+    val mapsFile = outputDir.resolve("maps.csv")
+    Files.writeString(
+        mapsFile,
+        csv.encodeToString(
+            maps.map { it.sizes }.toList()
+        )
     )
-
-    val json = Json { prettyPrint = true }.encodeToString(sizes)
-
-    Files.writeString(outputDir.resolve("sizes.json"), json)
-    println(json)
+    println("Wrote $mapsFile")
 }
 
