@@ -3,6 +3,7 @@ import org.gradle.kotlin.dsl.*
 
 plugins {
 	kotlin("jvm")
+    kotlin("plugin.serialization")
 	id("io.github.detekt.gradle.compiler-plugin")
     id("java-library")
 }
@@ -17,8 +18,8 @@ detekt {
 
 dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:${property("immutableCollectionsVersion")}")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${property("serializationVersion")}")
     detektPlugins(project(":detekt-treapability"))
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-	testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${property("serializationVersion")}")
 }

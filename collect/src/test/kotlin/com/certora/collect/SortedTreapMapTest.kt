@@ -6,7 +6,7 @@ import java.util.TreeMap
 
 /** Tests for [SortedTreapMap]. */
 @Suppress("UNCHECKED_CAST")
-class SortedTreapMapTest: TreapMapTest() {
+class SortedMapTest: MapTest() {
     override fun makeKey(value: Int, code: Int) = ComparableTestKey(value, code)
     override val allowNullKeys = false
     override fun makeMap(): MutableMap<TestKey?, Any?> = treapMapOf<ComparableTestKey, Any?>().builder() as MutableMap<TestKey?, Any?>

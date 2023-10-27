@@ -3,10 +3,10 @@ package com.certora.collect
 import com.certora.collect.*
 import kotlinx.serialization.DeserializationStrategy
 
-/** Tests for [HashTreapMap]. */
-class HashTreapMapTest: MapTest() {
+/** Tests for [ArrayHashMap]. */
+class ArrayHashMapTest: MapTest() {
     override fun makeKey(value: Int, code: Int) = HashTestKey(value, code)
-    override fun makeMap(): MutableMap<TestKey?, Any?> = treapMapOf<TestKey?, Any?>().builder()
+    override fun makeMap(): MutableMap<TestKey?, Any?> = ArrayHashMap<TestKey?, Any?>()
     override fun makeBaseline(): MutableMap<TestKey?, Any?> = HashMap()
     override fun makeMap(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?> = makeMap().apply { putAll(other) }
     override fun makeBaseline(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?> = HashMap(other)

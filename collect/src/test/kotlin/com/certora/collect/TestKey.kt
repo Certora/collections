@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 
 /** Type to use as a key for Treap tests. */
 @Treapable
+@Serializable
 sealed class TestKey : java.io.Serializable
 
 /** Type to use as a key for Treap tests.  Allows tests to control exact hash codes. */

@@ -10,13 +10,13 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.DeserializationStrategy
 
-/** Tests for [TreapSet]. */
-abstract class TreapSetTest {
+/** Tests for Set implementations. */
+abstract class SetTest {
 
     abstract fun makeKey(value: Int, code: Int = value.hashCode()): TestKey
     open val nullKeysAllowed: Boolean get() = true
 
-    fun makeSet(): MutableSet<TestKey?> = treapSetOf<TestKey?>().builder()
+    abstract fun makeSet(): MutableSet<TestKey?>
     abstract fun makeBaseline(): MutableSet<TestKey?>
 
     fun makeSet(other: Collection<TestKey?>): MutableSet<TestKey?> = makeSet().also { it += other }

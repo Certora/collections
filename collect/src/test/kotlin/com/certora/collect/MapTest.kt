@@ -8,8 +8,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.DeserializationStrategy
 import kotlin.test.*
 
-/** Tests for [TreapMap]. */
-abstract class TreapMapTest {
+/** Tests for Map implementations. */
+abstract class MapTest {
 
     abstract fun makeKey(value: Int, code: Int = value.hashCode()): TestKey
 
