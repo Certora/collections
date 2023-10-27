@@ -32,26 +32,22 @@ benchmark {
     configurations {
         named("main") {
             param("size", "10", "1000", "10000")
-            param("hashCodeType", "random")
             param("implementation", "treap")
         }
 
         register("compare") {
             param("size", "10", "1000", "10000")
-            param("hashCodeType", "random")
             param("implementation", "hash_map", "hamt", "treap")
         }
 
         register("named") {
             param("size", "10", "1000", "10000")
-            param("hashCodeType", "random")
             param("implementation", "hash_map", "hamt", "treap")
             include("${project.findProperty("benchmark")}")
         }
 
         register("mapMerge") {
             param("size", "10", "10000")
-            param("hashCodeType", "random")
             param("implementation", "treap")
 
             include("immutableMap.Merge")
@@ -60,7 +56,6 @@ benchmark {
 
         register("mapUpdateValues") {
             param("size", "10", "10000")
-            param("hashCodeType", "random")
             param("implementation", "treap")
 
             include("immutableMap.UpdateValues")
@@ -72,6 +67,7 @@ benchmark {
             iterations = 10
             iterationTime = 100
             iterationTimeUnit = "ms"
+            param("hashCodeType", "random", "comparable")
             param("immutablePercentage", "0")
         }
     }

@@ -6,10 +6,10 @@
 
 package benchmarks
 
-class ObjectWrapper<K: Comparable<K>>(
+open class ObjectWrapper<K: Comparable<K>>(
         val obj: K,
         val hashCode: Int
-) : Comparable<ObjectWrapper<K>> {
+) {
     override fun hashCode(): Int {
         return hashCode
     }
@@ -20,11 +20,16 @@ class ObjectWrapper<K: Comparable<K>>(
         }
         return obj == other.obj
     }
+}
 
+class ComparableObjectWrapper<K : Comparable<K>>(
+        obj: K,
+        hashCode: Int
+) : ObjectWrapper<K>(obj, hashCode), Comparable<ObjectWrapper<K>> {
     override fun compareTo(other: ObjectWrapper<K>): Int {
         return obj.compareTo(other.obj)
     }
 }
 
-
 typealias IntWrapper = ObjectWrapper<Int>
+typealias ComparableIntWrapper = ComparableObjectWrapper<Int>
