@@ -14,10 +14,10 @@ import kotlin.math.log
 
 
 fun <K, V> emptyPersistentMap(implementation: String): PersistentMap<K, V> = when (implementation) {
-    ORDERED_HAMT_IMPL -> persistentMapOf()
-    HAMT_IMPL -> persistentHashMapOf()
+    KOTLIN_ORDERED_IMPL -> persistentMapOf()
+    KOTLIN_IMPL -> persistentHashMapOf()
     TREAP_IMPL -> treapMapOf()
-    HASH_MAP_IMPL -> fakePersistentMapOf()
+    JAVA_IMPL -> fakePersistentMapOf()
     else -> throw AssertionError("Unknown PersistentMap implementation: $implementation")
 }
 

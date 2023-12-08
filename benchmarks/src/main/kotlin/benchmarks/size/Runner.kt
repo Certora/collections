@@ -1,9 +1,9 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 package benchmarks.size
 
-import java.nio.file.*
 import kotlinx.serialization.*
 import kotlinx.serialization.csv.*
+import java.nio.file.*
 
 /** Computes the sizes of various sets and maps, for comparison. Invoked by the `sizesBenchmark` Gradle task. */
 fun main(args: Array<String>) {
@@ -37,6 +37,19 @@ fun main(args: Array<String>) {
             )
         )
         println("Wrote $mapsFile")
+    }
+
+    println("Computing list sizes...")
+    val listSizes = lists.map { it.sizes }.toList().groupBy { it.scenario }
+    listSizes.forEach {
+        val listsFile = outputDir.resolve("lists-${it.key}.csv")
+        Files.writeString(
+            listsFile,
+            csv.encodeToString(
+                it.value.toList()
+            )
+        )
+        println("Wrote $listsFile")
     }
 }
 

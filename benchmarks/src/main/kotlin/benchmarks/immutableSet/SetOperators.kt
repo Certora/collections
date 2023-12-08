@@ -9,7 +9,7 @@ open class SetOperators {
     @Param(ASCENDING_HASH_CODE, RANDOM_HASH_CODE, COLLISION_HASH_CODE, NON_EXISTING_HASH_CODE)
     var hashCodeType = ""
 
-    @Param(HAMT_IMPL, ORDERED_HAMT_IMPL, TREAP_IMPL)
+    @Param(KOTLIN_IMPL, KOTLIN_ORDERED_IMPL, TREAP_IMPL)
     var implementation = ""
 
     @Param(BM_1, BM_10, BM_100, BM_1000, BM_10000, BM_100000, BM_1000000)
