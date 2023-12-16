@@ -5,8 +5,18 @@ public class MutableMapEntry<K, V>(
     private val map: MutableMap<K, V>,
     override val key: K
 ) : AbstractMapEntry<K, V>(), MutableMap.MutableEntry<K, V> {
-    @Suppress("UNCHECKED_CAST")
-    override val value: @UnsafeVariance V get() = map.get(key) as V
-    @Suppress("UNCHECKED_CAST")
-    override fun setValue(newValue: V): @UnsafeVariance V = map.put(key, newValue) as V
+
+    override val value: @UnsafeVariance V get() {
+        return map.get(key) ?: run {
+            check(key in map) { "Key '$key' was removed from the map" }
+            @Suppress("UNCHECKED_CAST")
+            null as V
+        }
+    }
+
+    override fun setValue(newValue: V): @UnsafeVariance V {
+        check(key in map) { "Key '$key' was removed from the map" }
+        @Suppress("UNCHECKED_CAST")
+        return map.put(key, newValue) as V
+    }
 }
