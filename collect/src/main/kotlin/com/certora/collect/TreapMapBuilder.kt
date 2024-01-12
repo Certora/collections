@@ -15,6 +15,8 @@ internal class TreapMapBuilder<@Treapable K, V>(
     override fun get(key: K): V? = map.get(key)
     override fun getOrDefault(key: K, defaultValue: @UnsafeVariance V): V = map.getOrDefault(key, defaultValue)
 
+    override fun clear() { map = map.clear() }
+
     override fun remove(key: K): V? {
         val oldMap = map
         map = map.remove(key)

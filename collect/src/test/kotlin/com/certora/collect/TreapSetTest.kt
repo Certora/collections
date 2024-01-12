@@ -125,6 +125,18 @@ abstract class TreapSetTest {
         }
     }
 
+    @Test
+    fun clear() {
+        val s = makeSet()
+        val k = makeKey(1)
+        s.add(k)
+        assertEquals(1, s.size)
+        assertTrue(k in s)
+        s.clear()
+        assertEquals(0, s.size)
+        assertFalse(k in s)
+    }
+
     fun randomHashObjectMaybeNull(rand: Random): TestKey? {
         val r = rand.nextInt()
         if (nullKeysAllowed) {
