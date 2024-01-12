@@ -123,6 +123,19 @@ abstract class TreapMapTest {
     }
 
     @Test
+    fun clear() {
+        val m = makeMap()
+        val k = makeKey(1)
+        val v = Object()
+        m.put(k, v)
+        assertEquals(1, m.size)
+        assertEquals(v, m[k])
+        m.clear()
+        assertEquals(0, m.size)
+        assertNull(m[k])
+    }
+
+    @Test
     fun addMany() {
         val b = makeBaseline()
         val m = makeMap()
