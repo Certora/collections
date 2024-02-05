@@ -369,26 +369,36 @@ internal class TreapListNode<E> private constructor(
             Given a non-empty iterator, produces a TreapList from the elements in O(N) time.
          */
         fun <E> fromIterator(elems: Iterator<E>): TreapListNode<E> {
+
             class Result(val node: TreapListNode<E>, val hasNext: Boolean, val nextElem: E?, val nextPri: Int) {
                 constructor(node: TreapListNode<E>) : this(node, false, null, 0)
                 constructor(node: TreapListNode<E>, nextElem: E, nextPri: Int) : this(node, true, nextElem, nextPri)
             }
 
-            fun buildLowerPri(upperPri: Int, initial: TreapListNode<E>): Result {
+            /*
+                Builds a TreapListNode containing consecutive elements pulled from [elems] until one is assigned a
+                higher priority than [upperPri].  Returns the node and optionally the higher-priority element.
+             */
+            fun buildLowerPri(upperPri: Int, initialElem: E, initialPri: Int): Result {
+                var thisNode = TreapListNode(initialElem, initialPri)
+
+                // If there are no more elements, we're done
                 if (!elems.hasNext()) {
-                    return Result(initial)
+                    return Result(thisNode)
                 }
 
-                var thisNode = initial
+                // Start the next element, and loop until we find one with a higher priority than [upperPri]
                 var nextElem = elems.next()
                 var nextPri = Random.Default.nextInt()
-
                 while (true) {
                     when {
                         nextPri > upperPri -> {
+                            // Return this up the recursion stack; [thisNode] will end up on the left of the next node.
                             return Result(thisNode, nextElem, nextPri)
                         }
                         nextPri > thisNode.priority -> {
+                            // The priority below the node above us, but above the current node.  Push the current node
+                            // to the left
                             thisNode = TreapListNode(nextElem, nextPri, left = thisNode)
                             if (!elems.hasNext()) {
                                 return Result(thisNode)
@@ -397,8 +407,8 @@ internal class TreapListNode<E> private constructor(
                             nextPri = Random.Default.nextInt()
                         }
                         else -> {
-                            val lowerResult = buildLowerPri(thisNode.priority, TreapListNode(nextElem, nextPri))
-                            check (lowerResult.node.priority <= thisNode.priority)
+                            // The priority is below the current node; construct a subtree on the right.
+                            val lowerResult = buildLowerPri(thisNode.priority, nextElem, nextPri)
                             thisNode = thisNode.with(right = lowerResult.node)
                             if (!lowerResult.hasNext) {
                                 return Result(thisNode)
@@ -411,7 +421,8 @@ internal class TreapListNode<E> private constructor(
                 }
             }
 
-            return buildLowerPri(Int.MAX_VALUE, TreapListNode(elems.next(), Random.Default.nextInt())).node
+            // Build the whole list
+            return buildLowerPri(Int.MAX_VALUE, elems.next(), Random.Default.nextInt()).node
         }
     }
 }
