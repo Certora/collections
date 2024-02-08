@@ -37,12 +37,12 @@ benchmark {
 
         register("compare") {
             param("size", "10", "1000", "10000")
-            param("implementation", "hash_map", "hamt", "treap")
+            param("implementation", "java", "treap")
         }
 
         register("named") {
             param("size", "10", "1000", "10000")
-            param("implementation", "hash_map", "hamt", "treap")
+            param("implementation", "java", "treap")
             include("${project.findProperty("benchmark")}")
         }
 
@@ -62,7 +62,15 @@ benchmark {
             include("immutableMap.ParallelUpdateValues")
         }
 
+        register("list") {
+            param("size", "1", "10", "1000", "10000")
+            param("implementation", "treap", "java")
+
+            include("benchmarks.immutableList")
+        }
+
         configureEach {
+            reportFormat = "csv"
             warmups = 5
             iterations = 10
             iterationTime = 100

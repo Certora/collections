@@ -35,7 +35,7 @@ private fun generateIntWrappers(hashCodeType: String, size: Int): List<IntWrappe
 fun generateKeys(hashCodeType: String, size: Int) = generateIntWrappers(hashCodeType, size)
 fun generateElements(hashCodeType: String, size: Int) = generateIntWrappers(hashCodeType, size)
 
-const val ORDERED_HAMT_IMPL = "ordered_hamt"
-const val HAMT_IMPL = "hamt"
+const val KOTLIN_IMPL = "kotlin"
+const val KOTLIN_ORDERED_IMPL = "kotlin_ordered"
 const val TREAP_IMPL = "treap"
-const val HASH_MAP_IMPL = "hash_map"
+const val JAVA_IMPL = "java"
