@@ -55,7 +55,7 @@ internal class TreapListNode<E> private constructor(
         when {
             index == size -> addLast(element)
             index == 0 -> addFirst(element)
-            else -> split(index).let { (l, r) -> l!! append TreapListNode(element) append r!! }
+            else -> split(index).let { (l, r) -> l!!.addLast(element) append r!! }
         }
     }
 
@@ -126,7 +126,7 @@ internal class TreapListNode<E> private constructor(
             currentIndex = index
             if (index < size) {
                 fun TreapListNode<E>.buildStack(i: Int) {
-                    traverseToIndex(
+                    stepToIndex(
                         i,
                         found = { current = this },
                         goLeft = {
@@ -229,7 +229,7 @@ internal class TreapListNode<E> private constructor(
         else -> index
     }
 
-    private inline fun <T> traverseToIndex(
+    private inline fun <T> stepToIndex(
         index: Int,
         found: () -> T,
         goLeft: (Int) -> T,
@@ -244,6 +244,8 @@ internal class TreapListNode<E> private constructor(
     }
 
     private fun computeHashCode(initial: Int): Int {
+        // We use recursive descent rather than `forEachNode` to avoid allocating a closure in this perf-critical
+        // method.
         var code = left?.computeHashCode(initial) ?: initial
         code = 31 * code + elem.hashCode()
         if (right != null) {
@@ -257,7 +259,11 @@ internal class TreapListNode<E> private constructor(
         else -> this.with(right = this.right append that)
     }
 
-    private fun split(index: Int): Pair<TreapListNode<E>?, TreapListNode<E>?> = traverseToIndex(
+    /**
+        Splits the list into two lists.  This first list contains all elements before [index]; the second list contains
+        the [index]th element and beyond.
+     */
+    private fun split(index: Int): Pair<TreapListNode<E>?, TreapListNode<E>?> = stepToIndex(
         index,
         found = { left to this.with(left = null) },
         goLeft = { left!!.split(it).let { it.first to this.with(left = it.second) }},
@@ -283,14 +289,14 @@ internal class TreapListNode<E> private constructor(
         else -> left
     }
 
-    private fun removeNodeAt(index: Int): TreapListNode<E>? = traverseToIndex(
+    private fun removeNodeAt(index: Int): TreapListNode<E>? = stepToIndex(
         index,
         found = { left append right },
         goLeft = { this.with(left = left!!.removeNodeAt(it)) },
         goRight = { this.with(right = right!!.removeNodeAt(it)) },
     )
 
-    private fun getNodeAt(index: Int): TreapListNode<E> = traverseToIndex(
+    private fun getNodeAt(index: Int): TreapListNode<E> = stepToIndex(
         index,
         found = { this },
         goLeft = { left!!.getNodeAt(it) },
@@ -314,7 +320,7 @@ internal class TreapListNode<E> private constructor(
         ?: thisIndex.takeIf { this.elem == element }
         ?: left?.indexOfLastNode(left.leftIndex(thisIndex), element)
 
-    private fun setNodeAt(index: Int, element: E): TreapListNode<E> = traverseToIndex(
+    private fun setNodeAt(index: Int, element: E): TreapListNode<E> = stepToIndex(
         index,
         found = { this.with(elem = element) },
         goLeft = { this.with(left = left!!.setNodeAt(it, element)) },
