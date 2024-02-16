@@ -3,10 +3,10 @@ package com.certora.collect
 import kotlinx.collections.immutable.PersistentMap
 
 /**
-    A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
+    A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.
  */
 @Treapable
-public interface TreapMap<K, V> : PersistentMap<K, V> {
+public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
     override fun remove(key: K): TreapMap<K, V>
     override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
@@ -14,7 +14,7 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun clear(): TreapMap<K, V>
 
     /**
-        A [PersistentMap.Builder] that produces a [TreapMap].    
+        A [PersistentMap.Builder] that produces a [TreapMap].
     */
     public interface Builder<K, V>: PersistentMap.Builder<K, V> {
         override fun build(): TreapMap<K, V>
@@ -24,13 +24,13 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun builder(): Builder<K, @UnsafeVariance V> = TreapMapBuilder(this)
 
     public fun merge(
-        m: Map<K, V>, 
+        m: Map<K, V>,
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
-    
+
     public fun parallelMerge(
-        m: Map<K, V>, 
-        parallelThresholdLog2: Int = 4, 
+        m: Map<K, V>,
+        parallelThresholdLog2: Int = 4,
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
 
@@ -39,13 +39,13 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     ): TreapMap<K, V>
 
     public fun parallelUpdateValues(
-        parallelThresholdLog2: Int = 5, 
+        parallelThresholdLog2: Int = 5,
         transform: (K, V) -> V?
-    ): TreapMap<K, V> 
+    ): TreapMap<K, V>
 
     public fun <U> updateEntry(
-        key: K, 
-        value: U?, 
+        key: K,
+        value: U?,
         merger: (V?, U?) -> V?
     ): TreapMap<K, V>
 

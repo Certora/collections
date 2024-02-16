@@ -6,7 +6,7 @@ import kotlinx.collections.immutable.PersistentList
     A PersistentList implemented as a [Treap](https://en.wikipedia.org/wiki/Treap).
  */
 @Treapable
-public interface TreapList<E> : PersistentList<E> {
+public sealed interface TreapList<E> : PersistentList<E> {
     override fun add(element: E): TreapList<E> = addLast(element)
     override fun addAll(elements: Collection<E>): TreapList<E>
     override fun remove(element: E): TreapList<E>
