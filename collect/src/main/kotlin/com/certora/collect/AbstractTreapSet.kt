@@ -4,8 +4,8 @@ package com.certora.collect
     Base class for TreapSet implementations.  Provides the Set operations; derived classes deal with type-specific
     behavior such as hash collisions.  See `Treap` for an overview of all of this.
  */
-internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>(
-    left: S?, 
+internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>(
+    left: S?,
     right: S?
 ) : TreapSet<E>, Treap<E, S>(left, right) {
     /**
@@ -144,7 +144,7 @@ internal abstract class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S
 
     override fun forEachElement(action: (element: E) -> Unit): Unit {
         left?.forEachElement(action)
-        shallowForEach(action) 
+        shallowForEach(action)
         right?.forEachElement(action)
     }
 

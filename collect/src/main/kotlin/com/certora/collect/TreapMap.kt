@@ -3,10 +3,10 @@ package com.certora.collect
 import kotlinx.collections.immutable.PersistentMap
 
 /**
-    A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.    
+    A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.
  */
 @Treapable
-public interface TreapMap<K, V> : PersistentMap<K, V> {
+public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
     override fun remove(key: K): TreapMap<K, V>
     override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
@@ -14,7 +14,7 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun clear(): TreapMap<K, V>
 
     /**
-        A [PersistentMap.Builder] that produces a [TreapMap].    
+        A [PersistentMap.Builder] that produces a [TreapMap].
     */
     public interface Builder<K, V>: PersistentMap.Builder<K, V> {
         override fun build(): TreapMap<K, V>
@@ -24,13 +24,13 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     override fun builder(): Builder<K, @UnsafeVariance V> = TreapMapBuilder(this)
 
     public fun merge(
-        m: Map<K, V>, 
+        m: Map<K, V>,
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
-    
+
     public fun parallelMerge(
-        m: Map<K, V>, 
-        parallelThresholdLog2: Int = 4, 
+        m: Map<K, V>,
+        parallelThresholdLog2: Int = 4,
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
 
@@ -39,13 +39,13 @@ public interface TreapMap<K, V> : PersistentMap<K, V> {
     ): TreapMap<K, V>
 
     public fun parallelUpdateValues(
-        parallelThresholdLog2: Int = 5, 
+        parallelThresholdLog2: Int = 5,
         transform: (K, V) -> V?
-    ): TreapMap<K, V> 
+    ): TreapMap<K, V>
 
     public fun <U> updateEntry(
-        key: K, 
-        value: U?, 
+        key: K,
+        value: U?,
         merger: (V?, U?) -> V?
     ): TreapMap<K, V>
 
@@ -133,3 +133,99 @@ public inline fun <K, V, @Treapable R> TreapMap<out K, V>.mapKeys(transform: (Ma
 
 public inline fun <@Treapable K, V, R> TreapMap<out K, V>.mapValues(transform: (Map.Entry<K, V>) -> R): TreapMap<K, R> =
     mapValuesTo(treapMapOf<K, R>().builder(), transform).build()
+
+/**
+    Returns a key-value mapping associated with the greatest key less than or equal to the given key, or null if there
+    is no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.floorEntry(key: K): Map.Entry<K, V>? = when (this) {
+    is EmptyTreapMap<K, V> -> null
+    is SortedTreapMap<K, V> -> floorEntry(key)
+    // Shouldn't happen due to static Comparable constraint on K
+    is HashTreapMap<K, V> -> throw UnsupportedOperationException("floorEntry is not supported for hashed treap maps")
+}
+
+/**
+    Returns the greatest key less than or equal to the given key, or null if there is no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.floorKey(key: K): K? = floorEntry(key)?.key
+
+/**
+    Returns a key-value mapping associated with the least key greater than or equal to the given key, or null if there
+    is no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.ceilingEntry(key: K): Map.Entry<K, V>? = when (this) {
+    is EmptyTreapMap<K, V> -> null
+    is SortedTreapMap<K, V> -> ceilingEntry(key)
+    // Shouldn't happen due to static Comparable constraint on K
+    is HashTreapMap<K, V> -> throw UnsupportedOperationException("ceilingEntry is not supported for hashed treap maps")
+}
+
+/**
+    Returns the least key greater than or equal to the given key, or null if there is no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.ceilingKey(key: K): K? = ceilingEntry(key)?.key
+
+/**
+    Returns a key-value mapping associated with the greatest key strictly less than the given key, or null if there is
+    no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.lowerEntry(key: K): Map.Entry<K, V>? = when (this) {
+    is EmptyTreapMap<K, V> -> null
+    is SortedTreapMap<K, V> -> lowerEntry(key)
+    // Shouldn't happen due to static Comparable constraint on K
+    is HashTreapMap<K, V> -> throw UnsupportedOperationException("lowerEntry is not supported for hashed treap maps")
+}
+
+/**
+    Returns the greatest key strictly less than the given key, or null if there is no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.lowerKey(key: K): K? = lowerEntry(key)?.key
+
+
+/**
+    Returns a key-value mapping associated with the least key strictly greater than the given key, or null if there is no
+    such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.higherEntry(key: K): Map.Entry<K, V>? = when (this) {
+    is EmptyTreapMap<K, V> -> null
+    is SortedTreapMap<K, V> -> higherEntry(key)
+    // Shouldn't happen due to static Comparable constraint on K
+    is HashTreapMap<K, V> -> throw UnsupportedOperationException("higherEntry is not supported for hashed treap maps")
+}
+
+/**
+    Returns the least key strictly greater than the given key, or null if there is no such key.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.higherKey(key: K): K? = higherEntry(key)?.key
+
+/**
+    Returns a key-value mapping associated with the least key in this map, or null if the map is empty.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.firstEntry(): Map.Entry<K, V>? = when (this) {
+    is EmptyTreapMap<K, V> -> null
+    is SortedTreapMap<K, V> -> firstEntry()
+    // Shouldn't happen due to static Comparable constraint on K
+    is HashTreapMap<K, V> -> throw UnsupportedOperationException("firstEntry is not supported for hashed treap maps")
+}
+
+/**
+    Returns the least key in this map, or null if the map is empty.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.firstKey(): K? = firstEntry()?.key
+
+
+/**
+    Returns a key-value mapping associated with the greatest key in this map, or null if the map is empty.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.lastEntry(): Map.Entry<K, V>? = when (this) {
+    is EmptyTreapMap<K, V> -> null
+    is SortedTreapMap<K, V> -> lastEntry()
+    // Shouldn't happen due to static Comparable constraint on K
+    is HashTreapMap<K, V> -> throw UnsupportedOperationException("lastEntry is not supported for hashed treap maps")
+}
+
+/**
+    Returns the greatest key in this map, or null if the map is empty.
+ */
+public fun <@Treapable K : Comparable<K>, V> TreapMap<K, V>.lastKey(): K? = lastEntry()?.key

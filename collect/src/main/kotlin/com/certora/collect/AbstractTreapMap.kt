@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.ImmutableSet
     Base class for TreapMap implementations.  Provides the Map operations; derived classes deal with type-specific
     behavior such as hash collisions.  See [Treap] for an overview of all of this.
  */
-internal abstract class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>>(
+internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>>(
     left: S?,
     right: S?
 ) : TreapMap<K, V>, Treap<K, S>(left, right) {
@@ -28,7 +28,7 @@ internal abstract class AbstractTreapMap<@Treapable K, V, @Treapable S : Abstrac
     /**
         Converts the given Map to a AbstractTreapMap of the same type as 'this'.  May copy the map.
      */
-    fun Map<out K, V>.toTreapMapIfNotEmpty(): AbstractTreapMap<K, V, S>? = 
+    fun Map<out K, V>.toTreapMapIfNotEmpty(): AbstractTreapMap<K, V, S>? =
         toTreapMapOrNull() ?: when {
             isEmpty() -> null
             else -> {
@@ -338,8 +338,8 @@ internal abstract class AbstractTreapMap<@Treapable K, V, @Treapable S : Abstrac
     Removes a map entry (`entryKey`, `entryValue`) with key `key`.
  */
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.removeEntry(
-    key: TreapKey<K>, 
-    entryKey: K, 
+    key: TreapKey<K>,
+    entryKey: K,
     entryValue: V
 ): S? = when {
     this == null -> null
@@ -355,10 +355,10 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.remo
 }
 
 internal fun <@Treapable K, V, U, @Treapable S : AbstractTreapMap<K, V, S>> S?.updateEntry(
-    thatKey: TreapKey<K>, 
-    entryKey: K, 
-    toUpdate: U?, 
-    merger: (V?, U?) -> V?, 
+    thatKey: TreapKey<K>,
+    entryKey: K,
+    toUpdate: U?,
+    merger: (V?, U?) -> V?,
     new: (K, V) -> S
 ): S? = when {
     this == null -> {
@@ -397,7 +397,7 @@ internal fun <@Treapable K, V, U, @Treapable S : AbstractTreapMap<K, V, S>> S?.u
     'this' over 'that', to preserve the object identity invariant described in the `Treap` summary.
  */
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.mergeWith(
-    that: S?, 
+    that: S?,
     shallowMerge: (S?, S?) -> S?
 ): S? =
     notForking(this to that) {
@@ -405,8 +405,8 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.merg
     }
 
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.parallelMergeWith(
-    that: S?, 
-    parallelThresholdLog2: Int, 
+    that: S?,
+    parallelThresholdLog2: Int,
     shallowMerge: (S?, S?) -> S?
 ): S? =
     maybeForking(
@@ -421,7 +421,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 
 context(ThresholdForker<Pair<S?, S?>>)
 private fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.mergeWithImpl(
-    that: S?, 
+    that: S?,
     shallowMerge: (S?, S?) -> S?
 ): S? {
     val (newLeft, newRight, newThis) = when {
