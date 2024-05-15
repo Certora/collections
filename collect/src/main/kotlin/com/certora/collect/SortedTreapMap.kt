@@ -6,7 +6,7 @@ import kotlinx.collections.immutable.PersistentMap
     A TreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element per
     Treap node, with the map key itself as the Treap key, and an additional `value` field
  */
-internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
+internal class SortedTreapMap<@Treapable K : Comparable<K>?, V>(
     val key: K,
     val value: V,
     left: SortedTreapMap<K, V>? = null,
@@ -74,7 +74,7 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
         }
     }
 
-    override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): SortedTreapMap<K, V>? {
+    override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U) -> V?): SortedTreapMap<K, V>? {
         val newValue = merger(value, toUpdate)
         return when {
             newValue == null -> null
@@ -119,4 +119,6 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
 
     fun firstEntry(): Map.Entry<K, V>? = left?.firstEntry() ?: this.asEntry()
     fun lastEntry(): Map.Entry<K, V>? = right?.lastEntry() ?: this.asEntry()
+
+    override fun <R : Any> shallowMapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R = map(key, value)
 }

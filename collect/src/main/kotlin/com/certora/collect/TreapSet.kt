@@ -52,6 +52,9 @@ public sealed interface TreapSet<out T> : PersistentSet<T> {
         which may be more efficient than [forEach].
      */
     public fun forEachElement(action: (element: T) -> Unit): Unit
+
+    public fun <R : Any> mapReduce(map: (T) -> R, reduce: (R, R) -> R): R?
+    public fun <R : Any> parallelMapReduce(map: (T) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int = 5): R?
 }
 
 /**

@@ -45,7 +45,7 @@ internal class HashTreapSet<@Treapable E>(
         return count
     }
 
-    override fun copyWith(left: HashTreapSet<E>?, right: HashTreapSet<E>?): HashTreapSet<E> = 
+    override fun copyWith(left: HashTreapSet<E>?, right: HashTreapSet<E>?): HashTreapSet<E> =
         HashTreapSet(element, next, left, right)
 
     fun withElement(element: E) = when {
@@ -229,6 +229,15 @@ internal class HashTreapSet<@Treapable E>(
     }.iterator()
 
     override fun shallowGetSingleElement(): E? = element.takeIf { next == null }
+
+    override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R {
+        var result: R? = null
+        forEachNodeElement {
+            val mapped = map(it)
+            result = result?.let { result -> reduce(result, mapped) } ?: mapped
+        }
+        return result!!
+    }
 }
 
 internal interface ElementList<E> {
