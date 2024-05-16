@@ -17,7 +17,7 @@ internal class HashTreapSet<@Treapable E>(
 
     override fun hashCode(): Int = computeHashCode()
 
-    override fun E.toTreapKey() = TreapKey.Hashed.FromKey(this)
+    override fun E.toTreapKey() = TreapKey.Hashed.fromKey(this)
     override fun new(element: E): HashTreapSet<E> = HashTreapSet(element)
 
     override fun add(element: E): TreapSet<E> = self.add(new(element))

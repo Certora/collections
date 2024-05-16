@@ -39,7 +39,7 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     /**
         Converts the supplied set element to a TreapKey appropriate to this type of AbstractTreapSet (sorted vs. hashed)
      */
-    abstract fun E.toTreapKey(): TreapKey<E>
+    abstract fun E.toTreapKey(): TreapKey<E>?
 
     /**
         Does this node contain the element?
@@ -92,7 +92,7 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     }
 
     override fun contains(element: E): Boolean =
-        self.find(element.toTreapKey())?.shallowContains(element) ?: false
+        element.toTreapKey()?.let { self.find(it) }?.shallowContains(element) ?: false
 
     override fun containsAll(elements: Collection<E>): Boolean = elements.useAsTreap(
         { elementsTreap -> self.containsAllKeys(elementsTreap) },
@@ -110,7 +110,7 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     )
 
     override fun remove(element: E): TreapSet<E> =
-        self.remove(element.toTreapKey(), element) ?: clear()
+        element.toTreapKey()?.let { self.remove(it, element) ?: clear() } ?: this
 
     override fun removeAll(elements: Collection<E>): TreapSet<E> = elements.useAsTreap(
         { elementsTreap -> (self difference elementsTreap) ?: clear() },
@@ -134,7 +134,7 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     )
 
     override fun findEqual(element: E): E? =
-        self.find(element.toTreapKey())?.shallowFindEqual(element)
+        element.toTreapKey()?.let { self.find(it) }?.shallowFindEqual(element)
 
     @Suppress("UNCHECKED_CAST")
     override fun single(): E = getSingleElement() ?: when {

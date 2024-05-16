@@ -21,7 +21,7 @@ internal class HashTreapMap<@Treapable K, V>(
 
     override fun hashCode() = computeHashCode()
 
-    override fun K.toTreapKey() = TreapKey.Hashed.FromKey(this)
+    override fun K.toTreapKey() = TreapKey.Hashed.fromKey(this)
     override fun new(key: K, value: V): HashTreapMap<K, V> = HashTreapMap(key, value)
 
     override fun put(key: K, value: V): TreapMap<K, V> = self.add(new(key, value))

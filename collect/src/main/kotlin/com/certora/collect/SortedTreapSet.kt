@@ -6,19 +6,21 @@ import kotlinx.collections.immutable.PersistentSet
     A TreapSet specific to Comparable elements.  Iterates in the order defined by the objects.  We store one element per
     Treap node, with the element itself as the Treap key.
  */
-internal class SortedTreapSet<@Treapable E : Comparable<E>?>(
+internal class SortedTreapSet<@Treapable E>(
     override val treapKey: E,
     left: SortedTreapSet<E>? = null,
     right: SortedTreapSet<E>? = null
 ) : AbstractTreapSet<E, SortedTreapSet<E>>(left, right), TreapKey.Sorted<E> {
 
+    init { check(treapKey is Comparable<*>?) { "SortedTreapSet elements must be Comparable" } }
+
     override fun hashCode(): Int = computeHashCode()
 
-    override fun E.toTreapKey() = TreapKey.Sorted.FromKey(this)
+    override fun E.toTreapKey() = TreapKey.Sorted.fromKey(this)
     override fun new(element: E): SortedTreapSet<E> = SortedTreapSet(element)
 
     override fun add(element: E): TreapSet<E> = when(element) {
-        is PrefersHashTreap -> HashTreapSet(element as E) + this
+        !is Comparable<*>?, is PrefersHashTreap -> HashTreapSet(element) + this
         else -> self.add(new(element))
     }
 

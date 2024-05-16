@@ -6,21 +6,23 @@ import kotlinx.collections.immutable.PersistentMap
     A TreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element per
     Treap node, with the map key itself as the Treap key, and an additional `value` field
  */
-internal class SortedTreapMap<@Treapable K : Comparable<K>?, V>(
+internal class SortedTreapMap<@Treapable K, V>(
     val key: K,
     val value: V,
     left: SortedTreapMap<K, V>? = null,
     right: SortedTreapMap<K, V>? = null
 ) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
 
+    init { check(key is Comparable<*>?) { "SortedTreapMap keys must be Comparable" } }
+
     override fun hashCode() = computeHashCode()
 
-    override fun K.toTreapKey() = TreapKey.Sorted.FromKey(this)
+    override fun K.toTreapKey() = TreapKey.Sorted.fromKey(this)
 
     override fun new(key: K, value: V): SortedTreapMap<K, V> = SortedTreapMap(key, value)
 
     override fun put(key: K, value: V): TreapMap<K, V> = when (key) {
-        is PrefersHashTreap -> HashTreapMap(key as K, value) + this
+        !is Comparable<*>?, is PrefersHashTreap -> HashTreapMap(key, value) + this
         else -> self.add(new(key, value))
     }
 
@@ -98,9 +100,9 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>?, V>(
     }
 
     fun floorEntry(key: K): Map.Entry<K, V>? {
-        requireNotNull(key)
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp < 0 -> left?.floorEntry(key)
             cmp > 0 -> right?.floorEntry(key) ?: this.asEntry()
             else -> this.asEntry()
@@ -108,9 +110,9 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>?, V>(
     }
 
     fun ceilingEntry(key: K): Map.Entry<K, V>? {
-        requireNotNull(key)
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp < 0 -> left?.ceilingEntry(key) ?: this.asEntry()
             cmp > 0 -> right?.ceilingEntry(key)
             else -> this.asEntry()
@@ -118,18 +120,18 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>?, V>(
     }
 
     fun lowerEntry(key: K): Map.Entry<K, V>? {
-        requireNotNull(key)
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp > 0 -> right?.lowerEntry(key) ?: this.asEntry()
             else -> left?.lowerEntry(key)
         }
     }
 
     fun higherEntry(key: K): Map.Entry<K, V>? {
-        requireNotNull(key)
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp < 0 -> left?.higherEntry(key) ?: this.asEntry()
             else -> right?.higherEntry(key)
         }

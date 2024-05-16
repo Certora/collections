@@ -47,7 +47,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     /**
         Converts the supplied map key to a TreapKey appropriate to this type of AbstractTreapMap (sorted vs. hashed)
      */
-    abstract fun K.toTreapKey(): TreapKey<K>
+    abstract fun K.toTreapKey(): TreapKey<K>?
 
     /**
         Does this node contain an entry with the given map key?
@@ -110,21 +110,21 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     override fun isEmpty(): Boolean = false
 
     override fun containsKey(key: K) =
-        self.find(key.toTreapKey())?.shallowContainsKey(key) ?: false
+        key.toTreapKey()?.let { self.find(it) }?.shallowContainsKey(key) ?: false
 
     override fun containsValue(value: V) = values.contains(value)
 
     override fun get(key: K): V? =
-        self.find(key.toTreapKey())?.shallowGetValue(key)
+        key.toTreapKey()?.let { self.find(it) }?.shallowGetValue(key)
 
     override fun putAll(m: Map<out K, V>): TreapMap<K, V> =
         m.entries.fold(this as TreapMap<K, V>) { t, e -> t.put(e.key, e.value) }
 
-    override fun remove(key: K):  TreapMap<K, V> =
-        self.remove(key.toTreapKey(), key) ?: clear()
+    override fun remove(key: K): TreapMap<K, V> =
+        key.toTreapKey()?.let { self.remove(it, key) ?: clear() } ?: this
 
     override fun remove(key: K, value: V): TreapMap<K, V> =
-        self.removeEntry(key.toTreapKey(), key, value) ?: clear()
+        key.toTreapKey()?.let { self.removeEntry(it, key, value) ?: clear() } ?: this
 
     override fun clear(): TreapMap<K, V> = treapMapOf<K, V>()
 
@@ -275,7 +275,13 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
        ```
      */
     override fun <U> updateEntry(key: K, value: U, merger: (V?, U) -> V?): TreapMap<K, V> {
-        return self.updateEntry(key.toTreapKey().precompute(), key, value, merger, ::new) ?: clear()
+        val treapKey = key.toTreapKey()?.precompute()
+        return if (treapKey == null) {
+            // The key is not compatible with this map type, so it's definitely not in the map.
+            merger(null, value)?.let { put(key, it) } ?: this
+        } else {
+            self.updateEntry(treapKey, key, value, merger, ::new) ?: clear()
+        }
     }
 
     /**
