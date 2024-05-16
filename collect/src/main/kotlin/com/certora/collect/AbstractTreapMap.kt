@@ -11,7 +11,7 @@ import kotlinx.collections.immutable.ImmutableSet
 internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>>(
     left: S?,
     right: S?
-) : TreapMap<K, V>, Treap<K, S>(left, right) {
+) : TreapMap<K, V>, Treap<K, S>(left, right), TreapKey<K> {
 
     /**
         Derived classes override to create an apropriate node containing the given entry.
@@ -24,23 +24,6 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         Otherwise returns null.
      */
     abstract fun Map<out K, V>.toTreapMapOrNull(): AbstractTreapMap<K, V, S>?
-
-    /**
-        Converts the given Map to a AbstractTreapMap of the same type as 'this'.  May copy the map.
-     */
-    fun Map<out K, V>.toTreapMapIfNotEmpty(): AbstractTreapMap<K, V, S>? =
-        toTreapMapOrNull() ?: when {
-            isEmpty() -> null
-            else -> {
-                val i = entries.iterator()
-                var m: AbstractTreapMap<K, V, S> = i.next().let { (k, v) -> new(k, v) }
-                while (i.hasNext()) {
-                    val (k, v) = i.next()
-                    m = m.put(k, v)
-                }
-                m
-            }
-        }
 
     /**
         Given a map, calls the supplied `action` if the collection is a Treap of the same type as this Treap, otherwise
@@ -133,9 +116,6 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
 
     override fun get(key: K): V? =
         self.find(key.toTreapKey())?.shallowGetValue(key)
-
-    override fun put(key: K, value: V): AbstractTreapMap<K, V, S> =
-        self.add(new(key, value))
 
     override fun putAll(m: Map<out K, V>): TreapMap<K, V> =
         m.entries.fold(this as TreapMap<K, V>) { t, e -> t.put(e.key, e.value) }
@@ -305,47 +285,58 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     override fun zip(m: Map<out K, V>) = sequence<Map.Entry<K, Pair<V?, V?>>> {
         fun <T> Iterator<T>.nextOrNull() = if (hasNext()) { next() } else { null }
 
-        // Iterate over the two maps' treap sequences.  We ensure that each sequence uses the same key ordering, by
-        // converting `m` to a TreapMap of this map's type, if necessary. Note that we can't use entrySequence, because
-        // HashTreapMap's entrySequence is only partially ordered.
-        val thisIt = asTreapSequence().iterator()
-        val that: Treap<K, S>? = m.toTreapMapIfNotEmpty()
-        val thatIt = that?.asTreapSequence()?.iterator()
+        val sequences = getTreapSequencesIfSameType(m)
+        if (sequences != null) {
+            // Fast case for when the maps are the same type
+            val thisIt = sequences.first.iterator()
+            val thatIt = sequences.second.iterator()
 
-        var thisCurrent = thisIt.nextOrNull()
-        var thatCurrent = thatIt?.nextOrNull()
+            var thisCurrent = thisIt.nextOrNull()
+            var thatCurrent = thatIt.nextOrNull()
 
-        while (thisCurrent != null && thatIt != null && thatCurrent != null) {
-            val c = thisCurrent.compareKeyTo(thatCurrent)
-            when {
-                c < 0 -> {
-                    yieldAll(thisCurrent.shallowZipThisOnly())
-                    thisCurrent = thisIt.nextOrNull()
-                }
-                c > 0 -> {
-                    yieldAll(thatCurrent.shallowZipThatOnly())
-                    thatCurrent = thatIt.nextOrNull()
-                }
-                else -> {
-                    yieldAll(thisCurrent.shallowZip(thatCurrent))
-                    thisCurrent = thisIt.nextOrNull()
-                    thatCurrent = thatIt.nextOrNull()
+            while (thisCurrent != null && thatCurrent != null) {
+                val c = thisCurrent.compareKeyTo(thatCurrent)
+                when {
+                    c < 0 -> {
+                        yieldAll(thisCurrent.shallowZipThisOnly())
+                        thisCurrent = thisIt.nextOrNull()
+                    }
+                    c > 0 -> {
+                        yieldAll(thatCurrent.shallowZipThatOnly())
+                        thatCurrent = thatIt.nextOrNull()
+                    }
+                    else -> {
+                        yieldAll(thisCurrent.shallowZip(thatCurrent))
+                        thisCurrent = thisIt.nextOrNull()
+                        thatCurrent = thatIt.nextOrNull()
+                    }
                 }
             }
-        }
-        while (thisCurrent != null) {
-            yieldAll(thisCurrent.shallowZipThisOnly())
-            thisCurrent = thisIt.nextOrNull()
-        }
-        while (thatIt != null && thatCurrent != null) {
-            yieldAll(thatCurrent.shallowZipThatOnly())
-            thatCurrent = thatIt.nextOrNull()
+            while (thisCurrent != null) {
+                yieldAll(thisCurrent.shallowZipThisOnly())
+                thisCurrent = thisIt.nextOrNull()
+            }
+            while (thatCurrent != null) {
+                yieldAll(thatCurrent.shallowZipThatOnly())
+                thatCurrent = thatIt.nextOrNull()
+            }
+        } else {
+            // Slower fallback for maps of different types
+            for ((k, v) in entries) {
+                yield(MapEntry(k, v to m[k]))
+            }
+            for ((k, v) in m.entries) {
+                if (k !in this@AbstractTreapMap) {
+                    yield(MapEntry(k, null to v))
+                }
+            }
         }
     }
 
     private fun shallowZipThisOnly() = shallowEntrySequence().map { MapEntry(it.key, it.value to null) }
     private fun shallowZipThatOnly() = shallowEntrySequence().map { MapEntry(it.key, null to it.value) }
     protected abstract fun shallowZip(that: S): Sequence<Map.Entry<K, Pair<V?, V?>>>
+    protected abstract fun getTreapSequencesIfSameType(that: Map<out K, V>): Pair<Sequence<S>, Sequence<S>>?
 
     override fun <R : Any> mapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R =
         notForking(self) { mapReduceImpl(map, reduce) }

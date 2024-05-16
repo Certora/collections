@@ -24,6 +24,8 @@ internal class HashTreapMap<@Treapable K, V>(
     override fun K.toTreapKey() = TreapKey.Hashed.FromKey(this)
     override fun new(key: K, value: V): HashTreapMap<K, V> = HashTreapMap(key, value)
 
+    override fun put(key: K, value: V): TreapMap<K, V> = self.add(new(key, value))
+
     @Suppress("UNCHECKED_CAST")
     override fun Map<out K, V>.toTreapMapOrNull() =
         this as? HashTreapMap<K, V>
@@ -86,6 +88,15 @@ internal class HashTreapMap<@Treapable K, V>(
             }
         }
         return false
+    }
+
+    protected override fun getTreapSequencesIfSameType(
+        that: Map<out K, V>
+    ): Pair<Sequence<HashTreapMap<K, V>>, Sequence<HashTreapMap<K, V>>>? {
+        @Suppress("UNCHECKED_CAST")
+        return (that as? HashTreapMap<K, V>)?.let {
+            this.asTreapSequence() to it.asTreapSequence()
+        }
     }
 
     override fun shallowZip(that: HashTreapMap<K, V>): Sequence<Map.Entry<K, Pair<V?, V?>>> = sequence {

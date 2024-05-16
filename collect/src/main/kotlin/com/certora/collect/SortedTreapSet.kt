@@ -18,7 +18,7 @@ internal class SortedTreapSet<@Treapable E : Comparable<E>?>(
     override fun new(element: E): SortedTreapSet<E> = SortedTreapSet(element)
 
     override fun add(element: E): TreapSet<E> = when(element) {
-        null, is PrefersHashTreap -> HashTreapSet(element) + this
+        is PrefersHashTreap -> HashTreapSet(element as E) + this
         else -> self.add(new(element))
     }
 

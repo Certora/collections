@@ -69,7 +69,16 @@ internal interface TreapKey<@Treapable K> {
 
         // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is extremely
         // perf-critical code.
-        override fun compareKeyTo(that: TreapKey<K>) = this.treapKey!!.compareTo(that.treapKey)
+        override fun compareKeyTo(that: TreapKey<K>): Int {
+            val thisTreapKey = this.treapKey
+            val thatTreapKey = that.treapKey
+            return when {
+                thisTreapKey === thatTreapKey -> 0
+                thisTreapKey == null -> -1
+                thatTreapKey == null -> 1
+                else -> thisTreapKey.compareTo(thatTreapKey)
+            }
+        }
 
         override fun precompute() = FromKey(treapKey)
 
