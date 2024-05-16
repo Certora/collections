@@ -58,9 +58,6 @@ internal class EmptyTreapList<E> private constructor() : TreapList<E>, java.io.S
         else -> throw IndexOutOfBoundsException("Empty list")
     }
 
-    override fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R? = null
-    override fun <R : Any> parallelMapReduce(map: (E) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int): R? = null
-
     companion object {
         private val instance = EmptyTreapList<Nothing>()
         @Suppress("UNCHECKED_CAST")

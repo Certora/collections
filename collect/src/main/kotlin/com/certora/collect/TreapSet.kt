@@ -26,9 +26,8 @@ public sealed interface TreapSet<out T> : PersistentSet<T> {
     override fun builder(): Builder<@UnsafeVariance T> = TreapSetBuilder(this)
 
     /**
-        Checks if this set contains any of the given [elements].
-
-        This is equivalent to, but more efficient than, `this.intersect(elements).isNotEmpty()`.
+        Checks if this set contains any of the given [elements].  This is equivalent to, but more efficient than,
+        `this.intersect(elements).isNotEmpty()`.
      */
     public fun containsAny(elements: Iterable<@UnsafeVariance T>): Boolean
 
@@ -44,35 +43,15 @@ public sealed interface TreapSet<out T> : PersistentSet<T> {
 
     /**
         If this set contains an element that compares equal to the specified [element], returns that element instance.
-
         This is useful for implementing intern tables, for example.
      */
     public fun findEqual(element: @UnsafeVariance T): T?
 
     /**
-        Calls [action] for each element in the set.
-
-        This traverses the treap without allocating temporary storage, which may be more efficient than [forEach].
+        Calls [action] for each element in the set.  This traverses the treap without allocating temporary storage,
+        which may be more efficient than [forEach].
      */
     public fun forEachElement(action: (element: T) -> Unit): Unit
-
-    /**
-        Calls [map] for each element in the set, and then reduces the results with [reduce].
-
-        This traverses the treap without allocating temporary storage, which may be more efficient than using the [map]
-        and [reduce] functions.
-     */
-    public fun <R : Any> mapReduce(map: (T) -> R, reduce: (R, R) -> R): R?
-
-    /**
-        Calls [map] for each element in the set, and then reduces the results with [reduce].
-
-        Operations are performed in parallel for sets larger than (approximately) 2^parallelThresholdLog2.
-
-        This traverses the treap without allocating temporary storage, which may be more efficient than using the [map]
-        and [reduce] functions.
-     */
-    public fun <R : Any> parallelMapReduce(map: (T) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int = 5): R?
 }
 
 /**

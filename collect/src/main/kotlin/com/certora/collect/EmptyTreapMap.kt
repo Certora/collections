@@ -19,19 +19,10 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
     override fun remove(key: K): TreapMap<K, V> = this
     override fun remove(key: K, value: V): TreapMap<K, V> = this
 
-    override fun <R : Any> updateValues(
-        transform: (K, V) -> R?
-    ): TreapMap<K, R> = treapMapOf()
+    override fun updateValues(transform: (K, V) -> V?): TreapMap<K, V> = this
+    override fun parallelUpdateValues(parallelThresholdLog2: Int, transform: (K, V) -> V?): TreapMap<K, V> = this
 
-    override fun <R : Any> parallelUpdateValues(
-        parallelThresholdLog2: Int,
-        transform: (K, V) -> R?
-    ): TreapMap<K, R> = treapMapOf()
-
-    override fun <R : Any> mapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R? = null
-    override fun <R : Any> parallelMapReduce(map: (K, V) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int): R? = null
-
-    override fun <U> updateEntry(key: K, value: U, merger: (V?, U) -> V?): TreapMap<K, V> =
+    override fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?): TreapMap<K, V> =
         when (val v = merger(null, value)) {
             null -> this
             else -> put(key, v)

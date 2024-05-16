@@ -365,27 +365,6 @@ internal class TreapListNode<E> private constructor(
         right?.forEachNodeIndexed(right.rightIndex(thisIndex), action)
     }
 
-
-    override fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R =
-        notForking(this) { mapReduceImpl(map, reduce) }
-
-    override fun <R : Any> parallelMapReduce(map: (E) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int): R =
-        maybeForking(this, threshold = { it.isApproximatelySmallerThanLog2(parallelThresholdLog2) }) {
-            mapReduceImpl(map, reduce)
-        }
-
-    context(ThresholdForker<TreapListNode<E>>)
-    private fun <R : Any> mapReduceImpl(map: (E) -> R, reduce: (R, R) -> R): R {
-        val (left, middle, right) = fork(
-            this,
-            { left?.mapReduceImpl(map, reduce) },
-            { map(elem) },
-            { right?.mapReduceImpl(map, reduce) }
-        )
-        val leftAndMiddle = left?.let { reduce(it, middle) } ?: middle
-        return right?.let { reduce(leftAndMiddle, it) } ?: leftAndMiddle
-    }
-
     companion object {
         private infix fun <E> TreapListNode<E>?.append(that: TreapListNode<E>?): TreapListNode<E>? = when {
             this == null -> that
@@ -451,12 +430,6 @@ internal class TreapListNode<E> private constructor(
 
             // Build the whole list
             return buildLowerPri(Int.MAX_VALUE, elems.next(), Random.Default.nextInt()).node
-        }
-
-        internal tailrec fun <E> TreapListNode<E>?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {
-            this == null -> true
-            sizeLog2 <= 0 -> false
-            else -> this.left.isApproximatelySmallerThanLog2(sizeLog2 - 1)
         }
     }
 }

@@ -37,9 +37,6 @@ public sealed interface TreapList<E> : PersistentList<E> {
     public fun updateElements(transform: (E) -> E?): TreapList<E>
     public fun updateElementsIndexed(transform: (Int, E) -> E?): TreapList<E>
 
-    public fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R?
-    public fun <R : Any> parallelMapReduce(map: (E) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int = 5): R?
-
     /**
         A [PersistentList.Builder] that produces a [TreapList].
     */

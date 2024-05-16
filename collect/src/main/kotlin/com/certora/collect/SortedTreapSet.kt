@@ -51,5 +51,4 @@ internal class SortedTreapSet<@Treapable E>(
     override fun shallowComputeHashCode(): Int = treapKey.hashCode()
     override fun shallowGetSingleElement(): E = treapKey
     override fun shallowForEach(action: (element: E) -> Unit): Unit { action(treapKey) }
-    override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R = map(treapKey)
 }
