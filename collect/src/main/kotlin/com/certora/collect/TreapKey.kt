@@ -64,16 +64,16 @@ internal interface TreapKey<@Treapable K> {
     /**
         A TreapKey whose underlying key implements Comparable.  This allows us to sort the Treap naturally.
      */
-    interface Sorted<@Treapable K : Comparable<K>> : TreapKey<K> {
+    interface Sorted<@Treapable K : Comparable<K>?> : TreapKey<K> {
         abstract override val treapKey: K
 
         // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is extremely
         // perf-critical code.
-        override fun compareKeyTo(that: TreapKey<K>) = this.treapKey.compareTo(that.treapKey)
+        override fun compareKeyTo(that: TreapKey<K>) = this.treapKey!!.compareTo(that.treapKey)
 
         override fun precompute() = FromKey(treapKey)
 
-        class FromKey<@Treapable K : Comparable<K>>(override val treapKey: K) : Sorted<K> {
+        class FromKey<@Treapable K : Comparable<K>?>(override val treapKey: K) : Sorted<K> {
             override val treapPriority = super.treapPriority // precompute the priority
         }
     }

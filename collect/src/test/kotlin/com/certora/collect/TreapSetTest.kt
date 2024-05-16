@@ -188,6 +188,38 @@ abstract class TreapSetTest {
     }
 
     @Test
+    fun addNullSetAtEnd() {
+        val s = makeSet()
+        s.addAll(treapSetOf(makeKey(0)))
+        s.addAll(treapSetOf(null))
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addNullSetAtStart() {
+        val s = makeSet()
+        s.addAll(treapSetOf(null))
+        s.addAll(treapSetOf(makeKey(0)))
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addNullElementAtEnd() {
+        val s = makeSet()
+        s.add(makeKey(0))
+        s.add(null)
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addNullElementAtStart() {
+        val s = makeSet()
+        s.add(null)
+        s.add(makeKey(0))
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
     fun retainAll() {
         val b = makeBaseline()
         val s = makeSet()
