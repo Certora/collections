@@ -62,7 +62,7 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
     @Suppress("Treapability", "UNCHECKED_CAST")
     override fun put(key: K, value: V): TreapMap<K, V> = when (key) {
         is PrefersHashTreap -> HashTreapMap(key, value)
-        null, is Comparable<*> ->
+        is Comparable<*> ->
             SortedTreapMap<Comparable<Comparable<*>>, V>(key as Comparable<Comparable<*>>, value) as TreapMap<K, V>
         else -> HashTreapMap(key, value)
     }

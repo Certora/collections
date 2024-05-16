@@ -30,7 +30,7 @@ internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E>, 
     @Suppress("Treapability", "UNCHECKED_CAST")
     override fun add(element: E): TreapSet<E> = when (element) {
         is PrefersHashTreap -> HashTreapSet(element)
-        null, is Comparable<*> ->
+        is Comparable<*> ->
             SortedTreapSet<Comparable<Comparable<*>>>(element as Comparable<Comparable<*>>) as TreapSet<E>
         else -> HashTreapSet(element)
     }
