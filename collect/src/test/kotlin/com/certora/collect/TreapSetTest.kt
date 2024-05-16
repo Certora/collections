@@ -220,6 +220,38 @@ abstract class TreapSetTest {
     }
 
     @Test
+    fun addHashSetAtEnd() {
+        val s = makeSet()
+        s.addAll(treapSetOf(makeKey(0)))
+        s.addAll(treapSetOf(HashTestKey(0)))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun addHashSetAtStart() {
+        val s = makeSet()
+        s.addAll(treapSetOf(HashTestKey(0)))
+        s.addAll(treapSetOf(makeKey(0)))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun addHashElementAtEnd() {
+        val s = makeSet()
+        s.add(makeKey(0))
+        s.add(HashTestKey(0))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun addHashElementAtStart() {
+        val s = makeSet()
+        s.add(HashTestKey(0))
+        s.add(makeKey(0))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
     fun retainAll() {
         val b = makeBaseline()
         val s = makeSet()
