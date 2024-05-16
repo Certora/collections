@@ -34,24 +34,27 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
 
-    public fun updateValues(
-        transform: (K, V) -> V?
-    ): TreapMap<K, V>
+    public fun <R : Any> updateValues(
+        transform: (K, V) -> R?
+    ): TreapMap<K, R>
 
-    public fun parallelUpdateValues(
+    public fun <R : Any> parallelUpdateValues(
         parallelThresholdLog2: Int = 5,
-        transform: (K, V) -> V?
-    ): TreapMap<K, V>
+        transform: (K, V) -> R?
+    ): TreapMap<K, R>
 
     public fun <U> updateEntry(
         key: K,
-        value: U?,
-        merger: (V?, U?) -> V?
+        value: U,
+        merger: (V?, U) -> V?
     ): TreapMap<K, V>
 
     public fun zip(
         m: Map<out K, V>
     ): Sequence<Map.Entry<K, Pair<V?, V?>>>
+
+    public fun <R : Any> mapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R?
+    public fun <R : Any> parallelMapReduce(map: (K, V) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int = 5): R?
 }
 
 public fun <@Treapable K, V> treapMapOf(): TreapMap<K, V> = EmptyTreapMap<K, V>()

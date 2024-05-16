@@ -77,7 +77,8 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     abstract fun shallowGetValue(key: K): V?
 
     abstract fun shallowRemoveEntry(key: K, value: V): S?
-    abstract fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): S?
+    abstract fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U) -> V?): S?
+    abstract fun <R : Any> shallowMapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R
 
     /**
         Applies a merge function to all entries in this Treap node.
@@ -212,7 +213,13 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     /**
         Applies a transform to each entry, producing new values.
      */
-    override fun updateValues(transform: (K, V) -> V?): TreapMap<K, V> = when {
+    @Suppress("UNCHECKED_CAST", "Treapability")
+    override fun <R : Any> updateValues(transform: (K, V) -> R?): TreapMap<K, R> =
+        (this as AbstractTreapMap<Any?, Any?, *>).updateValuesErasedTypes(
+            transform as (Any?, Any?) -> Any?
+        ) as TreapMap<K, R>
+
+    private fun updateValuesErasedTypes(transform: (K, V) -> V?): TreapMap<K, V> = when {
         isEmpty() -> self
         else -> notForking(this) {
             updateValuesImpl(transform) ?: clear()
@@ -227,7 +234,14 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
 
         @param[transform] The transform to apply to each entry.  Must be pure and thread-safe.
      */
-    override fun parallelUpdateValues(parallelThresholdLog2: Int, transform: (K, V) -> V?): TreapMap<K, V> = when {
+    @Suppress("UNCHECKED_CAST", "Treapability")
+    override fun <R : Any> parallelUpdateValues(parallelThresholdLog2: Int, transform: (K, V) -> R?): TreapMap<K, R> =
+        (this as AbstractTreapMap<Any?, Any?, *>).parallelUpdateValuesErasedTypes(
+            parallelThresholdLog2,
+            transform as (Any?, Any?) -> Any?
+        ) as TreapMap<K, R>
+
+    private fun parallelUpdateValuesErasedTypes(parallelThresholdLog2: Int, transform: (K, V) -> V?): TreapMap<K, V> = when {
         isEmpty() -> self
         else -> maybeForking(self, threshold = { it.isApproximatelySmallerThanLog2(parallelThresholdLog2) }) {
             updateValuesImpl(transform) ?: clear()
@@ -280,7 +294,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
        }
        ```
      */
-    override fun <U> updateEntry(key: K, value: U?, merger: (V?, U?) -> V?): TreapMap<K, V> {
+    override fun <U> updateEntry(key: K, value: U, merger: (V?, U) -> V?): TreapMap<K, V> {
         return self.updateEntry(key.toTreapKey().precompute(), key, value, merger, ::new) ?: clear()
     }
 
@@ -332,6 +346,26 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     private fun shallowZipThisOnly() = shallowEntrySequence().map { MapEntry(it.key, it.value to null) }
     private fun shallowZipThatOnly() = shallowEntrySequence().map { MapEntry(it.key, null to it.value) }
     protected abstract fun shallowZip(that: S): Sequence<Map.Entry<K, Pair<V?, V?>>>
+
+    override fun <R : Any> mapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R =
+        notForking(self) { mapReduceImpl(map, reduce) }
+
+    override fun <R : Any> parallelMapReduce(map: (K, V) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int): R =
+        maybeForking(self, threshold = { it.isApproximatelySmallerThanLog2(parallelThresholdLog2) }) {
+            mapReduceImpl(map, reduce)
+        }
+
+    context(ThresholdForker<S>)
+    private fun <R : Any> mapReduceImpl(map: (K, V) -> R, reduce: (R, R) -> R): R {
+        val (left, middle, right) = fork(
+            self,
+            { left?.mapReduceImpl(map, reduce) },
+            { shallowMapReduce(map, reduce) },
+            { right?.mapReduceImpl(map, reduce) }
+        )
+        val leftAndMiddle = left?.let { reduce(it, middle) } ?: middle
+        return right?.let { reduce(leftAndMiddle, it) } ?: leftAndMiddle
+    }
 }
 
 /**
@@ -357,8 +391,8 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.remo
 internal fun <@Treapable K, V, U, @Treapable S : AbstractTreapMap<K, V, S>> S?.updateEntry(
     thatKey: TreapKey<K>,
     entryKey: K,
-    toUpdate: U?,
-    merger: (V?, U?) -> V?,
+    toUpdate: U,
+    merger: (V?, U) -> V?,
     new: (K, V) -> S
 ): S? = when {
     this == null -> {
