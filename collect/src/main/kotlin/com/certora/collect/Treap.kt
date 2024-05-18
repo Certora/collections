@@ -265,7 +265,8 @@ internal fun <@Treapable T, S : Treap<T, S>> S?.computeHashCode(): Int = when {
     along a single path, under the assumption that the tree is balanced.
  */
 internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {
-    sizeLog2 <= 0 -> throw IllegalArgumentException("sizeLog2 must be positive")
+    sizeLog2 < 0 -> throw IllegalArgumentException("sizeLog2 must be positive")
     this == null -> true
+    sizeLog2 == 0 -> false
     else -> this.left.isApproximatelySmallerThanLog2(sizeLog2 - 1)
 }

@@ -454,8 +454,9 @@ internal class TreapListNode<E> private constructor(
         }
 
         internal tailrec fun <E> TreapListNode<E>?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {
-            sizeLog2 <= 0 -> throw IllegalArgumentException("sizeLog2 must be positive")
+            sizeLog2 < 0 -> throw IllegalArgumentException("sizeLog2 must be positive")
             this == null -> true
+            sizeLog2 == 0 -> false
             else -> this.left.isApproximatelySmallerThanLog2(sizeLog2 - 1)
         }
     }
