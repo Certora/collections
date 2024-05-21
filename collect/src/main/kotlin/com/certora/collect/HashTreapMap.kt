@@ -165,7 +165,7 @@ internal class HashTreapMap<@Treapable K, V>(
         }
     }
 
-    override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): HashTreapMap<K, V>? {
+    override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U) -> V?): HashTreapMap<K, V>? {
         return when (this.key) {
             entryKey -> {
                 val newValue = merger(this.value, toUpdate)
@@ -279,6 +279,15 @@ internal class HashTreapMap<@Treapable K, V>(
         var h = 0
         forEachPair { (k, v) -> h += AbstractMapEntry.hashCode(k, v) }
         return h
+    }
+
+    override fun <R : Any> shallowMapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R {
+        var result: R? = null
+        forEachPair {
+            val mapped = map(it.key, it.value)
+            result = result?.let { result -> reduce(result, mapped) } ?: mapped
+        }
+        return result!!
     }
 }
 

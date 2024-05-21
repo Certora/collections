@@ -1,5 +1,7 @@
 package com.certora.collect
 
+import com.certora.forkjoin.*
+
 /**
     Base class for TreapSet implementations.  Provides the Set operations; derived classes deal with type-specific
     behavior such as hash collisions.  See `Treap` for an overview of all of this.
@@ -62,6 +64,7 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     abstract fun shallowRemoveAll(predicate: (E) -> Boolean): S?
     abstract fun shallowContainsAll(elements: S): Boolean
     abstract fun shallowContainsAny(elements: S): Boolean
+    abstract fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +154,26 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     internal fun getSingleElement(): E? = when {
         left === null && right === null -> shallowGetSingleElement()
         else -> null
+    }
+
+    override fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R =
+        notForking(self) { mapReduceImpl(map, reduce) }
+
+    override fun <R : Any> parallelMapReduce(map: (E) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int): R =
+        maybeForking(self, threshold = { it.isApproximatelySmallerThanLog2(parallelThresholdLog2) }) {
+            mapReduceImpl(map, reduce)
+        }
+
+    context(ThresholdForker<S>)
+    private fun <R : Any> mapReduceImpl(map: (E) -> R, reduce: (R, R) -> R): R {
+        val (left, middle, right) = fork(
+            self,
+            { left?.mapReduceImpl(map, reduce) },
+            { shallowMapReduce(map, reduce) },
+            { right?.mapReduceImpl(map, reduce) }
+        )
+        val leftAndMiddle = left?.let { reduce(it, middle) } ?: middle
+        return right?.let { reduce(leftAndMiddle, it) } ?: leftAndMiddle
     }
 }
 
