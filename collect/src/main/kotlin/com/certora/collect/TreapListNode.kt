@@ -267,8 +267,8 @@ internal class TreapListNode<E> private constructor(
     private fun split(index: Int): Pair<TreapListNode<E>?, TreapListNode<E>?> = stepToIndex(
         index,
         found = { left to this.with(left = null) },
-        goLeft = { left!!.split(it).let { it.first to this.with(left = it.second) }},
-        goRight = { right!!.split(it).let { this.with(right = it.first) to it.second }},
+        goLeft = { left?.split(it).let { it?.first to this.with(left = it?.second) }},
+        goRight = { right?.split(it).let { this.with(right = it?.first) to it?.second }},
     )
 
     private fun removeNode(element: E): TreapListNode<E>? {
