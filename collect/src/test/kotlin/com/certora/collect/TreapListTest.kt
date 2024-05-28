@@ -403,4 +403,29 @@ class TreapListTest {
         val large = (1..100000).toTreapList()
         large.removeAt(large.size / 2)
     }
+
+    @Test
+    fun subList() {
+        assertEquals(listOf<Int>(), treapListOf<Int>().subList(0, 0))
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf<Int>().subList(0, 1) }
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf<Int>().subList(1, 1) }
+
+        assertEquals(listOf<Int>(), treapListOf(1).subList(0, 0))
+        assertEquals(listOf<Int>(), treapListOf(1).subList(1, 1))
+        assertEquals(listOf(1), treapListOf(1).subList(0, 1))
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf<Int>().subList(1, 2) }
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf<Int>().subList(2, 2) }
+
+        assertEquals(listOf<Int>(), treapListOf(1, 2).subList(2, 2))
+        assertEquals(listOf(1), treapListOf(1, 2).subList(0, 1))
+        assertEquals(listOf(2), treapListOf(1, 2).subList(1, 2))
+        assertEquals(listOf(1, 2), treapListOf(1, 2).subList(0, 2))
+
+        assertEquals(listOf(1), treapListOf(1, 2, 3).subList(0, 1))
+        assertEquals(listOf(1, 2), treapListOf(1, 2, 3).subList(0, 2))
+        assertEquals(listOf(2, 3), treapListOf(1, 2, 3).subList(1, 3))
+        assertEquals(listOf(3), treapListOf(1, 2, 3).subList(2, 3))
+        assertEquals(listOf<Int>(), treapListOf(1, 2, 3).subList(3, 3))
+        assertEquals(listOf(1, 2, 3), treapListOf(1, 2, 3).subList(0, 3))
+    }
 }

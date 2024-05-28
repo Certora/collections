@@ -90,7 +90,7 @@ internal class SortedTreapMap<@Treapable K, V>(
         }
     }
 
-    override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U?) -> V?): SortedTreapMap<K, V>? {
+    override fun <U> shallowUpdate(entryKey: K, toUpdate: U, merger: (V?, U) -> V?): SortedTreapMap<K, V>? {
         val newValue = merger(value, toUpdate)
         return when {
             newValue == null -> null
@@ -139,4 +139,6 @@ internal class SortedTreapMap<@Treapable K, V>(
 
     fun firstEntry(): Map.Entry<K, V>? = left?.firstEntry() ?: this.asEntry()
     fun lastEntry(): Map.Entry<K, V>? = right?.lastEntry() ?: this.asEntry()
+
+    override fun <R : Any> shallowMapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R = map(key, value)
 }
