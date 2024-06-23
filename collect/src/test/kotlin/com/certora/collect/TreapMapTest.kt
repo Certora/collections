@@ -192,6 +192,70 @@ abstract class TreapMapTest {
     }
 
     @Test
+    fun addNullMapAtEnd() {
+        val s = makeMap()
+        s.putAll(treapMapOf(makeKey(0) to null))
+        s.putAll(treapMapOf(null to null))
+        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addNullMapAtStart() {
+        val s = makeMap()
+        s.putAll(treapMapOf(null to null))
+        s.putAll(treapMapOf(makeKey(0) to null))
+        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addHashKeyAtEnd() {
+        val s = makeMap()
+        s.put(makeKey(0), null)
+        s.put(null, null)
+        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addNullKeyAtStart() {
+        val s = makeMap()
+        s.put(null, null)
+        s.put(makeKey(0), null)
+        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addHashKeyAtStart() {
+        val s = makeMap()
+        s.put(HashTestKey(0), null)
+        s.put(makeKey(0), null)
+        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addHashMapAtEnd() {
+        val s = makeMap()
+        s.putAll(treapMapOf(makeKey(0) to null))
+        s.putAll(treapMapOf(HashTestKey(0) to null))
+        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addHashMapAtStart() {
+        val s = makeMap()
+        s.putAll(treapMapOf(HashTestKey(0) to null))
+        s.putAll(treapMapOf(makeKey(0) to null))
+        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
+    }
+
+    @Test
+    fun addNullKeyAtEnd() {
+        val s = makeMap()
+        s.put(makeKey(0), null)
+        s.put(HashTestKey(0), null)
+        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
+    }
+
+    @Test
     fun copyConstructorEmpty() {
         val empty = mapOf<TestKey?, Any?>()
         val b = makeBaseline(empty)

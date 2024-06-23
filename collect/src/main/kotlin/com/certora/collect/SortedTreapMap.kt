@@ -6,18 +6,25 @@ import kotlinx.collections.immutable.PersistentMap
     A TreapMap specific to Comparable keys.  Iterates in the order defined by the objects.  We store one element per
     Treap node, with the map key itself as the Treap key, and an additional `value` field
  */
-internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
+internal class SortedTreapMap<@Treapable K, V>(
     val key: K,
     val value: V,
     left: SortedTreapMap<K, V>? = null,
     right: SortedTreapMap<K, V>? = null
 ) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
 
+    init { check(key is Comparable<*>?) { "SortedTreapMap keys must be Comparable" } }
+
     override fun hashCode() = computeHashCode()
 
-    override fun K.toTreapKey() = TreapKey.Sorted.FromKey(this)
+    override fun K.toTreapKey() = TreapKey.Sorted.fromKey(this)
 
     override fun new(key: K, value: V): SortedTreapMap<K, V> = SortedTreapMap(key, value)
+
+    override fun put(key: K, value: V): TreapMap<K, V> = when (key) {
+        !is Comparable<*>?, is PrefersHashTreap -> HashTreapMap(key, value) + this
+        else -> self.add(new(key, value))
+    }
 
     @Suppress("UNCHECKED_CAST")
     override fun Map<out K, V>.toTreapMapOrNull() =
@@ -25,7 +32,7 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? SortedTreapMap<K, V>
 
     override fun getShallowMerger(merger: (K, V?, V?) -> V?): (SortedTreapMap<K, V>?, SortedTreapMap<K, V>?) -> SortedTreapMap<K, V>? = { t1, t2 ->
-        val k = t1?.key ?: t2?.key as K
+        val k = (t1 ?: t2)!!.key
         val v1 = t1?.value
         val v2 = t2?.value
         val v = merger(k, v1, v2)
@@ -34,6 +41,15 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
             t1 != null -> if (v == v1) { t1 } else { SortedTreapMap<K, V>(k, v, t1.left, t1.right) }
             t2 != null -> if (v == v2) { t2 } else { SortedTreapMap<K, V>(k, v, t2.left, t2.right) }
             else -> throw IllegalArgumentException("shallow merge with no treaps")
+        }
+    }
+
+    protected override fun getTreapSequencesIfSameType(
+        that: Map<out K, V>
+    ): Pair<Sequence<SortedTreapMap<K, V>>, Sequence<SortedTreapMap<K, V>>>? {
+        @Suppress("UNCHECKED_CAST")
+        return (that as? SortedTreapMap<K, V>)?.let {
+            this.asTreapSequence() to it.asTreapSequence()
         }
     }
 
@@ -84,8 +100,9 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
     }
 
     fun floorEntry(key: K): Map.Entry<K, V>? {
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp < 0 -> left?.floorEntry(key)
             cmp > 0 -> right?.floorEntry(key) ?: this.asEntry()
             else -> this.asEntry()
@@ -93,8 +110,9 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
     }
 
     fun ceilingEntry(key: K): Map.Entry<K, V>? {
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp < 0 -> left?.ceilingEntry(key) ?: this.asEntry()
             cmp > 0 -> right?.ceilingEntry(key)
             else -> this.asEntry()
@@ -102,16 +120,18 @@ internal class SortedTreapMap<@Treapable K : Comparable<K>, V>(
     }
 
     fun lowerEntry(key: K): Map.Entry<K, V>? {
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp > 0 -> right?.lowerEntry(key) ?: this.asEntry()
             else -> left?.lowerEntry(key)
         }
     }
 
     fun higherEntry(key: K): Map.Entry<K, V>? {
-        val cmp = key.compareTo(this.key)
+        val cmp = TreapKey.Sorted.fromKey(key)?.compareKeyTo(this)
         return when {
+            cmp == null -> null
             cmp < 0 -> left?.higherEntry(key) ?: this.asEntry()
             else -> right?.higherEntry(key)
         }

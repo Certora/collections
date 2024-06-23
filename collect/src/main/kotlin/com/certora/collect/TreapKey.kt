@@ -64,17 +64,33 @@ internal interface TreapKey<@Treapable K> {
     /**
         A TreapKey whose underlying key implements Comparable.  This allows us to sort the Treap naturally.
      */
-    interface Sorted<@Treapable K : Comparable<K>> : TreapKey<K> {
+    interface Sorted<@Treapable K> : TreapKey<K> {
         abstract override val treapKey: K
 
-        // Note that we must never compare a Hashed key with a Sorted key.  We'd check that here, but this is extremely
-        // perf-critical code.
-        override fun compareKeyTo(that: TreapKey<K>) = this.treapKey.compareTo(that.treapKey)
+        override fun compareKeyTo(that: TreapKey<K>): Int {
+            val thisTreapKey = this.treapKey
+            val thatTreapKey = that.treapKey
+            return when {
+                thisTreapKey === thatTreapKey -> 0
+                thisTreapKey == null -> -1
+                thatTreapKey == null -> 1
+                else -> {
+                    @Suppress("UNCHECKED_CAST")
+                    (thisTreapKey as Comparable<K>).compareTo(thatTreapKey)
+                }
+            }
+        }
 
-        override fun precompute() = FromKey(treapKey)
+        override fun precompute() = fromKey(treapKey)!!
 
-        class FromKey<@Treapable K : Comparable<K>>(override val treapKey: K) : Sorted<K> {
-            override val treapPriority = super.treapPriority // precompute the priority
+        companion object {
+            fun <@Treapable K> fromKey(key: K): Sorted<K>? = when (key) {
+                is Comparable<*>? -> object : Sorted<K> {
+                    override val treapKey = key
+                    override val treapPriority = super.treapPriority // precompute the priority
+                }
+                else -> null
+            }
         }
     }
 
@@ -98,11 +114,14 @@ internal interface TreapKey<@Treapable K> {
             }
         }
 
-        override fun precompute() = FromKey(treapKey)
+        override fun precompute() = fromKey(treapKey)
 
-        class FromKey<@Treapable K>(override val treapKey: K) : Hashed<K> {
-            override val treapKeyHashCode = treapKey.hashCode() // precompute the hash code
-            override val treapPriority = super.treapPriority // precompute the priority
+        companion object {
+            fun <@Treapable K> fromKey(key: K): Hashed<K> = object : Hashed<K> {
+                override val treapKey = key
+                override val treapKeyHashCode = treapKey.hashCode() // precompute the hash code
+                override val treapPriority = super.treapPriority // precompute the priority
+            }
         }
     }
 }

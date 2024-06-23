@@ -188,6 +188,108 @@ abstract class TreapSetTest {
     }
 
     @Test
+    fun addNullSetAtEnd() {
+        val s = makeSet()
+        s.addAll(treapSetOf(makeKey(0)))
+        s.addAll(treapSetOf(null))
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addNullSetAtStart() {
+        val s = makeSet()
+        s.addAll(treapSetOf(null))
+        s.addAll(treapSetOf(makeKey(0)))
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addNullElementAtEnd() {
+        val s = makeSet()
+        s.add(makeKey(0))
+        s.add(null)
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addNullElementAtStart() {
+        val s = makeSet()
+        s.add(null)
+        s.add(makeKey(0))
+        assertEquals(s, setOf(null, makeKey(0)))
+    }
+
+    @Test
+    fun addHashSetAtEnd() {
+        val s = makeSet()
+        s.addAll(treapSetOf(makeKey(0)))
+        s.addAll(treapSetOf(HashTestKey(0)))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun addHashSetAtStart() {
+        val s = makeSet()
+        s.addAll(treapSetOf(HashTestKey(0)))
+        s.addAll(treapSetOf(makeKey(0)))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun addHashElementAtEnd() {
+        val s = makeSet()
+        s.add(makeKey(0))
+        s.add(HashTestKey(0))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun addHashElementAtStart() {
+        val s = makeSet()
+        s.add(HashTestKey(0))
+        s.add(makeKey(0))
+        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    }
+
+    @Test
+    fun nullQueries() {
+        val withNull = makeSet()
+        withNull.add(makeKey(0))
+        withNull.add(null)
+
+        val withoutNull = makeSet()
+        withNull.add(makeKey(0))
+
+        assertTrue(null in withNull)
+        assertFalse(null in withoutNull)
+
+        assertTrue(withNull.containsAll(treapSetOf(null)))
+        assertFalse(withoutNull.containsAll(treapSetOf(null)))
+
+        assertTrue(withNull.remove(null))
+        assertFalse(withoutNull.remove(null))
+    }
+
+    @Test
+    fun hashQueries() {
+        val withHash = makeSet()
+        withHash.add(makeKey(0))
+        withHash.add(HashTestKey(0))
+
+        val withoutHash = makeSet()
+        withHash.add(makeKey(0))
+
+        assertTrue(HashTestKey(0) in withHash)
+        assertFalse(HashTestKey(0) in withoutHash)
+
+        assertTrue(withHash.containsAll(treapSetOf(HashTestKey(0))))
+        assertFalse(withoutHash.containsAll(treapSetOf(HashTestKey(0))))
+
+        assertTrue(withHash.remove(HashTestKey(0)))
+        assertFalse(withoutHash.remove(HashTestKey(0)))
+    }
+
+    @Test
     fun retainAll() {
         val b = makeBaseline()
         val s = makeSet()
