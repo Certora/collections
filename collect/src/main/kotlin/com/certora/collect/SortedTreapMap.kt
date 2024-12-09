@@ -143,4 +143,10 @@ internal class SortedTreapMap<@Treapable K, V>(
     fun lastEntry(): Map.Entry<K, V>? = right?.lastEntry() ?: this.asEntry()
 
     override fun <R : Any> shallowMapReduce(map: (K, V) -> R, reduce: (R, R) -> R): R = map(key, value)
+
+    override fun forEachEntry(action: (Map.Entry<K, V>) -> Unit) {
+        left?.forEachEntry(action)
+        action(this.asEntry())
+        right?.forEachEntry(action)
+    }
 }
