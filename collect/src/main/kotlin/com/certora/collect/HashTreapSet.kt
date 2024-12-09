@@ -230,6 +230,8 @@ internal class HashTreapSet<@Treapable E>(
 
     override fun shallowGetSingleElement(): E? = element.takeIf { next == null }
 
+    override fun arbitraryOrNull(): E? = element
+
     override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R {
         var result: R? = null
         forEachNodeElement {

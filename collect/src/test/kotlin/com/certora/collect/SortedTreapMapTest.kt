@@ -10,9 +10,9 @@ import java.util.TreeMap
 class SortedTreapMapTest: TreapMapTest() {
     override fun makeKey(value: Int, code: Int) = ComparableTestKey(value, code)
     override val allowNullKeys = false
-    override fun makeMap(): MutableMap<TestKey?, Any?> = treapMapOf<ComparableTestKey, Any?>().builder() as MutableMap<TestKey?, Any?>
+    override fun makeMap(): TreapMap.Builder<TestKey?, Any?> = treapMapOf<ComparableTestKey, Any?>().builder() as TreapMap.Builder<TestKey?, Any?>
     override fun makeBaseline(): MutableMap<TestKey?, Any?> = TreeMap()
-    override fun makeMap(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?> = makeMap().apply { putAll(other) }
+    override fun makeMap(other: Map<TestKey?,Any?>): TreapMap.Builder<TestKey?, Any?> = makeMap().apply { putAll(other) }
     override fun makeBaseline(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?> = TreeMap(other)
     override fun makeMapOfInts(): TreapMap<Int?, Int?> = treapMapOf<Int, Int?>() as TreapMap<Int?, Int?>
     override fun makeMapOfInts(other: Map<Int?, Int?>) = makeMapOfInts().apply { putAll(other) }

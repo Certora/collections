@@ -43,6 +43,11 @@ public sealed interface TreapSet<out T> : PersistentSet<T> {
     public fun singleOrNull(): T?
 
     /**
+        Returns an arbitrary element from the set, or null if the set is empty.
+     */
+    public fun arbitraryOrNull(): T?
+
+    /**
         If this set contains an element that compares equal to the specified [element], returns that element instance.
 
         This is useful for implementing intern tables, for example.

@@ -19,6 +19,10 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
     override fun remove(key: K): TreapMap<K, V> = this
     override fun remove(key: K, value: V): TreapMap<K, V> = this
 
+    override fun arbitraryOrNull(): Map.Entry<K, V>? = null
+
+    override fun forEachEntry(action: (Map.Entry<K, V>) -> Unit): Unit {}
+
     override fun <R : Any> updateValues(
         transform: (K, V) -> R?
     ): TreapMap<K, R> = treapMapOf()

@@ -23,6 +23,13 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     @Suppress("Treapability")
     override fun builder(): Builder<K, @UnsafeVariance V> = TreapMapBuilder(this)
 
+    /**
+        Returns an arbitrary entry from the map, or null if the map is empty.
+     */
+    public fun arbitraryOrNull(): Map.Entry<K, V>?
+
+    public fun forEachEntry(action: (Map.Entry<K, V>) -> Unit): Unit
+
     public fun merge(
         m: Map<K, V>,
         merger: (K, V?, V?) -> V?

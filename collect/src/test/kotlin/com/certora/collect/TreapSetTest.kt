@@ -16,10 +16,10 @@ abstract class TreapSetTest {
     abstract fun makeKey(value: Int, code: Int = value.hashCode()): TestKey
     open val nullKeysAllowed: Boolean get() = true
 
-    fun makeSet(): MutableSet<TestKey?> = treapSetOf<TestKey?>().builder()
+    fun makeSet(): TreapSet.Builder<TestKey?> = treapSetOf<TestKey?>().builder()
     abstract fun makeBaseline(): MutableSet<TestKey?>
 
-    fun makeSet(other: Collection<TestKey?>): MutableSet<TestKey?> = makeSet().also { it += other }
+    fun makeSet(other: Collection<TestKey?>): TreapSet.Builder<TestKey?> = makeSet().also { it += other }
     fun makeBaseline(other: Collection<TestKey?>): MutableSet<TestKey?> = makeSet().also { it += other }
 
     open fun assertOrderedIteration(expected: Iterator<*>, actual: Iterator<*>) {}
@@ -410,6 +410,23 @@ abstract class TreapSetTest {
         assertVeryEqual(b, rb)
         assertVeryEqual(s, rs)
         assertVeryEqual(b, rs)
+    }
+
+    @Test
+    fun arbitraryOrNull() {
+        val s = makeSet()
+        assertNull(s.build().arbitraryOrNull())
+
+        s += makeKey(1, 1)
+        assertEquals(makeKey(1, 1), s.build().arbitraryOrNull())
+
+        s += makeKey(2, 1)
+        assertTrue(s.build().arbitraryOrNull() in (1..2).map { makeKey(it) })
+
+        for (it in 3..100) {
+            s += makeKey(it)
+        }
+        assertTrue(s.build().arbitraryOrNull() in (1..100).map { makeKey(it) })
     }
 }
 
