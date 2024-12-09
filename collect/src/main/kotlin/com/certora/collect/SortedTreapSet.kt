@@ -50,6 +50,7 @@ internal class SortedTreapSet<@Treapable E>(
     override fun shallowRemoveAll(predicate: (E) -> Boolean): SortedTreapSet<E>? = this.takeIf { !predicate(treapKey) }
     override fun shallowComputeHashCode(): Int = treapKey.hashCode()
     override fun shallowGetSingleElement(): E = treapKey
+    override fun arbitraryOrNull(): E? = treapKey
     override fun shallowForEach(action: (element: E) -> Unit): Unit { action(treapKey) }
     override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R = map(treapKey)
 }

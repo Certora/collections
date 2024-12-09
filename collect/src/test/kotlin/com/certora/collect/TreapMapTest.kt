@@ -14,14 +14,14 @@ abstract class TreapMapTest {
     abstract fun makeKey(value: Int, code: Int = value.hashCode()): TestKey
 
     open val allowNullKeys = true
-    abstract fun makeMap(): MutableMap<TestKey?, Any?>
+    abstract fun makeMap(): TreapMap.Builder<TestKey?, Any?>
     abstract fun makeBaseline(): MutableMap<TestKey?, Any?>
-    abstract fun makeMap(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?>
+    abstract fun makeMap(other: Map<TestKey?,Any?>): TreapMap.Builder<TestKey?, Any?>
     abstract fun makeBaseline(other: Map<TestKey?,Any?>): MutableMap<TestKey?, Any?>
 
     open fun assertOrderedIteration(expected: Iterator<*>, actual: Iterator<*>) { }
 
-    fun assertVeryEqual(expected: Map<*,*>, actual: Map<*,*>) {
+    fun assertVeryEqual(expected: Map<*,*>, actual: TreapMap<*,*>) {
         assertEquals(expected, actual)
         assertTrue(actual.equals(expected))
         assertEquals(expected.hashCode(), actual.hashCode())
@@ -41,9 +41,27 @@ abstract class TreapMapTest {
         val actualValues = actual.values
         assertEquals(expectedValues.size, actualValues.size)
         assertOrderedIteration(expectedValues.iterator(), actualValues.iterator())
+
+        val actualForEachEntries = mutableListOf<Map.Entry<*, *>>()
+        actual.forEach {
+            actualForEachEntries += it
+        }
+        assertOrderedIteration(expected.entries.iterator(), actualForEachEntries.iterator())
+
+        val actualForEachEntryEntries = mutableListOf<Map.Entry<*, *>>()
+        actual.forEachEntry {
+            actualForEachEntryEntries += it
+        }
+        assertOrderedIteration(expected.entries.iterator(), actualForEachEntryEntries.iterator())
+
+        assertEquals(actualForEachEntries, actualForEachEntryEntries)
     }
 
-    fun <TResult> assertEqualMutation(baseline: MutableMap<TestKey?, Any?>, map: MutableMap<TestKey?,Any?>, action: MutableMap<TestKey?,Any?>.() -> TResult) {
+    fun assertVeryEqual(expected: Map<*, *>, actual: TreapMap.Builder<*, *>) {
+        assertVeryEqual(expected, actual.build())
+    }
+
+    fun <TResult> assertEqualMutation(baseline: MutableMap<TestKey?, Any?>, map: TreapMap.Builder<TestKey?,Any?>, action: MutableMap<TestKey?,Any?>.() -> TResult) {
         assertEqualResult(baseline, map, action)
         assertVeryEqual(baseline, map)
     }
@@ -350,7 +368,7 @@ abstract class TreapMapTest {
         @Suppress("UNCHECKED_CAST")
         val db = Json.decodeFromString(getBaseDeserializer()!!, bs) as Map<TestKey?, Any?>
         @Suppress("UNCHECKED_CAST")
-        val dm = Json.decodeFromString(getDeserializer()!!, ms) as Map<TestKey?, Any?>
+        val dm = Json.decodeFromString(getDeserializer()!!, ms) as TreapMap<TestKey?, Any?>
 
         assertVeryEqual(db, dm)
     }
@@ -431,5 +449,22 @@ abstract class TreapMapTest {
             setOf(MapEntry(1, 2 to 3), MapEntry(2, 3 to 4)),
             testMapOf(1 to 2, 2 to 3).zip(testMapOf(1 to 3, 2 to 4)).toSet()
         )
+    }
+
+    @Test
+    fun arbitraryOrNull() {
+        val m = makeMap()
+        assertNull(m.build().arbitraryOrNull())
+
+        m[makeKey(1, 1)] = 1
+        assertEquals(1, m.build().arbitraryOrNull()!!.value)
+
+        m[makeKey(2, 1)] = 2
+        assertTrue(m.build().arbitraryOrNull()!!.value in 1..2)
+
+        for (it in 3..100) {
+            m[makeKey(it)] = it
+        }
+        assertTrue(m.build().arbitraryOrNull()!!.value in 1..100)
     }
 }

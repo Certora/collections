@@ -31,6 +31,8 @@ internal class HashTreapMap<@Treapable K, V>(
         this as? HashTreapMap<K, V>
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? HashTreapMap<K, V>
 
+    override fun arbitraryOrNull(): Map.Entry<K, V>? = MapEntry(key, value)
+
     override fun getShallowMerger(merger: (K, V?, V?) -> V?): (HashTreapMap<K, V>?, HashTreapMap<K, V>?) -> HashTreapMap<K, V>? = { t1, t2 ->
         var newPairs: KeyValuePairList.More<K, V>? = null
         t1?.forEachPair { (k, v1) ->

@@ -152,6 +152,12 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
             override operator fun iterator() = entrySequence().map { it.value }.iterator()
         }
 
+    override fun forEachEntry(action: (Map.Entry<K, V>) -> Unit) {
+        left?.forEachEntry(action)
+        shallowEntrySequence().forEach(action)
+        right?.forEachEntry(action)
+    }
+
     /**
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the
         new values for each key.

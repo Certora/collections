@@ -24,6 +24,7 @@ internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E>, 
     override fun retainAll(elements: Collection<E>): TreapSet<E> = this
     override fun single(): E = throw NoSuchElementException("Empty set.")
     override fun singleOrNull(): E? = null
+    override fun arbitraryOrNull(): E? = null
     override fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R? = null
     override fun <R : Any> parallelMapReduce(map: (E) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int): R? = null
 

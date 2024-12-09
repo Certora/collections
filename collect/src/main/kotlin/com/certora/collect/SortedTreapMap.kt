@@ -31,6 +31,8 @@ internal class SortedTreapMap<@Treapable K, V>(
         this as? SortedTreapMap<K, V>
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? SortedTreapMap<K, V>
 
+    override fun arbitraryOrNull(): Map.Entry<K, V>? = MapEntry(key, value)
+
     override fun getShallowMerger(merger: (K, V?, V?) -> V?): (SortedTreapMap<K, V>?, SortedTreapMap<K, V>?) -> SortedTreapMap<K, V>? = { t1, t2 ->
         val k = (t1 ?: t2)!!.key
         val v1 = t1?.value
