@@ -53,4 +53,7 @@ internal class SortedTreapSet<@Treapable E>(
     override fun arbitraryOrNull(): E? = treapKey
     override fun shallowForEach(action: (element: E) -> Unit): Unit { action(treapKey) }
     override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R = map(treapKey)
+
+    override fun containsAny(predicate: (E) -> Boolean): Boolean =
+        predicate(treapKey) || left?.containsAny(predicate) == true || right?.containsAny(predicate) == true
 }

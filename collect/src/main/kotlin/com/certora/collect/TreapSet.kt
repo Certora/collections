@@ -33,6 +33,13 @@ public sealed interface TreapSet<out T> : PersistentSet<T> {
     public fun containsAny(elements: Iterable<@UnsafeVariance T>): Boolean
 
     /**
+        Checks if this set contains any element that satisfies the given [predicate].
+
+        This traverses the treap without allocating temporary storage, which may be more efficient than [any].
+     */
+    public fun containsAny(predicate: (T) -> Boolean): Boolean
+
+    /**
         If this set contains exactly one element, returns that element.  Otherwise, throws [NoSuchElementException].
      */
     public fun single(): T

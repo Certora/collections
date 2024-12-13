@@ -16,6 +16,7 @@ internal class EmptyTreapSet<@Treapable E> private constructor() : TreapSet<E>, 
     override fun contains(element: E): Boolean = false
     override fun containsAll(elements: Collection<E>): Boolean = elements.isEmpty()
     override fun containsAny(elements: Iterable<E>): Boolean = false
+    override fun containsAny(predicate: (E) -> Boolean): Boolean = false
     override fun findEqual(element: E): E? = null
     override fun forEachElement(action: (element: E) -> Unit): Unit {}
     override fun remove(element: E): TreapSet<E> = this

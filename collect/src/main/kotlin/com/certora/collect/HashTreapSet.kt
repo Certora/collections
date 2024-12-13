@@ -240,6 +240,15 @@ internal class HashTreapSet<@Treapable E>(
         }
         return result!!
     }
+
+    override fun containsAny(predicate: (E) -> Boolean): Boolean {
+        forEachNodeElement {
+            if (predicate(it)) {
+                return true
+            }
+        }
+        return left?.containsAny(predicate) == true || right?.containsAny(predicate) == true
+    }
 }
 
 internal interface ElementList<E> {
