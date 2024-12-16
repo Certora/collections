@@ -66,6 +66,48 @@ internal class HashTreapMap<@Treapable K, V>(
         }
     }
 
+    override fun getShallowUnionMerger(
+        merger: (K, V, V) -> V
+    ): (HashTreapMap<K, V>, HashTreapMap<K, V>) -> HashTreapMap<K, V> = { t1, t2 ->
+        var newPairs: KeyValuePairList.More<K, V>? = null
+        t1.forEachPair { (k, v1) ->
+            val v = if (t2.shallowContainsKey(k)) {
+                @Suppress("UNCHECKED_CAST")
+                merger(k, v1, t2.shallowGetValue(k) as V)
+            } else {
+                v1
+            }
+            newPairs = KeyValuePairList.More(k, v, newPairs)
+        }
+        t2.forEachPair { (k, v2) ->
+            if (!t1.shallowContainsKey(k)) {
+                newPairs = KeyValuePairList.More(k, v2, newPairs)
+            }
+        }
+        newPairs!!.let { firstPair ->
+            val newNode = HashTreapMap(firstPair.key, firstPair.value, firstPair.next, t1.left, t1.right)
+            if (newNode.shallowEquals(t1)) { t1 } else { newNode }
+        }
+    }
+
+    override fun getShallowIntersectMerger(
+        merger: (K, V, V) -> V
+    ): (HashTreapMap<K, V>, HashTreapMap<K, V>) -> HashTreapMap<K, V>? = { t1, t2 ->
+        var newPairs: KeyValuePairList.More<K, V>? = null
+        t1.forEachPair { (k, v1) ->
+            if (t2.shallowContainsKey(k)) {
+                @Suppress("UNCHECKED_CAST")
+                val v2 = t2.shallowGetValue(k) as V
+                val v = merger(k, v1, v2)
+                newPairs = KeyValuePairList.More(k, v, newPairs)
+            }
+        }
+        newPairs?.let { firstPair ->
+            val newNode = HashTreapMap(firstPair.key, firstPair.value, firstPair.next, t1.left, t1.right)
+            if (newNode.shallowEquals(t1)) { t1 } else { newNode }
+        }
+    }
+
     private inline fun KeyValuePairList<K, V>?.forEachPair(action: (KeyValuePairList<K, V>) -> Unit) {
         var current = this
         while (current != null) {

@@ -67,6 +67,8 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         Applies a merge function to all entries in this Treap node.
      */
     abstract fun getShallowMerger(merger: (K, V?, V?) -> V?): (S?, S?) -> S?
+    abstract fun getShallowUnionMerger(merger: (K, V, V) -> V): (S, S) -> S
+    abstract fun getShallowIntersectMerger(merger: (K, V, V) -> V): (S, S) -> S?
 
     private fun containsEntry(entry: Map.Entry<K, V>): Boolean {
         val key = entry.key
@@ -151,6 +153,52 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
             override fun isEmpty() = this@AbstractTreapMap.isEmpty()
             override operator fun iterator() = entrySequence().map { it.value }.iterator()
         }
+
+    override fun union(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =
+        m.useAsTreap(
+            { otherTreap -> self.unionWith(otherTreap, getShallowUnionMerger(merger)) ?: clear() },
+            { fallbackUnion(m, merger) }
+        )
+
+    override fun parallelUnion(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> =
+        m.useAsTreap(
+            { otherTreap -> self.parallelUnionWith(otherTreap, parallelThresholdLog2, getShallowUnionMerger(merger)) ?: clear() },
+            { fallbackUnion(m, merger) }
+        )
+
+    private fun fallbackUnion(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> {
+        var newThis = this as TreapMap<K, V>
+        for ((k, v) in m.entries) {
+            if (k in this) {
+                newThis = newThis + (k to merger(k, this[k]!!, v))
+            } else {
+                newThis = newThis + (k to v)
+            }
+        }
+        return newThis
+    }
+
+    override fun intersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =
+        m.useAsTreap(
+            { otherTreap -> self.intersectWith(otherTreap, getShallowIntersectMerger(merger)) ?: clear() },
+            { fallbackIntersect(m, merger) }
+        )
+
+    override fun parallelIntersect(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> =
+        m.useAsTreap(
+            { otherTreap -> self.parallelIntersectWith(otherTreap, parallelThresholdLog2, getShallowIntersectMerger(merger)) ?: clear() },
+            { fallbackIntersect(m, merger) }
+        )
+
+    private fun fallbackIntersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> {
+        var newThis = clear()
+        for ((k, v) in m.entries) {
+            if (k in this) {
+                newThis = newThis + (k to merger(k, this[k]!!, v))
+            }
+        }
+        return newThis
+    }
 
     /**
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the
@@ -491,3 +539,107 @@ private fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.merge
     return newThis?.with(newLeft, newRight) ?: (newLeft join newRight)
 }
 
+internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.unionWith(
+    that: S?,
+    shallowUnion: (S, S) -> S
+): S? =
+    notForking(this to that) {
+        unionWithImpl(that, shallowUnion)
+    }
+
+internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.parallelUnionWith(
+    that: S?,
+    parallelThresholdLog2: Int,
+    shallowUnion: (S, S) -> S
+): S? =
+    maybeForking(
+        this to that,
+        {
+            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
+            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
+        }
+    ) {
+        unionWithImpl(that, shallowUnion)
+    }
+
+context(ThresholdForker<Pair<S?, S?>>)
+private fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.unionWithImpl(
+    that: S?,
+    shallowUnion: (S, S) -> S
+): S? {
+    val (newLeft, newRight, newThis) = when {
+        this == null -> return that
+        that == null -> return this
+        this.comparePriorityTo(that) >= 0 -> {
+            val thatSplit = that.split(this)
+            fork(
+                this to that,
+                { this.left.unionWithImpl(thatSplit.left, shallowUnion) },
+                { this.right.unionWithImpl(thatSplit.right, shallowUnion) },
+                { thatSplit.duplicate?.let { shallowUnion(this, it) } ?: this }
+            )
+        }
+        else -> {
+            val thisSplit = this.split(that)
+            fork(
+                this to that,
+                { thisSplit.left.unionWithImpl(that.left, shallowUnion) },
+                { thisSplit.right.unionWithImpl(that.right, shallowUnion) },
+                { thisSplit.duplicate?.let { shallowUnion(it, that) } ?: that }
+            )
+        }
+    }
+    return newThis.with(newLeft, newRight)
+}
+
+internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.intersectWith(
+    that: S?,
+    shallowIntersect: (S, S) -> S?
+): S? =
+    notForking(this to that) {
+        intersectWithImpl(that, shallowIntersect)
+    }
+
+internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.parallelIntersectWith(
+    that: S?,
+    parallelThresholdLog2: Int,
+    shallowIntersect: (S, S) -> S?
+): S? =
+    maybeForking(
+        this to that,
+        {
+            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
+            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
+        }
+    ) {
+        intersectWithImpl(that, shallowIntersect)
+    }
+
+context(ThresholdForker<Pair<S?, S?>>)
+private fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.intersectWithImpl(
+    that: S?,
+    shallowIntersect: (S, S) -> S?
+): S? {
+    val (newLeft, newRight, newThis) = when {
+        this == null || that == null -> return null
+        this.comparePriorityTo(that) >= 0 -> {
+            val thatSplit = that.split(this)
+            fork(
+                this to that,
+                { this.left.intersectWithImpl(thatSplit.left, shallowIntersect) },
+                { this.right.intersectWithImpl(thatSplit.right, shallowIntersect) },
+                { thatSplit.duplicate?.let { shallowIntersect(this, it) } }
+            )
+        }
+        else -> {
+            val thisSplit = this.split(that)
+            fork(
+                this to that,
+                { thisSplit.left.intersectWithImpl(that.left, shallowIntersect) },
+                { thisSplit.right.intersectWithImpl(that.right, shallowIntersect) },
+                { thisSplit.duplicate?.let { shallowIntersect(it, that) } }
+            )
+        }
+    }
+    return newThis?.with(newLeft, newRight) ?: (newLeft join newRight)
+}

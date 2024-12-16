@@ -41,6 +41,12 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
             else -> put(key, v)
         }
 
+    override fun union(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = putAll(m)
+    override fun parallelUnion(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = putAll(m)
+
+    override fun intersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = this
+    override fun parallelIntersect(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = this
+
     override fun merge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
         var map: TreapMap<K, V> = this
         for ((key, value) in m) {

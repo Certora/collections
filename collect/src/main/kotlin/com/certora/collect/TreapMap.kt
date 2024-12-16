@@ -36,6 +36,58 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     public fun forEachEntry(action: (Map.Entry<K, V>) -> Unit): Unit
 
     /**
+        Produces a new map containing the keys from this map and another map [m].
+
+        If a key is present in just one of the maps, the resulting map will contain the key with the corresponding value
+        from that map.  If a key is present in both maps, [merger] is called with the key, the value from this map, and
+        the value from [m], in that order, and the returned value will appear in the resulting map.
+     */
+    public fun union(
+        m: Map<K, V>,
+        merger: (K, V, V) -> V
+    ): TreapMap<K, V>
+
+    /**
+        Produces a new map containing the keys from this map and another map [m].
+
+        If a key is present in just one of the maps, the resulting map will contain the key with the corresponding value
+        from that map.  If a key is present in both maps, [merger] is called with the key, the value from this map, and
+        the value from [m], in that order, and the returned value will appear in the resulting map.
+
+        Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
+     */
+    public fun parallelUnion(
+        m: Map<K, V>,
+        parallelThresholdLog2: Int = 4,
+        merger: (K, V, V) -> V
+    ): TreapMap<K, V>
+
+    /**
+        Produces a new map containing the keys that are present in both this map and another map [m].
+
+        For each key, the resulting map will contain the key with the value returned by [merger], which is called with
+        the key, the value from this map, and the value from [m], in that order.
+     */
+    public fun intersect(
+        m: Map<K, V>,
+        merger: (K, V, V) -> V
+    ): TreapMap<K, V>
+
+    /**
+        Produces a new map containing the keys that are present in both this map and another map [m].
+
+        For each key, the resulting map will contain the key with the value returned by [merger], which is called with
+        the key, the value from this map, and the value from [m], in that order.
+
+        Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
+     */
+    public fun parallelIntersect(
+        m: Map<K, V>,
+        parallelThresholdLog2: Int = 4,
+        merger: (K, V, V) -> V
+    ): TreapMap<K, V>
+
+    /**
         Produces a new [TreapMap] with updated entries, by applying supplied [merger] to each entry of this map and
         another map [m].
 
