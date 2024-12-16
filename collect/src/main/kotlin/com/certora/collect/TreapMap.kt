@@ -28,13 +28,40 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
      */
     public fun arbitraryOrNull(): Map.Entry<K, V>?
 
+    /**
+        Calls [action] for each entry in the map.
+
+        Traverses the treap without allocating temprarory storage, which may be more efficient than `entries.forEach`.
+     */
     public fun forEachEntry(action: (Map.Entry<K, V>) -> Unit): Unit
 
+    /**
+        Produces a new [TreapMap] with updated entries, by applying supplied [merger] to each entry of this map and
+        another map [m].
+
+        The [merger] function is called for each key that is present in either map, with the key, the value from this
+        map, and the value from [m], in that order, as arguments.  If the key is not present in one of the maps, the
+        corresponding [merger] argument will be `null`.
+
+        If the [merger] function returns null, the key is not added to the resulting map.
+     */
     public fun merge(
         m: Map<K, V>,
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
 
+    /**
+        Produces a new [TreapMap] with updated entries, by applying supplied [merger] to each entry of this map and
+        another map [m].
+
+        The [merger] function is called for each key that is present in either map, with the key, the value from this
+        map, and the value from [m], in that order, as arguments.  If the key is not present in one of the maps, the
+        corresponding [merger] argument will be `null`.
+
+        If the [merger] function returns null, the key is not added to the resulting map.
+
+        Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
+     */
     public fun parallelMerge(
         m: Map<K, V>,
         parallelThresholdLog2: Int = 4,
@@ -68,12 +95,23 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         transform: (K, V) -> R?
     ): TreapMap<K, R>
 
+    /**
+        Produces a new [TreapMap] with the entry for the specified [key] updated via [merger].
+
+        [merger] is called with the current value for the key (or null if the key is absent), and supplied [value]
+        argument.  If the [merger] function returns null, the key will be absent from the resulting map.  Otherwise
+        the resulting map will contain the key with the value returned by the [merger] function.
+     */
     public fun <U> updateEntry(
         key: K,
         value: U,
         merger: (V?, U) -> V?
     ): TreapMap<K, V>
 
+    /**
+        Produces a sequence from the entries of this map and another map.  For each key, the result is an entry mapping
+        the key to a pair of values.  Each value may be null, if the key is not present in the corresponding map.
+     */
     public fun zip(
         m: Map<out K, V>
     ): Sequence<Map.Entry<K, Pair<V?, V?>>>
