@@ -33,6 +33,20 @@ internal class SortedTreapMap<@Treapable K, V>(
 
     override fun arbitraryOrNull(): Map.Entry<K, V>? = MapEntry(key, value)
 
+    override fun getShallowUnionMerger(
+        merger: (K, V, V) -> V
+    ): (SortedTreapMap<K, V>, SortedTreapMap<K, V>) -> SortedTreapMap<K, V> = { t1, t2 ->
+        val v = merger(t1.key, t1.value, t2.value)
+        SortedTreapMap(t1.key, v, t1.left, t1.right)
+    }
+
+    override fun getShallowIntersectMerger(
+        merger: (K, V, V) -> V
+    ): (SortedTreapMap<K, V>, SortedTreapMap<K, V>) -> SortedTreapMap<K, V>? = { t1, t2 ->
+        val v = merger(t1.key, t1.value, t2.value)
+        SortedTreapMap(t1.key, v, t1.left, t1.right)
+    }
+
     override fun getShallowMerger(merger: (K, V?, V?) -> V?): (SortedTreapMap<K, V>?, SortedTreapMap<K, V>?) -> SortedTreapMap<K, V>? = { t1, t2 ->
         val k = (t1 ?: t2)!!.key
         val v1 = t1?.value

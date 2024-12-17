@@ -424,6 +424,66 @@ abstract class TreapMapTest {
     }
 
     @Test
+    fun union() {
+        assertEquals(testMapOf(), testMapOf().union(testMapOf()) { _, a, _ -> a })
+        assertEquals(testMapOf(1 to 2), testMapOf(1 to 2).union(testMapOf()) { _, a, _ -> a })
+        assertEquals(testMapOf(1 to 2), testMapOf().union(testMapOf(1 to 2)) { _, a, _ -> a })
+        assertEquals(
+            testMapOf(1 to 2, 2 to 3, 3 to 4),
+            testMapOf(1 to 2, 2 to 3).union(testMapOf(2 to 3, 3 to 4)) { _, a, _ -> a }
+        )
+
+        val m1 = testMapOf(2 to 2, 3 to 3)
+        val m2 = testMapOf(3 to 4)
+        assertEquals(
+            mapOf(2 to 2, 3 to 3),
+            m1.union(m2) { _, a, _ -> a }
+        )
+        assertEquals(
+            mapOf(2 to 2, 3 to 4),
+            m2.union(m1) { _, a, _ -> a }
+        )
+        assertEquals(
+            mapOf(2 to 2, 3 to 4),
+            m1.union(m2) { _, _, b -> b }
+        )
+        assertEquals(
+            mapOf(2 to 2, 3 to 3),
+            m2.union(m1) { _, _, b -> b }
+        )
+    }
+
+    @Test
+    fun intersect() {
+        assertEquals(testMapOf(), testMapOf().intersect(testMapOf()) { _, a, _ -> a })
+        assertEquals(testMapOf(), testMapOf(1 to 2).intersect(testMapOf()) { _, a, _ -> a })
+        assertEquals(testMapOf(), testMapOf().intersect(testMapOf(1 to 2)) { _, a, _ -> a })
+        assertEquals(
+            testMapOf(2 to 3),
+            testMapOf(1 to 2, 2 to 3).intersect(testMapOf(2 to 3, 3 to 4)) { _, a, _ -> a }
+        )
+
+        val m1 = testMapOf(2 to 2, 3 to 3)
+        val m2 = testMapOf(3 to 4)
+        assertEquals(
+            mapOf(3 to 3),
+            m1.intersect(m2) { _, a, _ -> a }
+        )
+        assertEquals(
+            mapOf(3 to 4),
+            m2.intersect(m1) { _, a, _ -> a }
+        )
+        assertEquals(
+            mapOf(3 to 4),
+            m1.intersect(m2) { _, _, b -> b }
+        )
+        assertEquals(
+            mapOf(3 to 3),
+            m2.intersect(m1) { _, _, b -> b }
+        )
+    }
+
+    @Test
     fun zip() {
         assertEquals(
             setOf<Map.Entry<Int, Pair<Int?, Int?>>>(),
