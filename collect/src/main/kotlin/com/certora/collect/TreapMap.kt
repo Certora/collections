@@ -31,7 +31,7 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     /**
         Calls [action] for each entry in the map.
 
-        Traverses the treap without allocating temprarory storage, which may be more efficient than `entries.forEach`.
+        Traverses the treap without allocating temporary storage, which may be more efficient than `entries.forEach`.
      */
     public fun forEachEntry(action: (Map.Entry<K, V>) -> Unit): Unit
 
