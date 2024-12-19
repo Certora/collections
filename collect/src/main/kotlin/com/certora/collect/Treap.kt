@@ -174,7 +174,9 @@ internal fun <@Treapable T, S : Treap<T, S>> Treap<T, S>?.split(key: TreapKey<T>
         }
     }
 }
-internal class Split<@Treapable T, S : Treap<T, S>>(var left: S?, var right: S?, var duplicate: S?)
+internal class Split<@Treapable T, S : Treap<T, S>>(var left: S?, var right: S?, var duplicate: S?) {
+    override fun toString(): String = "Split(left=$left, right=$right, duplicate=$duplicate)"
+}
 
 
 /**
