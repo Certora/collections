@@ -15,9 +15,9 @@ internal class HashTreapMap<@Treapable K, V>(
     override val key: K,
     override val value: V,
     override val next: KeyValuePairList.More<K, V>? = null,
-    left: HashTreapMap<K, V>? = null,
-    right: HashTreapMap<K, V>? = null
-) : AbstractTreapMap<K, V, HashTreapMap<K, V>>(left, right), TreapKey.Hashed<K>, KeyValuePairList<K, V> {
+    override val left: HashTreapMap<K, V>? = null,
+    override val right: HashTreapMap<K, V>? = null
+) : AbstractTreapMap<K, V, HashTreapMap<K, V>>(), TreapKey.Hashed<K>, KeyValuePairList<K, V> {
 
     override fun hashCode() = computeHashCode()
 
@@ -350,12 +350,30 @@ internal class HashTreapMap<@Treapable K, V>(
         forEachPair { (k, v) -> action(MapEntry(k, v)) }
         right?.forEachEntry(action)
     }
+
+    override val keys get() = KeySet(this)
+
+    class KeySet<@Treapable K>(
+        private val map: HashTreapMap<K, *>
+    ) : AbstractHashTreapSet<K>() {
+        override fun hashCode() = super.hashCode()
+
+        override val element get() = map.key
+        override val left get() = map.left?.keys
+        override val right get() = map.right?.keys
+        override val next get() = map.next?.let { More(it) }
+
+        class More<K>(val mapMore: KeyValuePairList.More<K, *>) : ElementList<K>, java.io.Serializable {
+            override val element get() = mapMore.key
+            override val next get() = mapMore.next?.let { More(it) }
+        }
+    }
 }
 
 internal interface KeyValuePairList<K, V> {
     abstract val key: K
     abstract val value: V
-    abstract val next: More<K, V>?
+    abstract val next: KeyValuePairList<K, V>?
     operator fun component1() = key
     operator fun component2() = value
 

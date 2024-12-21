@@ -6,10 +6,7 @@ import com.certora.forkjoin.*
     Base class for TreapSet implementations.  Provides the Set operations; derived classes deal with type-specific
     behavior such as hash collisions.  See `Treap` for an overview of all of this.
  */
-internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>(
-    left: S?,
-    right: S?
-) : TreapSet<E>, Treap<E, S>(left, right) {
+internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>> : TreapSet<E>, Treap<E, S>() {
     /**
         Derived classes override to create an apropriate node containing the given element.
      */

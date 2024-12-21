@@ -9,11 +9,9 @@ import kotlinx.collections.immutable.PersistentMap
 internal class SortedTreapMap<@Treapable K, V>(
     val key: K,
     val value: V,
-    left: SortedTreapMap<K, V>? = null,
-    right: SortedTreapMap<K, V>? = null
-) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(left, right), TreapKey.Sorted<K> {
-
-    init { check(key is Comparable<*>?) { "SortedTreapMap keys must be Comparable" } }
+    override val left: SortedTreapMap<K, V>? = null,
+    override val right: SortedTreapMap<K, V>? = null
+) : AbstractTreapMap<K, V, SortedTreapMap<K, V>>(), TreapKey.Sorted<K> {
 
     override fun hashCode() = computeHashCode()
 
@@ -162,5 +160,17 @@ internal class SortedTreapMap<@Treapable K, V>(
         left?.forEachEntry(action)
         action(this.asEntry())
         right?.forEachEntry(action)
+    }
+
+    override val keys get() = KeySet(this)
+
+    class KeySet<@Treapable K>(
+        private val map: SortedTreapMap<K, *>
+    ) : AbstractSortedTreapSet<K>() {
+        override fun hashCode() = super.hashCode()
+
+        override val treapKey get() = map.key
+        override val left get() = map.left?.keys
+        override val right get() = map.right?.keys
     }
 }
