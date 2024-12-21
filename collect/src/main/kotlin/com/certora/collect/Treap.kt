@@ -65,11 +65,9 @@ package com.certora.collect
 
     - Treaps impose special requirements on keys if they are serialized.  See [Treapable].
 */
-internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
-    @JvmField val left: S?,
-    @JvmField val right: S?
-) : TreapKey<T>, java.io.Serializable {
-
+internal abstract class Treap<@Treapable T, S : Treap<T, S>> : TreapKey<T>, java.io.Serializable {
+    abstract val left: S?
+    abstract val right: S?
     abstract val self: S
 
     /**
@@ -135,11 +133,11 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
         case any hash functions have changed since this Treap was serialized.
      */
     protected fun readResolve(): Any? {
-        if (left != null) {
+        left?.let { left ->
             check(left.compareKeyTo(this) < 0) { "Treap key comparison logic changed: ${left.treapKey} >= ${this.treapKey}" }
             check(left.comparePriorityTo(this) < 0) { "Treap key priority hash logic changed: ${left.treapKey} >= ${this.treapKey} "}
         }
-        if (right != null) {
+        right?.let { right -> 
             check(right.compareKeyTo(this) > 0) { "Treap key comparison logic changed: ${right.treapKey} <= ${this.treapKey}" }
             check(right.comparePriorityTo(this) < 0) { "Treap key priority hash logic changed: ${right.treapKey} >= ${this.treapKey} "}
         }

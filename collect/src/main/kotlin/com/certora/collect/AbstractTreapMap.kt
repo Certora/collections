@@ -8,11 +8,8 @@ import kotlinx.collections.immutable.ImmutableSet
     Base class for TreapMap implementations.  Provides the Map operations; derived classes deal with type-specific
     behavior such as hash collisions.  See [Treap] for an overview of all of this.
  */
-internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>>(
-    left: S?,
-    right: S?
-) : TreapMap<K, V>, Treap<K, S>(left, right) {
-
+internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>>
+: TreapMap<K, V>, Treap<K, S>() {
     /**
         Derived classes override to create an apropriate node containing the given entry.
      */
@@ -139,13 +136,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
             override fun iterator() = entrySequence().iterator()
         }
 
-    override val keys: ImmutableSet<K>
-        get() = object: AbstractSet<K>(), ImmutableSet<K> {
-            override val size get() = this@AbstractTreapMap.size
-            override fun isEmpty() = this@AbstractTreapMap.isEmpty()
-            override operator fun contains(element: K) = containsKey(element)
-            override operator fun iterator() = entrySequence().map { it.key }.iterator()
-        }
+    abstract override val keys: TreapSet<K>
 
     override val values: ImmutableCollection<V>
         get() = object: AbstractCollection<V>(), ImmutableCollection<V> {
