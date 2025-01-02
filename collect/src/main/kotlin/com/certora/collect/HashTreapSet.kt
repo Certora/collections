@@ -25,6 +25,7 @@ internal class HashTreapSet<@Treapable E>(
     override fun Iterable<E>.toTreapSetOrNull(): HashTreapSet<E>? =
         (this as? HashTreapSet<E>)
         ?: (this as? TreapSet.Builder<E>)?.build() as? HashTreapSet<E>
+        ?: (this as? HashTreapMap.KeySet<E>)?.keys?.value
 
     private inline fun ElementList<E>?.forEachNodeElement(action: (E) -> Unit) {
         var current = this
@@ -228,8 +229,10 @@ internal class HashTreapSet<@Treapable E>(
         }
     }.iterator()
 
-    override fun shallowGetSingleElement(): E? = element.takeIf { next == null }
-
+    override fun singleOrNull(): E? = element.takeIf { next == null && left == null && right == null }
+    override fun single(): E = element.also {
+        if (next != null || left != null || right != null) { throw IllegalArgumentException("Set contains more than one element") }
+    }
     override fun arbitraryOrNull(): E? = element
 
     override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R {

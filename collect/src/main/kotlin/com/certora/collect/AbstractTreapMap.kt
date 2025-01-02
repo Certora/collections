@@ -101,6 +101,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         return when {
             otherMap == null -> false
             otherMap === this -> true
+            otherMap.isEmpty() -> false // NB AbstractTreapMap always contains at least one entry
             else -> otherMap.useAsTreap(
                 { otherTreap -> this.self.deepEquals(otherTreap) },
                 { other.size == this.size && other.entries.all { this.containsEntry(it) }}
@@ -110,6 +111,9 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
 
     override val size: Int get() = computeSize()
     override fun isEmpty(): Boolean = false
+
+    // NB AbstractTreapMap always contains at least one entry
+    override fun single() = singleOrNull() ?: throw IllegalArgumentException("Map contains more than one entry")
 
     override fun containsKey(key: K) =
         key.toTreapKey()?.let { self.find(it) }?.shallowContainsKey(key) ?: false
@@ -137,14 +141,6 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
             override val size get() = this@AbstractTreapMap.size
             override fun isEmpty() = this@AbstractTreapMap.isEmpty()
             override fun iterator() = entrySequence().iterator()
-        }
-
-    override val keys: ImmutableSet<K>
-        get() = object: AbstractSet<K>(), ImmutableSet<K> {
-            override val size get() = this@AbstractTreapMap.size
-            override fun isEmpty() = this@AbstractTreapMap.isEmpty()
-            override operator fun contains(element: K) = containsKey(element)
-            override operator fun iterator() = entrySequence().map { it.key }.iterator()
         }
 
     override val values: ImmutableCollection<V>
