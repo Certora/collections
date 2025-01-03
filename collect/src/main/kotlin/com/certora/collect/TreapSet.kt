@@ -40,7 +40,7 @@ public sealed interface TreapSet<out T> : PersistentSet<T> {
     public fun containsAny(predicate: (T) -> Boolean): Boolean
 
     /**
-        If this set contains exactly one element, returns that element.  Otherwise, throws [NoSuchElementException].
+        If this set contains exactly one element, returns that element.  Otherwise, throws.
      */
     public fun single(): T
 
