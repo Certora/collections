@@ -1,6 +1,7 @@
 package com.certora.collect
 
 import com.certora.collect.*
+import com.certora.collect.TreapMap.MergeMode
 import java.util.Random
 import kotlinx.collections.immutable.*
 import kotlinx.serialization.json.Json
@@ -421,6 +422,38 @@ abstract class TreapMapTest {
         assertEquals(
             mapOf(2 to -1),
             m1.merge(m2, merger3))
+    }
+
+    @Test
+    fun mergeIntersectMode() {
+        val merger = { _: Int?, v1: Int?, v2: Int? ->
+            v1!! + v2!!
+        }
+
+        assertEquals(testMapOf(), testMapOf().merge(testMapOf(), MergeMode.INTERSECTION, merger))
+        assertEquals(testMapOf(), testMapOf(1 to 2).merge(testMapOf(), MergeMode.INTERSECTION, merger))
+        assertEquals(testMapOf(), testMapOf().merge(testMapOf(1 to 2), MergeMode.INTERSECTION, merger))
+
+        assertEquals(
+            testMapOf(1 to 3, 3 to 9),
+            testMapOf(1 to 2, 2 to 3, 3 to 4).merge(testMapOf(1 to 1, 3 to 5, 4 to 6), MergeMode.INTERSECTION, merger))
+
+        val m1 = testMapOf(2 to 2, 3 to 3)
+        val m2 = testMapOf(3 to 3)
+        assertEquals(
+            mapOf(3 to 6),
+            m2.merge(m1, MergeMode.INTERSECTION, merger))
+        assertEquals(
+            mapOf(3 to 6),
+            m1.merge(m2, MergeMode.INTERSECTION, merger))
+
+        val merger3 = { _: Int?, _: Int?, _: Int? -> null }
+        assertEquals(
+            mapOf(),
+            m2.merge(m1, MergeMode.INTERSECTION, merger3))
+        assertEquals(
+            mapOf(),
+            m1.merge(m2, MergeMode.INTERSECTION, merger3))
     }
 
     @Test
