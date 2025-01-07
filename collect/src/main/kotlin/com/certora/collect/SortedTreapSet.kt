@@ -51,8 +51,11 @@ internal class SortedTreapSet<@Treapable E>(
     override fun shallowRemoveAll(predicate: (E) -> Boolean): SortedTreapSet<E>? = this.takeIf { !predicate(treapKey) }
     override fun shallowComputeHashCode(): Int = treapKey.hashCode()
     override fun singleOrNull(): E? = treapKey.takeIf { left == null && right == null }
-    override fun single(): E = treapKey.also {
-        if (left != null || right != null) { throw IllegalArgumentException("Set contains more than one element") }
+    override fun single(): E {
+        if (left != null || right != null) {
+            throw IllegalArgumentException("Set contains more than one element")
+        }
+        return treapKey
     }
     override fun arbitraryOrNull(): E? = treapKey
     override fun shallowForEach(action: (element: E) -> Unit): Unit { action(treapKey) }

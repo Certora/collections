@@ -230,8 +230,11 @@ internal class HashTreapSet<@Treapable E>(
     }.iterator()
 
     override fun singleOrNull(): E? = element.takeIf { next == null && left == null && right == null }
-    override fun single(): E = element.also {
-        if (next != null || left != null || right != null) { throw IllegalArgumentException("Set contains more than one element") }
+    override fun single(): E {
+        if (next != null || left != null || right != null) {
+            throw IllegalArgumentException("Set contains more than one element")
+        }
+        return element
     }
     override fun arbitraryOrNull(): E? = element
 
