@@ -25,7 +25,7 @@ internal class HashTreapSet<@Treapable E>(
     override fun Iterable<E>.toTreapSetOrNull(): HashTreapSet<E>? =
         (this as? HashTreapSet<E>)
         ?: (this as? TreapSet.Builder<E>)?.build() as? HashTreapSet<E>
-        ?: (this as? HashTreapMap.KeySet<E>)?.keys?.value
+        ?: (this as? HashTreapMap<E, *>.KeySet)?.keys?.value
 
     private inline fun ElementList<E>?.forEachNodeElement(action: (E) -> Unit) {
         var current = this

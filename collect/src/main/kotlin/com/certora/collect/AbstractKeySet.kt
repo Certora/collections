@@ -4,7 +4,8 @@ package com.certora.collect
     Presents the keys of a [TreapMap] as a [TreapSet].
 
     The idea here is that a `TreapMap<K, *>` is stored with the same Treap structure as a `TreapSet<K>`, so we can very
-    quickly create the corresponding `TreapSet<K>` when needed, in O(1) time.
+    quickly create the corresponding `TreapSet<K>` when needed, in O(n) time (as opposed to the naive O(n*log(n))
+    method).
 
     We lazily initialize the set, so that we don't create it until we need it.  For many operations, we can avoid
     creating the set entirely, and just use the map directly.  However, many operations, e.g. [addAll]/[union] and

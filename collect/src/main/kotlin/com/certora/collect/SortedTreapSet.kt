@@ -27,7 +27,7 @@ internal class SortedTreapSet<@Treapable E>(
     override fun Iterable<E>.toTreapSetOrNull(): SortedTreapSet<E>? =
         (this as? SortedTreapSet<E>)
         ?: (this as? PersistentSet.Builder<E>)?.build() as? SortedTreapSet<E>
-        ?: (this as? SortedTreapMap.KeySet<E>)?.keys?.value
+        ?: (this as? SortedTreapMap<E, *>.KeySet)?.keys?.value
 
     override val self get() = this
     override fun iterator(): Iterator<E> = this.asTreapSequence().map { it.treapKey }.iterator()

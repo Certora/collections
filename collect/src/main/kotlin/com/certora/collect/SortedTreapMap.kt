@@ -168,11 +168,11 @@ internal class SortedTreapMap<@Treapable K, V>(
     private fun treapSetFromKeys(): SortedTreapSet<K> =
         SortedTreapSet(treapKey, left?.treapSetFromKeys(), right?.treapSetFromKeys())
 
-    @Suppress("Treapability")
-    class KeySet<@Treapable K>(
-        override val map: SortedTreapMap<K, *>,
-        override val keys: Lazy<SortedTreapSet<K>> = lazy { map.treapSetFromKeys() }
-    ) : AbstractKeySet<K, SortedTreapSet<K>>()
+    inner class KeySet : AbstractKeySet<K, SortedTreapSet<K>>() {
+        override val map get() = this@SortedTreapMap
+        override val keys = lazy { treapSetFromKeys() }
+        override fun hashCode() = super.hashCode() // avoids treapability warning
+    }
 
-    override val keys get() = KeySet(this)
+    override val keys get() = KeySet()
 }

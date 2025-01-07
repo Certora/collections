@@ -355,13 +355,13 @@ internal class HashTreapMap<@Treapable K, V>(
     private fun treapSetFromKeys(): HashTreapSet<K> =
         HashTreapSet(treapKey, next?.toKeyList(), left?.treapSetFromKeys(), right?.treapSetFromKeys())
 
-    @Suppress("Treapability")
-    class KeySet<@Treapable K>(
-        override val map: HashTreapMap<K, *>,
-        override val keys: Lazy<HashTreapSet<K>> = lazy { map.treapSetFromKeys() }
-    ) : AbstractKeySet<K, HashTreapSet<K>>()
+    inner class KeySet : AbstractKeySet<K, HashTreapSet<K>>() {
+        override val map get() = this@HashTreapMap
+        override val keys = lazy { treapSetFromKeys() }
+        override fun hashCode() = super.hashCode() // avoids treapability warning
+    }
 
-    override val keys get() = KeySet(this)
+    override val keys get() = KeySet()
 }
 
 internal interface KeyValuePairList<K, V> {
