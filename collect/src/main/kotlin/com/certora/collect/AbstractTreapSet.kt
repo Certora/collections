@@ -56,8 +56,6 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
      */
     abstract fun shallowForEach(action: (element: E) -> Unit): Unit
 
-    abstract fun shallowGetSingleElement(): E?
-
     abstract infix fun shallowUnion(that: S): S
     abstract infix fun shallowIntersect(that: S): S?
     abstract infix fun shallowDifference(that: S): S?
@@ -85,6 +83,7 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
         other == null -> false
         this === other -> true
         other !is Set<*> -> false
+        other.isEmpty() -> false // NB AbstractTreapSet always contains at least one element
         else -> (other as Set<E>).useAsTreap(
             { otherTreap -> this.self.deepEquals(otherTreap) },
             { this.size == other.size && this.containsAll(other) }
@@ -136,24 +135,10 @@ internal sealed class AbstractTreapSet<@Treapable E, S : AbstractTreapSet<E, S>>
     override fun findEqual(element: E): E? =
         element.toTreapKey()?.let { self.find(it) }?.shallowFindEqual(element)
 
-    @Suppress("UNCHECKED_CAST")
-    override fun single(): E = getSingleElement() ?: when {
-        isEmpty() -> throw NoSuchElementException("Set is empty")
-        size > 1 -> throw IllegalArgumentException("Set has more than one element")
-        else -> null as E // The single element must have been null!
-    }
-
-    override fun singleOrNull(): E? = getSingleElement()
-
     override fun forEachElement(action: (element: E) -> Unit): Unit {
         left?.forEachElement(action)
         shallowForEach(action)
         right?.forEachElement(action)
-    }
-
-    internal fun getSingleElement(): E? = when {
-        left === null && right === null -> shallowGetSingleElement()
-        else -> null
     }
 
     override fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R =
@@ -186,7 +171,7 @@ internal infix fun <@Treapable E, S : AbstractTreapSet<E, S>> S?.treapUnion(that
     this == null -> that
     that == null -> this
     this === that -> this
-    that.getSingleElement() != null -> add(that)
+    that.singleOrNull() != null -> add(that)
     else -> {
         // remember, a.comparePriorityTo(b)==0 <=> a.compareKeyTo(b)==0
         val c = this.comparePriorityTo(that)

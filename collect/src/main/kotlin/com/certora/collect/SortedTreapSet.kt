@@ -27,6 +27,7 @@ internal class SortedTreapSet<@Treapable E>(
     override fun Iterable<E>.toTreapSetOrNull(): SortedTreapSet<E>? =
         (this as? SortedTreapSet<E>)
         ?: (this as? PersistentSet.Builder<E>)?.build() as? SortedTreapSet<E>
+        ?: (this as? SortedTreapMap<E, *>.KeySet)?.keys?.value
 
     override val self get() = this
     override fun iterator(): Iterator<E> = this.asTreapSequence().map { it.treapKey }.iterator()
@@ -49,7 +50,13 @@ internal class SortedTreapSet<@Treapable E>(
     override fun shallowRemove(element: E): SortedTreapSet<E>? = null
     override fun shallowRemoveAll(predicate: (E) -> Boolean): SortedTreapSet<E>? = this.takeIf { !predicate(treapKey) }
     override fun shallowComputeHashCode(): Int = treapKey.hashCode()
-    override fun shallowGetSingleElement(): E = treapKey
+    override fun singleOrNull(): E? = treapKey.takeIf { left == null && right == null }
+    override fun single(): E {
+        if (left != null || right != null) {
+            throw IllegalArgumentException("Set contains more than one element")
+        }
+        return treapKey
+    }
     override fun arbitraryOrNull(): E? = treapKey
     override fun shallowForEach(action: (element: E) -> Unit): Unit { action(treapKey) }
     override fun <R : Any> shallowMapReduce(map: (E) -> R, reduce: (R, R) -> R): R = map(treapKey)

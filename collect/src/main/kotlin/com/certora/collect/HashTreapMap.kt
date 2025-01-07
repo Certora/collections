@@ -32,6 +32,7 @@ internal class HashTreapMap<@Treapable K, V>(
         this as? HashTreapMap<K, V>
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? HashTreapMap<K, V>
 
+    override fun singleOrNull() = MapEntry(key, value).takeIf { next == null && left == null && right == null }
     override fun arbitraryOrNull(): Map.Entry<K, V>? = MapEntry(key, value)
 
     override fun getShallowMerger(
@@ -358,6 +359,17 @@ internal class HashTreapMap<@Treapable K, V>(
         forEachPair { (k, v) -> action(MapEntry(k, v)) }
         right?.forEachEntry(action)
     }
+
+    private fun treapSetFromKeys(): HashTreapSet<K> =
+        HashTreapSet(treapKey, next?.toKeyList(), left?.treapSetFromKeys(), right?.treapSetFromKeys())
+
+    inner class KeySet : AbstractKeySet<K, HashTreapSet<K>>() {
+        override val map get() = this@HashTreapMap
+        override val keys = lazy { treapSetFromKeys() }
+        override fun hashCode() = super.hashCode() // avoids treapability warning
+    }
+
+    override val keys get() = KeySet()
 }
 
 internal interface KeyValuePairList<K, V> {
@@ -366,6 +378,8 @@ internal interface KeyValuePairList<K, V> {
     abstract val next: More<K, V>?
     operator fun component1() = key
     operator fun component2() = value
+
+    fun toKeyList(): ElementList.More<K> = ElementList.More(key, next?.toKeyList())
 
     class More<K, V>(
         override val key: K,

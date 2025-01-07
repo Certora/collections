@@ -32,6 +32,7 @@ internal class SortedTreapMap<@Treapable K, V>(
         this as? SortedTreapMap<K, V>
         ?: (this as? PersistentMap.Builder<K, V>)?.build() as? SortedTreapMap<K, V>
 
+    override fun singleOrNull(): Map.Entry<K, V>? = MapEntry(key, value).takeIf { left == null && right == null }
     override fun arbitraryOrNull(): Map.Entry<K, V>? = MapEntry(key, value)
 
     override fun getShallowUnionMerger(
@@ -170,4 +171,15 @@ internal class SortedTreapMap<@Treapable K, V>(
         action(this.asEntry())
         right?.forEachEntry(action)
     }
+
+    private fun treapSetFromKeys(): SortedTreapSet<K> =
+        SortedTreapSet(treapKey, left?.treapSetFromKeys(), right?.treapSetFromKeys())
+
+    inner class KeySet : AbstractKeySet<K, SortedTreapSet<K>>() {
+        override val map get() = this@SortedTreapMap
+        override val keys = lazy { treapSetFromKeys() }
+        override fun hashCode() = super.hashCode() // avoids treapability warning
+    }
+
+    override val keys get() = KeySet()
 }
