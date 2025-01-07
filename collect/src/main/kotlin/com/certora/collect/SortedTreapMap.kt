@@ -1,5 +1,6 @@
 package com.certora.collect
 
+import com.certora.collect.TreapMap.MergeMode
 import kotlinx.collections.immutable.PersistentMap
 
 /**
@@ -48,7 +49,13 @@ internal class SortedTreapMap<@Treapable K, V>(
         SortedTreapMap(t1.key, v, t1.left, t1.right)
     }
 
-    override fun getShallowMerger(merger: (K, V?, V?) -> V?): (SortedTreapMap<K, V>?, SortedTreapMap<K, V>?) -> SortedTreapMap<K, V>? = { t1, t2 ->
+    override fun getShallowMerger(
+        mode: MergeMode,
+        merger: (K, V?, V?) -> V?
+    ): (SortedTreapMap<K, V>?, SortedTreapMap<K, V>?) -> SortedTreapMap<K, V>? = merge@{ t1, t2 ->
+        if (mode == MergeMode.INTERSECTION && (t1 == null || t2 == null)) {
+            return@merge null
+        }
         val k = (t1 ?: t2)!!.key
         val v1 = t1?.value
         val v2 = t2?.value

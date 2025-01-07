@@ -99,17 +99,24 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     ): TreapMap<K, V>
 
     /**
-        Produces a new [TreapMap] with updated entries, by applying supplied [merger] to each entry of this map and
+        Produces a new [TreapMap] with updated entries, by applying supplied [merger] to entries from this map and
         another map [m].
 
-        The [merger] function is called for each key that is present in either map, with the key, the value from this
-        map, and the value from [m], in that order, as arguments.  If the key is not present in one of the maps, the
-        corresponding [merger] argument will be `null`.
+        [mode] selects which entries to merge.  If [mode] is [MergeMode.UNION], all entries from both maps are merged.
+        If [mode] is [MergeMode.INTERSECTION], only entries whose keys appear in both maps are merged.
+
+        The [merger] function is called for each entry to be merged, with the key, the value from this map, and the
+        value from [m], in that order, as arguments.  If the key is not present in one of the maps, the corresponding
+        [merger] value argument will be `null`.
 
         If the [merger] function returns null, the key is not added to the resulting map.
+
+        If the merger function does not need to return null (excluding an entry from the resulting map), consider using
+        [union] or [intersect] instead.
      */
     public fun merge(
         m: Map<K, V>,
+        mode: MergeMode,
         merger: (K, V?, V?) -> V?
     ): TreapMap<K, V>
 
@@ -117,19 +124,75 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         Produces a new [TreapMap] with updated entries, by applying supplied [merger] to each entry of this map and
         another map [m].
 
-        The [merger] function is called for each key that is present in either map, with the key, the value from this
-        map, and the value from [m], in that order, as arguments.  If the key is not present in one of the maps, the
-        corresponding [merger] argument will be `null`.
+        The [merger] function is called for each entry to be merged, with the key, the value from this map, and the
+        value from [m], in that order, as arguments.  If the key is not present in one of the maps, the corresponding
+        [merger] value argument will be `null`.
+
+        If the [merger] function returns null, the key is not added to the resulting map.
+
+        If the merger function does not need to return null (excluding an entry from the resulting map), consider using
+        [union] or [intersect] instead.
+     */
+    public fun merge(
+        m: Map<K, V>,
+        merger: (K, V?, V?) -> V?
+    ): TreapMap<K, V> = merge(m, MergeMode.UNION, merger)
+
+    /**
+        Produces a new [TreapMap] with updated entries, by applying supplied [merger] to entries from this map and
+        another map [m].
+
+        [mode] selects which entries to merge.  If [mode] is [MergeMode.UNION], all entries from both maps are merged.
+        If [mode] is [MergeMode.INTERSECTION], only entries whose keys appear in both maps are merged.
+
+        The [merger] function is called for each entry to be merged, with the key, the value from this map, and the
+        value from [m], in that order, as arguments.  If the key is not present in one of the maps, the corresponding
+        [merger] value argument will be `null`.
 
         If the [merger] function returns null, the key is not added to the resulting map.
 
         Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
+
+        If the merger function does not need to return null (excluding an entry from the resulting map), consider using
+        [parallelUnion] or [parallelIntersect] instead.
+     */
+    public fun parallelMerge(
+        m: Map<K, V>,
+        mode: MergeMode,
+        parallelThresholdLog2: Int = 4,
+        merger: (K, V?, V?) -> V?
+    ): TreapMap<K, V>
+
+    /**
+        Produces a new [TreapMap] with updated entries, by applying supplied [merger] to each entry of this map and
+        another map [m].
+
+        The [merger] function is called for each entry to be merged, with the key, the value from this map, and the
+        value from [m], in that order, as arguments.  If the key is not present in one of the maps, the corresponding
+        [merger] value argument will be `null`.
+
+        If the [merger] function returns null, the key is not added to the resulting map.
+
+        Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
+
+        If the merger function does not need to return null (excluding an entry from the resulting map), consider using
+        [parallelUnion] or [parallelIntersect] instead.
      */
     public fun parallelMerge(
         m: Map<K, V>,
         parallelThresholdLog2: Int = 4,
         merger: (K, V?, V?) -> V?
-    ): TreapMap<K, V>
+    ): TreapMap<K, V> = parallelMerge(m, MergeMode.UNION, parallelThresholdLog2, merger)
+
+    /**
+        Controls the behavior of [merge] and [parallelMerge] when the maps have different keys.
+     */
+    public enum class MergeMode {
+        /** Merge all entries from both maps. */
+        UNION,
+        /** Only merge entries whose keys appear in both maps. */
+        INTERSECTION
+    }
 
     /**
         Produces a new [TreapMap] with updated entries, by applying the supplied [transform].  Removes entries for which

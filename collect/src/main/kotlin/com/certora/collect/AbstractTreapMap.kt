@@ -1,5 +1,6 @@
 package com.certora.collect
 
+import com.certora.collect.TreapMap.MergeMode
 import com.certora.forkjoin.*
 import kotlinx.collections.immutable.ImmutableCollection
 import kotlinx.collections.immutable.ImmutableSet
@@ -66,7 +67,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     /**
         Applies a merge function to all entries in this Treap node.
      */
-    abstract fun getShallowMerger(merger: (K, V?, V?) -> V?): (S?, S?) -> S?
+    abstract fun getShallowMerger(mode: MergeMode, merger: (K, V?, V?) -> V?): (S?, S?) -> S?
     abstract fun getShallowUnionMerger(merger: (K, V, V) -> V): (S, S) -> S
     abstract fun getShallowIntersectMerger(merger: (K, V, V) -> V): (S, S) -> S?
 
@@ -200,10 +201,13 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the
         new values for each key.
      */
-    override fun merge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
+    override fun merge(m: Map<K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
         m.useAsTreap(
-            { otherTreap -> self.mergeWith(otherTreap, getShallowMerger(merger)) ?: clear() },
-            { fallbackMerge(m, merger) }
+            { otherTreap ->
+                self.mergeWith(otherTreap, mode, getShallowMerger(mode, merger))
+                    ?: clear()
+            },
+            { fallbackMerge(m, mode, merger) }
         )
 
     /**
@@ -215,21 +219,28 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
 
         @param[merger] The merge function to apply to each pair of entries.  Must be pure and thread-safe.
      */
-    override fun parallelMerge(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
+    override fun parallelMerge(
+        m: Map<K, V>,
+        mode: MergeMode,
+        parallelThresholdLog2: Int,
+        merger: (K, V?, V?) -> V?
+    ): TreapMap<K, V> =
         m.useAsTreap(
-            { otherTreap -> self.parallelMergeWith(otherTreap, parallelThresholdLog2, getShallowMerger(merger)) ?: clear() },
-            { fallbackMerge(m, merger) }
+            { otherTreap ->
+                self.parallelMergeWith(otherTreap, mode, parallelThresholdLog2, getShallowMerger(mode, merger))
+                    ?: clear()
+            },
+            { fallbackMerge(m, mode, merger) }
         )
 
-    private fun fallbackMerge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
+    private fun fallbackMerge(m: Map<K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
         var newThis = clear()
-        for (k in this.keys.asSequence() + m.keys.asSequence()) {
-            if (k !in newThis) {
-                newThis = when (val merged = merger(k, this[k], m[k])) {
-                    null -> newThis.remove(k)
-                    else -> newThis.put(k, merged)
-                }
-            }
+        val keys = when(mode) {
+            MergeMode.UNION -> this.keys union m.keys
+            MergeMode.INTERSECTION -> this.keys intersect m.keys
+        }
+        for (k in keys) {
+            merger(k, this[k], m[k])?.let { newThis = newThis.put(k, it) }
         }
         return newThis
     }
@@ -474,14 +485,16 @@ internal fun <@Treapable K, V, U, @Treapable S : AbstractTreapMap<K, V, S>> S?.u
  */
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.mergeWith(
     that: S?,
+    mode: MergeMode,
     shallowMerge: (S?, S?) -> S?
 ): S? =
     notForking(this to that) {
-        mergeWithImpl(that, shallowMerge)
+        mergeWithImpl(that, mode, shallowMerge)
     }
 
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.parallelMergeWith(
     that: S?,
+    mode: MergeMode,
     parallelThresholdLog2: Int,
     shallowMerge: (S?, S?) -> S?
 ): S? =
@@ -492,32 +505,34 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
             it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
         }
     ) {
-        mergeWithImpl(that, shallowMerge)
+        mergeWithImpl(that, mode, shallowMerge)
     }
 
 context(ThresholdForker<Pair<S?, S?>>)
 private fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.mergeWithImpl(
     that: S?,
+    mode: MergeMode,
     shallowMerge: (S?, S?) -> S?
 ): S? {
     val (newLeft, newRight, newThis) = when {
         this == null && that == null -> {
             return null
         }
-        this == null || that == null -> {
-            fork(
+        this == null || that == null -> when (mode) {
+            MergeMode.UNION -> fork(
                 this to that,
-                { this?.left.mergeWithImpl(that?.left, shallowMerge) },
-                { this?.right.mergeWithImpl(that?.right, shallowMerge) },
+                { this?.left.mergeWithImpl(that?.left, mode, shallowMerge) },
+                { this?.right.mergeWithImpl(that?.right, mode, shallowMerge) },
                 { shallowMerge(this, that) }
             )
+            MergeMode.INTERSECTION -> return null
         }
         this.comparePriorityTo(that) >= 0 -> {
             val thatSplit = that.split(this)
             fork(
                 this to that,
-                { this.left.mergeWithImpl(thatSplit.left, shallowMerge) },
-                { this.right.mergeWithImpl(thatSplit.right, shallowMerge) },
+                { this.left.mergeWithImpl(thatSplit.left, mode, shallowMerge) },
+                { this.right.mergeWithImpl(thatSplit.right, mode, shallowMerge) },
                 { shallowMerge(this, thatSplit.duplicate) }
             )
         }
@@ -526,8 +541,8 @@ private fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.merge
             val thisSplit = this.split(that)
             fork(
                 this to that,
-                { thisSplit.left.mergeWithImpl(that.left, shallowMerge) },
-                { thisSplit.right.mergeWithImpl(that.right, shallowMerge) },
+                { thisSplit.left.mergeWithImpl(that.left, mode, shallowMerge) },
+                { thisSplit.right.mergeWithImpl(that.right, mode, shallowMerge) },
                 { shallowMerge(thisSplit.duplicate, that) }
             )
         }

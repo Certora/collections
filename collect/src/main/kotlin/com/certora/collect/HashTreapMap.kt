@@ -1,5 +1,6 @@
 package com.certora.collect
 
+import com.certora.collect.TreapMap.MergeMode
 import kotlinx.collections.immutable.PersistentMap
 
 /**
@@ -34,21 +35,28 @@ internal class HashTreapMap<@Treapable K, V>(
     override fun singleOrNull() = MapEntry(key, value).takeIf { next == null && left == null && right == null }
     override fun arbitraryOrNull(): Map.Entry<K, V>? = MapEntry(key, value)
 
-    override fun getShallowMerger(merger: (K, V?, V?) -> V?): (HashTreapMap<K, V>?, HashTreapMap<K, V>?) -> HashTreapMap<K, V>? = { t1, t2 ->
+    override fun getShallowMerger(
+        mode: MergeMode,
+        merger: (K, V?, V?) -> V?
+    ): (HashTreapMap<K, V>?, HashTreapMap<K, V>?) -> HashTreapMap<K, V>? = { t1, t2 ->
         var newPairs: KeyValuePairList.More<K, V>? = null
         t1?.forEachPair { (k, v1) ->
-            val v2 = t2?.shallowGetValue(k)
-            val v = merger(k, v1, v2)
-            if (v != null) {
-                newPairs = KeyValuePairList.More(k, v, newPairs)
-            }
-        }
-        t2?.forEachPair { (k, v2) ->
-            val v1 = t1?.shallowGetValue(k)
-            if (v1 == null) {
+            if (mode == MergeMode.UNION || t2.shallowContainsKey(k)) {
+                val v2 = t2?.shallowGetValue(k)
                 val v = merger(k, v1, v2)
                 if (v != null) {
                     newPairs = KeyValuePairList.More(k, v, newPairs)
+                }
+            }
+        }
+        if (mode == MergeMode.UNION) {
+            t2?.forEachPair { (k, v2) ->
+                val v1 = t1?.shallowGetValue(k)
+                if (v1 == null) {
+                    val v = merger(k, v1, v2)
+                    if (v != null) {
+                        newPairs = KeyValuePairList.More(k, v, newPairs)
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.certora.collect
 
+import com.certora.collect.TreapMap.MergeMode
 import kotlinx.collections.immutable.*
 
 internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K, V>, java.io.Serializable {
@@ -49,20 +50,26 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
     override fun intersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = this
     override fun parallelIntersect(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = this
 
-    override fun merge(m: Map<K, V>, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
+    override fun merge(m: Map<K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
         var map: TreapMap<K, V> = this
-        for ((key, value) in m) {
-            val v = merger(key, null, value)
-            if (v != null) {
-                map = map.put(key, v)
+        if (mode == MergeMode.UNION) {
+            for ((key, value) in m) {
+                val v = merger(key, null, value)
+                if (v != null) {
+                    map = map.put(key, v)
+                }
             }
         }
         return map
     }
 
 
-    override fun parallelMerge(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
-        merge(m, merger)
+    override fun parallelMerge(
+        m: Map<K, V>,
+        mode: MergeMode,
+        parallelThresholdLog2: Int,
+        merger: (K, V?, V?) -> V?
+    ): TreapMap<K, V> = merge(m, mode, merger)
 
     override fun zip(m: Map<out K, V>): Sequence<Map.Entry<K, Pair<V?, V?>>> =
         m.asSequence().map { MapEntry(it.key, null to it.value) }
