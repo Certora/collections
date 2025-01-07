@@ -10,10 +10,6 @@ package com.certora.collect
     We lazily initialize the set, so that we don't create it until we need it.  For many operations, we can avoid
     creating the set entirely, and just use the map directly.  However, many operations, e.g. [addAll]/[union] and
     [retainAll/intersect], are much more efficient when we have a [TreapSet], so we create it when needed.
-
-    Note: It would be really nice if we could just treat the [TreapMap] objects themselves as [TreapSet] objects, but
-    this presents some problems.  The most fundamental problem is that the [TreapMap] and [TreapSet] interfaces have
-    methods that are not compatible; for example, they both implement [Iterable], but with different element types.
  */
 internal abstract class AbstractKeySet<@Treapable K, S : TreapSet<K>> : TreapSet<K> {
     /**
