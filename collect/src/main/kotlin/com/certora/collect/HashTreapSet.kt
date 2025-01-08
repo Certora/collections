@@ -49,10 +49,21 @@ internal class HashTreapSet<@Treapable E>(
     override fun copyWith(left: HashTreapSet<E>?, right: HashTreapSet<E>?): HashTreapSet<E> =
         HashTreapSet(element, next, left, right)
 
-    fun withElement(element: E) = when {
+    /** Add [element] if it's not already present. */
+    private fun withElement(element: E): HashTreapSet<E> = when {
         this.shallowContains(element) -> this
-        else -> HashTreapSet(this.element, ElementList.More(element, this.next), this.left, this.right)
+        else -> addElement(element)
     }
+
+    private fun HashTreapSet<E>?.withElement(element: E): HashTreapSet<E> =
+        this?.withElement(element) ?: HashTreapSet(element, null, left, right)
+
+    /** Add [element] unconditionally. (Use [withElement] if the element might already be present.) */
+    private fun addElement(element: E): HashTreapSet<E> =
+        HashTreapSet(this.element, ElementList.More(element, this.next), this.left, this.right)
+
+    private fun HashTreapSet<E>?.addElement(element: E): HashTreapSet<E> =
+        this?.addElement(element) ?: HashTreapSet(element, null, left, right)
 
     override fun shallowEquals(that: HashTreapSet<E>): Boolean {
         forEachNodeElement {
@@ -131,7 +142,7 @@ internal class HashTreapSet<@Treapable E>(
         var changed = false
         this.forEachNodeElement {
             if (!that.shallowContains(it)) {
-                result = result?.withElement(it) ?: HashTreapSet(it, null, left, right)
+                result = result.addElement(it)
             } else {
                 changed = true
             }
@@ -158,7 +169,7 @@ internal class HashTreapSet<@Treapable E>(
         var changed = false
         this.forEachNodeElement {
             if (that.shallowContains(it)) {
-                result = result?.withElement(it) ?: HashTreapSet(it, null, left, right)
+                result = result.addElement(it)
             } else {
                 changed = true
             }
@@ -185,7 +196,7 @@ internal class HashTreapSet<@Treapable E>(
         var changed = false
         this.forEachNodeElement {
             if (it != element) {
-                result = result?.withElement(it) ?: HashTreapSet(it, null, left, right)
+                result = result.addElement(it)
             } else {
                 changed = true
             }
@@ -205,7 +216,7 @@ internal class HashTreapSet<@Treapable E>(
             if (predicate(it)) {
                 removed = true
             } else {
-                result = result?.withElement(it) ?: HashTreapSet(it, null, left, right)
+                result = result.addElement(it)
             }
         }
         if (removed) {

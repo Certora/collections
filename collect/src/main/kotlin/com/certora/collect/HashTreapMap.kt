@@ -210,22 +210,24 @@ internal class HashTreapMap<@Treapable K, V>(
     }
 
     override fun shallowRemoveEntry(key: K, value: V): HashTreapMap<K, V>? {
-        return when {
-            !this.shallowContainsPair(key, value) -> this
-            else -> {
-                var newPairs: KeyValuePairList.More<K, V>? = null
-                this.forEachPair {
-                    if (it.key != key || it.value != value) {
-                        newPairs = KeyValuePairList.More(it.key, it.value, newPairs)
-                    }
-                }
-                val firstPair = newPairs
-                if (firstPair == null) {
-                    null
-                } else {
-                    HashTreapMap(firstPair.key, firstPair.value, firstPair.next, this.left, this.right)
-                }
+        var newPairs: KeyValuePairList.More<K, V>? = null
+        var removed = false
+        this.forEachPair {
+            if (it.key != key || it.value != value) {
+                newPairs = KeyValuePairList.More(it.key, it.value, newPairs)
+            } else {
+                removed = true
             }
+        }
+        return if (removed) {
+            val firstPair = newPairs
+            if (firstPair == null) {
+                null
+            } else {
+                HashTreapMap(firstPair.key, firstPair.value, firstPair.next, this.left, this.right)
+            }
+        } else {
+            this
         }
     }
 
@@ -239,7 +241,7 @@ internal class HashTreapMap<@Treapable K, V>(
                     } else {
                         HashTreapMap(this.next.key, this.next.value, this.next.next, this.left, this.right)
                     }
-                } else if(newValue == value) {
+                } else if(newValue === value) {
                     this
                 } else {
                     HashTreapMap(this.key, newValue, this.next, this.left, this.right)
@@ -254,7 +256,7 @@ internal class HashTreapMap<@Treapable K, V>(
                     if(it.key == entryKey) {
                         val upd = merger(it.value, toUpdate)
                         found = true
-                        if(upd != null && upd == it.value) {
+                        if(upd != null && upd === it.value) {
                             return this
                         } else if(upd != null) {
                             newPairs = KeyValuePairList.More(it.key, upd, newPairs)
@@ -274,21 +276,24 @@ internal class HashTreapMap<@Treapable K, V>(
     }
 
     override fun shallowRemove(element: K): HashTreapMap<K, V>? {
-        if (!this.shallowContainsKey(element)) {
-            return this
-        } else {
-            var newPairs: KeyValuePairList.More<K, V>? = null
-            this.forEachPair {
-                if (it.key != element) {
-                    newPairs = KeyValuePairList.More(it.key, it.value, newPairs)
-                }
+        var newPairs: KeyValuePairList.More<K, V>? = null
+        var removed = false
+        this.forEachPair {
+            if (it.key != element) {
+                newPairs = KeyValuePairList.More(it.key, it.value, newPairs)
+            } else {
+                removed = true
             }
+        }
+        if (removed) {
             val firstPair = newPairs
             return if (firstPair == null) {
                 null
             } else {
                 HashTreapMap(firstPair.key, firstPair.value, firstPair.next, this.left, this.right)
             }
+        } else {
+            return this
         }
     }
 
