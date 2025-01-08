@@ -13,7 +13,7 @@ internal class HashTreapSet<@Treapable E>(
     override val next: ElementList.More<E>? = null,
     left: HashTreapSet<E>? = null,
     right: HashTreapSet<E>? = null
-) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E>, ElementList<E> {
+) : AbstractTreapSet<E, HashTreapSet<E>>(left, right), TreapKey.Hashed<E>, ElementList<E, HashTreapSet<E>> {
 
     override fun hashCode(): Int = computeHashCode()
 
@@ -27,7 +27,7 @@ internal class HashTreapSet<@Treapable E>(
         ?: (this as? TreapSet.Builder<E>)?.build() as? HashTreapSet<E>
         ?: (this as? HashTreapMap<E, *>.KeySet)?.keys?.value
 
-    private inline fun ElementList<E>?.forEachNodeElement(action: (E) -> Unit) {
+    private inline fun ElementList<E, *>?.forEachNodeElement(action: (E) -> Unit) {
         var current = this
         while (current != null) {
             action(current.element)
@@ -209,22 +209,8 @@ internal class HashTreapSet<@Treapable E>(
         }
     }
 
-    override fun shallowRemoveAll(predicate: (E) -> Boolean): HashTreapSet<E>? {
-        var result: HashTreapSet<E>? = null
-        var removed = false
-        this.forEachNodeElement {
-            if (predicate(it)) {
-                removed = true
-            } else {
-                result = result.addElement(it)
-            }
-        }
-        if (removed) {
-            return result
-        } else {
-            return this
-        }
-    }
+    override fun shallowRemoveAll(predicate: (E) -> Boolean): HashTreapSet<E>? =
+        removeAllFromList(predicate)
 
     override fun shallowComputeHashCode(): Int {
         var h = 0
@@ -266,14 +252,37 @@ internal class HashTreapSet<@Treapable E>(
         }
         return left?.containsAny(predicate) == true || right?.containsAny(predicate) == true
     }
+
+    override fun updateListElement(element: E, next: ElementList.More<E>?): HashTreapSet<E> =
+        HashTreapSet(element, next, left, right)
+
+    override fun replaceListElement(more: ElementList.More<E>?): HashTreapSet<E>? =
+        more?.let { HashTreapSet(more.element, more.next, left, right) }
 }
 
-internal interface ElementList<E> {
+internal interface ElementList<E, S : ElementList<E, S>> {
     val element: E
     val next: More<E>?
+    val self: S
+
+    fun removeAllFromList(predicate: (E) -> Boolean): S? {
+        val newNext = next?.removeAllFromList(predicate)
+        return when {
+            predicate(element) -> this.replaceListElement(newNext)
+            newNext === next -> self
+            else -> updateListElement(element, newNext)
+        }
+    }
+
+    fun updateListElement(element: E, next: More<E>?): S
+    fun replaceListElement(more: More<E>?): S?
 
     class More<E>(
         override val element: E,
         override val next: More<E>?
-    ) : ElementList<E>, java.io.Serializable
+    ) : ElementList<E, More<E>>, java.io.Serializable {
+        override val self get() = this
+        override fun updateListElement(element: E, next: More<E>?): More<E> = More(element, next)
+        override fun replaceListElement(more: More<E>?): More<E>? = more
+    }
 }
