@@ -6,17 +6,17 @@ import kotlinx.collections.immutable.PersistentList
     A PersistentList implemented as a [Treap](https://en.wikipedia.org/wiki/Treap).
  */
 @Treapable
-public sealed interface TreapList<E> : PersistentList<E> {
-    override fun add(element: E): TreapList<E> = addLast(element)
-    override fun addAll(elements: Collection<E>): TreapList<E>
-    override fun remove(element: E): TreapList<E>
-    override fun removeAll(elements: Collection<E>): TreapList<E>
+public sealed interface TreapList<out E> : PersistentList<E> {
+    override fun add(element: @UnsafeVariance E): TreapList<E> = addLast(element)
+    override fun addAll(elements: Collection<@UnsafeVariance E>): TreapList<E>
+    override fun remove(element: @UnsafeVariance E): TreapList<E>
+    override fun removeAll(elements: Collection<@UnsafeVariance E>): TreapList<E>
     override fun removeAll(predicate: (E) -> Boolean): TreapList<E>
-    override fun retainAll(elements: Collection<E>): TreapList<E>
+    override fun retainAll(elements: Collection<@UnsafeVariance E>): TreapList<E>
     override fun clear(): TreapList<E>
-    override fun addAll(index: Int, c: Collection<E>): TreapList<E>
-    override fun set(index: Int, element: E): TreapList<E>
-    override fun add(index: Int, element: E): TreapList<E>
+    override fun addAll(index: Int, c: Collection<@UnsafeVariance E>): TreapList<E>
+    override fun set(index: Int, element: @UnsafeVariance E): TreapList<E>
+    override fun add(index: Int, element: @UnsafeVariance E): TreapList<E>
     override fun removeAt(index: Int): TreapList<E>
     override fun subList(fromIndex: Int, toIndex: Int): TreapList<E>
 
@@ -28,14 +28,14 @@ public sealed interface TreapList<E> : PersistentList<E> {
     public fun last(): E
     public fun lastOrNull(): E?
 
-    public fun addFirst(element: E): TreapList<E>
-    public fun addLast(element: E): TreapList<E>
+    public fun addFirst(element: @UnsafeVariance E): TreapList<E>
+    public fun addLast(element: @UnsafeVariance E): TreapList<E>
 
     public fun removeFirst(): TreapList<E>
     public fun removeLast(): TreapList<E>
 
-    public fun updateElements(transform: (E) -> E?): TreapList<E>
-    public fun updateElementsIndexed(transform: (Int, E) -> E?): TreapList<E>
+    public fun updateElements(transform: (E) -> @UnsafeVariance E?): TreapList<E>
+    public fun updateElementsIndexed(transform: (Int, E) -> @UnsafeVariance E?): TreapList<E>
 
     public fun <R : Any> mapReduce(map: (E) -> R, reduce: (R, R) -> R): R?
     public fun <R : Any> parallelMapReduce(map: (E) -> R, reduce: (R, R) -> R, parallelThresholdLog2: Int = 5): R?
@@ -57,7 +57,7 @@ public sealed interface TreapList<E> : PersistentList<E> {
         public fun removeLast(): E
     }
 
-    override fun builder(): Builder<E>
+    override fun builder(): Builder<@UnsafeVariance E>
 }
 
 public fun <T> treapListOf(): TreapList<T> = EmptyTreapList<T>()

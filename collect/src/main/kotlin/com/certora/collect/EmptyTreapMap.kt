@@ -44,13 +44,13 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
             else -> put(key, v)
         }
 
-    override fun union(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = putAll(m)
-    override fun parallelUnion(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = putAll(m)
+    override fun union(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = putAll(m)
+    override fun parallelUnion(m: Map<out K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = putAll(m)
 
-    override fun intersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = this
-    override fun parallelIntersect(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = this
+    override fun intersect(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> = this
+    override fun parallelIntersect(m: Map<out K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> = this
 
-    override fun merge(m: Map<K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
+    override fun merge(m: Map<out K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
         var map: TreapMap<K, V> = this
         if (mode == MergeMode.UNION) {
             for ((key, value) in m) {
@@ -65,7 +65,7 @@ internal class EmptyTreapMap<@Treapable K, V> private constructor() : TreapMap<K
 
 
     override fun parallelMerge(
-        m: Map<K, V>,
+        m: Map<out K, V>,
         mode: MergeMode,
         parallelThresholdLog2: Int,
         merger: (K, V?, V?) -> V?

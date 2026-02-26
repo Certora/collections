@@ -151,19 +151,19 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
             override operator fun iterator() = entrySequence().map { it.value }.iterator()
         }
 
-    override fun union(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =
+    override fun union(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap -> self.unionWith(otherTreap, getShallowUnionMerger(merger)) ?: clear() },
             { fallbackUnion(m, merger) }
         )
 
-    override fun parallelUnion(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> =
+    override fun parallelUnion(m: Map<out K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap -> self.parallelUnionWith(otherTreap, parallelThresholdLog2, getShallowUnionMerger(merger)) ?: clear() },
             { fallbackUnion(m, merger) }
         )
 
-    private fun fallbackUnion(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> {
+    private fun fallbackUnion(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> {
         var newThis = this as TreapMap<K, V>
         for ((k, v) in m.entries) {
             if (k in this) {
@@ -175,19 +175,19 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         return newThis
     }
 
-    override fun intersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =
+    override fun intersect(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap -> self.intersectWith(otherTreap, getShallowIntersectMerger(merger)) ?: clear() },
             { fallbackIntersect(m, merger) }
         )
 
-    override fun parallelIntersect(m: Map<K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> =
+    override fun parallelIntersect(m: Map<out K, V>, parallelThresholdLog2: Int, merger: (K, V, V) -> V): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap -> self.parallelIntersectWith(otherTreap, parallelThresholdLog2, getShallowIntersectMerger(merger)) ?: clear() },
             { fallbackIntersect(m, merger) }
         )
 
-    private fun fallbackIntersect(m: Map<K, V>, merger: (K, V, V) -> V): TreapMap<K, V> {
+    private fun fallbackIntersect(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> {
         var newThis = clear()
         for ((k, v) in m.entries) {
             if (k in this) {
@@ -201,7 +201,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the
         new values for each key.
      */
-    override fun merge(m: Map<K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
+    override fun merge(m: Map<out K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> =
         m.useAsTreap(
             { otherTreap ->
                 self.mergeWith(otherTreap, mode, getShallowMerger(mode, merger))
@@ -220,7 +220,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         @param[merger] The merge function to apply to each pair of entries.  Must be pure and thread-safe.
      */
     override fun parallelMerge(
-        m: Map<K, V>,
+        m: Map<out K, V>,
         mode: MergeMode,
         parallelThresholdLog2: Int,
         merger: (K, V?, V?) -> V?
@@ -233,7 +233,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
             { fallbackMerge(m, mode, merger) }
         )
 
-    private fun fallbackMerge(m: Map<K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
+    private fun fallbackMerge(m: Map<out K, V>, mode: MergeMode, merger: (K, V?, V?) -> V?): TreapMap<K, V> {
         var newThis = clear()
         val keys = when(mode) {
             MergeMode.UNION -> this.keys union m.keys
