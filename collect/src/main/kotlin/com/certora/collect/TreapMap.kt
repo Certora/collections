@@ -7,6 +7,10 @@ import kotlinx.collections.immutable.PersistentMap
  */
 @Treapable
 public sealed interface TreapMap<K, out V> : PersistentMap<K, V> {
+
+    // Note: all the @UnsafeVariance annotations are safe because we never mutate anything.  Any value appearing in an
+    // "in" position can only be a) compared to other values, or b) returned in an "out" position.
+
     override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
     override fun remove(key: K): TreapMap<K, V>
     override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
