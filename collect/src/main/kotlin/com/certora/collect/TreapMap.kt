@@ -6,7 +6,11 @@ import kotlinx.collections.immutable.PersistentMap
     A [PersistentMap] implemented as a [Treap](https://en.wikipedia.org/wiki/Treap) - a kind of balanced binary tree.
  */
 @Treapable
-public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
+public sealed interface TreapMap<K, out V> : PersistentMap<K, V> {
+
+    // Note: all the @UnsafeVariance annotations are safe because we never mutate anything.  Any value appearing in an
+    // "in" position can only be a) compared to other values, or b) returned in an "out" position.
+
     override fun put(key: K, value: @UnsafeVariance V): TreapMap<K, V>
     override fun remove(key: K): TreapMap<K, V>
     override fun remove(key: K, value: @UnsafeVariance V): TreapMap<K, V>
@@ -54,8 +58,8 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         the value from [m], in that order, and the returned value will appear in the resulting map.
      */
     public fun union(
-        m: Map<K, V>,
-        merger: (K, V, V) -> V
+        m: Map<out K, @UnsafeVariance V>,
+        merger: (K, V, V) -> @UnsafeVariance V
     ): TreapMap<K, V>
 
     /**
@@ -68,9 +72,9 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
      */
     public fun parallelUnion(
-        m: Map<K, V>,
+        m: Map<out K, @UnsafeVariance V>,
         parallelThresholdLog2: Int = 4,
-        merger: (K, V, V) -> V
+        merger: (K, V, V) -> @UnsafeVariance V
     ): TreapMap<K, V>
 
     /**
@@ -80,8 +84,8 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         the key, the value from this map, and the value from [m], in that order.
      */
     public fun intersect(
-        m: Map<K, V>,
-        merger: (K, V, V) -> V
+        m: Map<out K, @UnsafeVariance V>,
+        merger: (K, V, V) -> @UnsafeVariance V
     ): TreapMap<K, V>
 
     /**
@@ -93,9 +97,9 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         Merge operations are performed in parallel for maps larger than (approximately) 2^parallelThresholdLog2.
      */
     public fun parallelIntersect(
-        m: Map<K, V>,
+        m: Map<out K, @UnsafeVariance V>,
         parallelThresholdLog2: Int = 4,
-        merger: (K, V, V) -> V
+        merger: (K, V, V) -> @UnsafeVariance V
     ): TreapMap<K, V>
 
     /**
@@ -115,9 +119,9 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         [union] or [intersect] instead.
      */
     public fun merge(
-        m: Map<K, V>,
+        m: Map<out K, @UnsafeVariance V>,
         mode: MergeMode,
-        merger: (K, V?, V?) -> V?
+        merger: (K, V?, V?) -> @UnsafeVariance V?
     ): TreapMap<K, V>
 
     /**
@@ -134,8 +138,8 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         [union] or [intersect] instead.
      */
     public fun merge(
-        m: Map<K, V>,
-        merger: (K, V?, V?) -> V?
+        m: Map<out K, @UnsafeVariance V>,
+        merger: (K, V?, V?) -> @UnsafeVariance V?
     ): TreapMap<K, V> = merge(m, MergeMode.UNION, merger)
 
     /**
@@ -157,10 +161,10 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         [parallelUnion] or [parallelIntersect] instead.
      */
     public fun parallelMerge(
-        m: Map<K, V>,
+        m: Map<out K, @UnsafeVariance V>,
         mode: MergeMode,
         parallelThresholdLog2: Int = 4,
-        merger: (K, V?, V?) -> V?
+        merger: (K, V?, V?) -> @UnsafeVariance V?
     ): TreapMap<K, V>
 
     /**
@@ -179,9 +183,9 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         [parallelUnion] or [parallelIntersect] instead.
      */
     public fun parallelMerge(
-        m: Map<K, V>,
+        m: Map<out K, @UnsafeVariance V>,
         parallelThresholdLog2: Int = 4,
-        merger: (K, V?, V?) -> V?
+        merger: (K, V?, V?) -> @UnsafeVariance V?
     ): TreapMap<K, V> = parallelMerge(m, MergeMode.UNION, parallelThresholdLog2, merger)
 
     /**
@@ -231,7 +235,7 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
     public fun <U> updateEntry(
         key: K,
         value: U,
-        merger: (V?, U) -> V?
+        merger: (V?, U) -> @UnsafeVariance V?
     ): TreapMap<K, V>
 
     /**
@@ -239,7 +243,7 @@ public sealed interface TreapMap<K, V> : PersistentMap<K, V> {
         the key to a pair of values.  Each value may be null, if the key is not present in the corresponding map.
      */
     public fun zip(
-        m: Map<out K, V>
+        m: Map<out K, @UnsafeVariance V>
     ): Sequence<Map.Entry<K, Pair<V?, V?>>>
 
     /**
