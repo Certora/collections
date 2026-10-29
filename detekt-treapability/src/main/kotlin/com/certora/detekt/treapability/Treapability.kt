@@ -69,7 +69,7 @@ class Treapability(config: Config) : Rule(config) {
                 if (hashCodeFunc == null) {
                     val message =
                         "'${desc.name}' does not have a stable hash code." +
-                        if (desc.isObject) { " Add 'override fun hashCode() = utils.treapHashObject(this)'." }
+                        if (desc.isObject) { " Add 'override fun hashCode() = treapHashObject(this)'." }
                         else { " Add 'override fun hashCode(): Int'." }
                     report(CodeSmell(issue, Entity.from(clazz), message))
                 } else {
@@ -97,13 +97,17 @@ class Treapability(config: Config) : Rule(config) {
                     hashCodeFunc.accept(object : DetektVisitor() {
                         override fun visitReferenceExpression(expression: KtReferenceExpression) {
                             super.visitReferenceExpression(expression)
-                            val parent = expression.parent as? KtElement ?: return
-                            val call = parent.getResolvedCall(bindingContext) ?: return
-                            if (call.resultingDescriptor.fqNameSafe != hashCodePlusName) {
-                                val prop = bindingContext[BindingContext.REFERENCE_TARGET, expression]
-                                    as? PropertyDescriptor ?: return
-                                checkPropertyAccess(prop, prop.type, null, expression)
+                            val parent = expression.parent as? KtElement
+                            val call = parent?.getResolvedCall(bindingContext)
+                            // A reference passed to TreapableHashCode.plus is exempt here. Generic plus is still
+                            // checked as a @Treapable type argument. A bare reference such as `hashCode() = b`
+                            // has no parent call and must still be checked.
+                            if (call?.resultingDescriptor?.fqNameSafe == hashCodePlusName) {
+                                return
                             }
+                            val prop = bindingContext[BindingContext.REFERENCE_TARGET, expression]
+                                as? PropertyDescriptor ?: return
+                            checkPropertyAccess(prop, prop.type, null, expression)
                         }
                     })
                 }

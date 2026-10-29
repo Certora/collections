@@ -3,7 +3,6 @@ package com.certora.detekt.treapability
 import io.gitlab.arturbosch.detekt.rules.KotlinCoreEnvironmentTest
 import io.gitlab.arturbosch.detekt.test.*
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -153,8 +152,9 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
 
     @Test
     fun classWithGoodHashCodePasses() {
-        // The rule's own comment says `treapHash { it + e }` is safe, but the plus exemption does not
-        // match this call, so the property is still reported. See documentedTreapHashPlusIsAccepted.
+        // Generic plus calls hashCode(), so an unstable serializable property is still a violation.
+        // The documented safe form is the enum overload, which hashes the enum name.
+        // See documentedTreapHashPlusIsAccepted.
         val code = """
             import com.certora.collect.*
             class AA(val b: Unstable) : StableHashCode {
@@ -165,19 +165,17 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
     }
 
     @Test
-    @Disabled("TreapableHashCode.plus is documented as a safe hash, but visitReferenceExpression does not treat `hash { it + b }` as that call, so `b` is still reported.")
     fun documentedTreapHashPlusIsAccepted() {
         val code = """
             import com.certora.collect.*
-            class AA(val b: Unstable) : StableHashCode {
-                override fun hashCode() = hash { it + b }
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = hash { it + e }
             }
         """
         assertEquals(0, failureCount(code))
     }
 
     @Test
-    @Disabled("visitReferenceExpression returns before checkPropertyAccess when the reference's parent has no resolved call, so `hashCode() = b` is not reported. A call such as `b.hashCode()` is reported.")
     fun hashCodeReturningPropertyDirectlyFails() {
         val code = """
             import com.certora.collect.*
@@ -337,7 +335,6 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
     }
 
     @Test
-    @Disabled("The reported fix says `utils.treapHashObject(this)`, but the helper in this library is `treapHashObject(this)`.")
     fun objectFixHintNamesTheRealHelper() {
         val code = """
             import com.certora.collect.*
