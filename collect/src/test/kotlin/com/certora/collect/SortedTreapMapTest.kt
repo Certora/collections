@@ -73,5 +73,16 @@ class SortedTreapMapTest: TreapMapTest() {
         assertEquals(1000, map.lowerKey(1001))
         assertNull(map.ceilingKey(1001))
         assertNull(map.higherKey(1001))
+
+        assertEquals(0 to 1, map.firstEntry()!!.toPair())
+        assertEquals(1000 to 1001, map.lastEntry()!!.toPair())
+        assertEquals(4 to 5, map.floorEntry(4)!!.toPair())
+        assertEquals(4 to 5, map.floorEntry(5)!!.toPair())
+        assertEquals(2 to 3, map.lowerEntry(4)!!.toPair())
+        assertEquals(4 to 5, map.ceilingEntry(4)!!.toPair())
+        assertEquals(6 to 7, map.ceilingEntry(5)!!.toPair())
+        assertEquals(6 to 7, map.higherEntry(4)!!.toPair())
+        assertNull(treapMapOf<Int, Int>().firstEntry())
+        assertNull(treapMapOf<Int, Int>().lastEntry())
     }
 }

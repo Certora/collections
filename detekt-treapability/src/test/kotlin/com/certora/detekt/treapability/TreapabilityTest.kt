@@ -3,6 +3,7 @@ package com.certora.detekt.treapability
 import io.gitlab.arturbosch.detekt.rules.KotlinCoreEnvironmentTest
 import io.gitlab.arturbosch.detekt.test.*
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 
@@ -152,10 +153,36 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
 
     @Test
     fun classWithGoodHashCodePasses() {
+        // The rule's own comment says `treapHash { it + e }` is safe, but the plus exemption does not
+        // match this call, so the property is still reported. See documentedTreapHashPlusIsAccepted.
         val code = """
             import com.certora.collect.*
             class AA(val b: Unstable) : StableHashCode {
                 override fun hashCode() = hash { it + b }
+            }
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    @Disabled("TreapableHashCode.plus is documented as a safe hash, but visitReferenceExpression does not treat `hash { it + b }` as that call, so `b` is still reported.")
+    fun documentedTreapHashPlusIsAccepted() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val b: Unstable) : StableHashCode {
+                override fun hashCode() = hash { it + b }
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    @Disabled("visitReferenceExpression returns before checkPropertyAccess when the reference's parent has no resolved call, so `hashCode() = b` is not reported. A call such as `b.hashCode()` is reported.")
+    fun hashCodeReturningPropertyDirectlyFails() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val b: Unstable) : StableHashCode {
+                override fun hashCode(): Int = b
             }
         """
         assertEquals(1, failureCount(code))
@@ -249,5 +276,86 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
             val f = genericFunc(UnstableNonSerializable())
         """
         assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun listOfStableElementsPasses() {
+        val code = """
+            import com.certora.collect.*
+            val f = genericFunc(listOf(1, 2))
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun listOfUnstableElementsFails() {
+        val code = """
+            import com.certora.collect.*
+            val f = genericFunc(listOf(Unstable()))
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    fun starProjectionIsNotCheckedHere() {
+        val code = """
+            import com.certora.collect.*
+            fun f(c: Container<*>) = c
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun sealedNonSerializableArgumentPasses() {
+        val code = """
+            import com.certora.collect.*
+            sealed class S
+            class C : S()
+            fun use(s: S) = genericFunc(s)
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun dataClassWithExplicitHashCodePasses() {
+        val code = """
+            import com.certora.collect.*
+            data class A(val b: Unstable) : StableHashCode {
+                override fun hashCode() = 1
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun objectWithoutHashCodeFails() {
+        val code = """
+            import com.certora.collect.*
+            object O : StableHashCode
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    @Disabled("The reported fix says `utils.treapHashObject(this)`, but the helper in this library is `treapHashObject(this)`.")
+    fun objectFixHintNamesTheRealHelper() {
+        val code = """
+            import com.certora.collect.*
+            object O : StableHashCode
+        """
+        val findings = Treapability(TestConfig()).lintWithContext(env, code, library)
+        assertEquals(1, findings.size)
+        val message = findings.single().message
+        assertTrue(message.contains("treapHashObject(this)"))
+        assertFalse(message.contains("utils.treapHashObject"))
+    }
+
+    @Test
+    fun providerRegistersTreapability() {
+        val provider = CollectionsRuleSetProvider()
+        assertEquals("certora-collections", provider.ruleSetId)
+        val rules = provider.instance(TestConfig()).rules
+        assertEquals(1, rules.size)
+        assertTrue(rules.single() is Treapability)
     }
 }
