@@ -3,7 +3,7 @@ package com.certora.collect
 internal class TreapListBuilder<E>(
     private var list: TreapList<E>
 ) : TreapList.Builder<E>, java.io.Serializable, AbstractMutableList<E>() {
-    override val size: Int = list.size
+    override val size: Int get() = list.size
     override fun isEmpty(): Boolean = list.isEmpty()
 
     override fun get(index: Int): E = list[index]
