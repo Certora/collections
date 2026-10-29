@@ -215,67 +215,29 @@ abstract class TreapMapTest {
     }
 
     @Test
-    fun addNullMapAtEnd() {
-        val s = makeMap()
-        s.putAll(treapMapOf(makeKey(0) to null))
-        s.putAll(treapMapOf(null to null))
-        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
+    fun addNullAndHashKeysByPutAndPutAll() {
+        val plain = makeKey(0)
+        val hash = HashTestKey(0)
+        putSequence("addNullMapAtEnd", plain, null, usePutAll = true)
+        putSequence("addNullMapAtStart", null, plain, usePutAll = true)
+        putSequence("addNullKeyAtEnd", plain, null, usePutAll = false)
+        putSequence("addNullKeyAtStart", null, plain, usePutAll = false)
+        putSequence("addHashKeyAtStart", hash, plain, usePutAll = false)
+        putSequence("addHashKeyAtEnd", plain, hash, usePutAll = false)
+        putSequence("addHashMapAtEnd", plain, hash, usePutAll = true)
+        putSequence("addHashMapAtStart", hash, plain, usePutAll = true)
     }
 
-    @Test
-    fun addNullMapAtStart() {
-        val s = makeMap()
-        s.putAll(treapMapOf(null to null))
-        s.putAll(treapMapOf(makeKey(0) to null))
-        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
-    }
-
-    @Test
-    fun addNullKeyAtEnd() {
-        val s = makeMap()
-        s.put(makeKey(0), null)
-        s.put(null, null)
-        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
-    }
-
-    @Test
-    fun addNullKeyAtStart() {
-        val s = makeMap()
-        s.put(null, null)
-        s.put(makeKey(0), null)
-        assertEquals(s, mapOf<TestKey?, Any?>(null to null, makeKey(0) to null))
-    }
-
-    @Test
-    fun addHashKeyAtStart() {
-        val s = makeMap()
-        s.put(HashTestKey(0), null)
-        s.put(makeKey(0), null)
-        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
-    }
-
-    @Test
-    fun addHashMapAtEnd() {
-        val s = makeMap()
-        s.putAll(treapMapOf(makeKey(0) to null))
-        s.putAll(treapMapOf(HashTestKey(0) to null))
-        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
-    }
-
-    @Test
-    fun addHashMapAtStart() {
-        val s = makeMap()
-        s.putAll(treapMapOf(HashTestKey(0) to null))
-        s.putAll(treapMapOf(makeKey(0) to null))
-        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
-    }
-
-    @Test
-    fun addHashKeyAtEnd() {
-        val s = makeMap()
-        s.put(makeKey(0), null)
-        s.put(HashTestKey(0), null)
-        assertEquals(s, mapOf<TestKey?, Any?>(HashTestKey(0) to null, makeKey(0) to null))
+    private fun putSequence(name: String, first: TestKey?, second: TestKey?, usePutAll: Boolean) {
+        val map = makeMap()
+        for (key in listOf(first, second)) {
+            if (usePutAll) {
+                map.putAll(treapMapOf(key to null))
+            } else {
+                map.put(key, null)
+            }
+        }
+        assertEquals(map, mapOf<TestKey?, Any?>(first to null, second to null), name)
     }
 
     @Test
@@ -302,7 +264,14 @@ abstract class TreapMapTest {
         assertVeryEqual(other, m)
     }
 
-    fun removeWhileIterating(toRemove: Int) {
+    @Test
+    fun removeWhileIterating() {
+        removeNthWhileIterating(1) // first
+        removeNthWhileIterating(2) // second
+        removeNthWhileIterating(3) // last
+    }
+
+    private fun removeNthWhileIterating(toRemove: Int) {
         val b = makeBaseline()
         val m = makeMap()
 
@@ -322,22 +291,6 @@ abstract class TreapMapTest {
         }
 
         assertVeryEqual(b, m)
-    }
-
-
-    @Test
-    fun removeFirstWhileIterating() {
-        removeWhileIterating(1)
-    }
-
-    @Test
-    fun removeSecondWhileIterating() {
-        removeWhileIterating(2)
-    }
-
-    @Test
-    fun removeLastWhileIterating() {
-        removeWhileIterating(3)
     }
 
     open fun assertIdenticalJson(expected: String, actual: String) {}

@@ -188,67 +188,29 @@ abstract class TreapSetTest {
     }
 
     @Test
-    fun addNullSetAtEnd() {
-        val s = makeSet()
-        s.addAll(treapSetOf(makeKey(0)))
-        s.addAll(treapSetOf(null))
-        assertEquals(s, setOf(null, makeKey(0)))
+    fun addNullAndHashElementsByAddAndAddAll() {
+        val plain = makeKey(0)
+        val hash = HashTestKey(0)
+        addSequence("addNullSetAtEnd", plain, null, useAddAll = true)
+        addSequence("addNullSetAtStart", null, plain, useAddAll = true)
+        addSequence("addNullElementAtEnd", plain, null, useAddAll = false)
+        addSequence("addNullElementAtStart", null, plain, useAddAll = false)
+        addSequence("addHashElementAtEnd", plain, hash, useAddAll = false)
+        addSequence("addHashElementAtStart", hash, plain, useAddAll = false)
+        addSequence("addHashSetAtEnd", plain, hash, useAddAll = true)
+        addSequence("addHashSetAtStart", hash, plain, useAddAll = true)
     }
 
-    @Test
-    fun addNullSetAtStart() {
-        val s = makeSet()
-        s.addAll(treapSetOf(null))
-        s.addAll(treapSetOf(makeKey(0)))
-        assertEquals(s, setOf(null, makeKey(0)))
-    }
-
-    @Test
-    fun addNullElementAtEnd() {
-        val s = makeSet()
-        s.add(makeKey(0))
-        s.add(null)
-        assertEquals(s, setOf(null, makeKey(0)))
-    }
-
-    @Test
-    fun addNullElementAtStart() {
-        val s = makeSet()
-        s.add(null)
-        s.add(makeKey(0))
-        assertEquals(s, setOf(null, makeKey(0)))
-    }
-
-    @Test
-    fun addHashSetAtEnd() {
-        val s = makeSet()
-        s.addAll(treapSetOf(makeKey(0)))
-        s.addAll(treapSetOf(HashTestKey(0)))
-        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
-    }
-
-    @Test
-    fun addHashSetAtStart() {
-        val s = makeSet()
-        s.addAll(treapSetOf(HashTestKey(0)))
-        s.addAll(treapSetOf(makeKey(0)))
-        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
-    }
-
-    @Test
-    fun addHashElementAtEnd() {
-        val s = makeSet()
-        s.add(makeKey(0))
-        s.add(HashTestKey(0))
-        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
-    }
-
-    @Test
-    fun addHashElementAtStart() {
-        val s = makeSet()
-        s.add(HashTestKey(0))
-        s.add(makeKey(0))
-        assertEquals(s, setOf<TestKey?>(HashTestKey(0), makeKey(0)))
+    private fun addSequence(name: String, first: TestKey?, second: TestKey?, useAddAll: Boolean) {
+        val set = makeSet()
+        for (element in listOf(first, second)) {
+            if (useAddAll) {
+                set.addAll(treapSetOf(element))
+            } else {
+                set.add(element)
+            }
+        }
+        assertEquals(set, setOf<TestKey?>(first, second), name)
     }
 
     @Test
@@ -309,44 +271,23 @@ abstract class TreapSetTest {
     }
 
     @Test
-    fun copyConstructorEmptySet() {
-        val empty = setOf<TestKey?>()
-        val b = makeBaseline(empty)
-        val s = makeSet(empty)
-        assertVeryEqual(b, s)
-        assertVeryEqual(empty, s)
-    }
+    fun copyFromSetAndList() {
+        assertCopiedFrom(setOf<TestKey?>())
+        assertCopiedFrom(listOf<TestKey?>())
 
-    @Test
-    fun copyConstructorEmptyList() {
-        val empty = listOf<TestKey?>()
-        val b = makeBaseline(empty)
-        val s = makeSet(empty)
-        assertVeryEqual(b, s)
-    }
-
-    @Test
-    fun copyConstructorNonEmptySet() {
         val rand = Random(1234)
-        val elems = Array<TestKey>(10000) { makeKey(rand.nextInt()) }
-        val list = elems.toList()
-        val other = makeBaseline(list)
-
-        val b = makeBaseline(other)
-        val s = makeSet(other)
-        assertVeryEqual(b, s)
-        assertVeryEqual(other, s)
+        val generated = Array<TestKey>(10000) { makeKey(rand.nextInt()) }.toList()
+        assertCopiedFrom(makeBaseline(generated))
+        assertCopiedFrom(generated)
     }
 
-    @Test
-    fun copyConstructorNonEmptyList() {
-        val rand = Random(1234)
-        val elems = Array<TestKey>(10000) { makeKey(rand.nextInt()) }
-        val other = elems.toList()
-
-        val b = makeBaseline(other)
-        val s = makeSet(other)
-        assertVeryEqual(b, s)
+    private fun assertCopiedFrom(source: Collection<TestKey?>) {
+        val baseline = makeBaseline(source)
+        val set = makeSet(source)
+        assertVeryEqual(baseline, set)
+        if (source is Set<*>) {
+            assertVeryEqual(source, set)
+        }
     }
 
     open fun assertIdenticalJson(expected: String, actual: String) {}
