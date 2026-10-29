@@ -51,9 +51,10 @@ internal class HashTreapMap<@Treapable K, V>(
         }
         if (mode == MergeMode.UNION) {
             t2?.forEachPair { (k, v2) ->
-                val v1 = t1?.shallowGetValue(k)
-                if (v1 == null) {
-                    val v = merger(k, v1, v2)
+                // shallowGetValue returns null both for a missing key and for a stored null.
+                // Only keys absent from t1 belong in this loop; a stored null was already merged above.
+                if (t1?.shallowContainsKey(k) != true) {
+                    val v = merger(k, null, v2)
                     if (v != null) {
                         newPairs = KeyValuePairList.More(k, v, newPairs)
                     }

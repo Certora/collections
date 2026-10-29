@@ -3,16 +3,10 @@ package com.certora.collect
 import kotlin.test.*
 
 /**
- * Each test states the behavior the public API should have. They are ignored because the
- * implementation does not do that yet, and this change set does not modify product code.
+ * Each test states the behavior the public API should have.
  */
 class ProductBugTest {
     @Test
-    @Ignore(
-        "HashTreapMap.getShallowMerger treats a null value as a missing key in UNION mode, " +
-            "so a key stored as null on the left is merged twice and the map can contain duplicate keys. " +
-            "Reproduce: treapMapOf(HashTestKey(1) to null).merge(treapMapOf(HashTestKey(1) to \"b\")) { _, _, right -> right }."
-    )
     fun mergeUnionWithNullLeftValueKeepsOneEntry() {
         val key = HashTestKey(1, code = 7)
         val other = HashTestKey(2, code = 7)
