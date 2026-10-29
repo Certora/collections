@@ -64,7 +64,9 @@ internal class TreapListBuilder<E>(
             if (i == -1) {
                 throw IllegalStateException("set() called before next()")
             }
+            val cursor = listIterator.nextIndex()
             list = list.set(i, element)
+            listIterator = list.listIterator(cursor)
         }
 
         override fun remove() {

@@ -52,11 +52,6 @@ class ProductBugTest {
     }
 
     @Test
-    @Ignore(
-        "TreapListBuilder.listIterator.set replaces the element in the builder but leaves the iterator " +
-            "walking the previous treap, so previous() still returns the old value. " +
-            "Reproduce: iterate a builder, set the first element, then previous()."
-    )
     fun listBuilderIteratorSetIsVisibleToThatIterator() {
         val builder = treapListOf(10, 20, 30).builder()
         val iterator = builder.listIterator()
@@ -64,6 +59,13 @@ class ProductBugTest {
         iterator.set(99)
         assertEquals(listOf(99, 20, 30), builder.build())
         assertEquals(99, iterator.previous())
+
+        assertEquals(99, iterator.next())
+        assertEquals(20, iterator.next())
+        assertEquals(20, iterator.previous())
+        iterator.set(77)
+        assertEquals(77, iterator.next())
+        assertEquals(listOf(99, 77, 30), builder.build())
     }
 
     @Test
