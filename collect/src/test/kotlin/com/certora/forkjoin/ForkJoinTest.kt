@@ -33,6 +33,7 @@ class ForkJoinTest {
 
     @Test
     fun forkWithThreshold() {
+        // 5 already meets `{ it > 0 }`, and withThreshold(0) meets it too, so this is the inline path.
         maybeForking(5, { it > 0 }) {
             assertEquals(2 to 4, withThreshold(0))
         }
@@ -42,6 +43,28 @@ class ForkJoinTest {
     fun noForkWithThreshold() {
         notForking(5) {
             assertEquals(2 to 4, withThreshold(0))
+        }
+    }
+
+    @Test
+    fun forkThreeWays() {
+        forking {
+            assertEquals(Triple(1, 2, 3), fork({ 1 }, { 2 }, { 3 }))
+        }
+        notForking {
+            assertEquals(Triple(1, 2, 3), fork({ 1 }, { 2 }, { 3 }))
+        }
+    }
+
+    @Test
+    fun thresholdActuallyForks() {
+        maybeForking(0, { it >= 1 }) {
+            assertEquals(2 to 4, fork(0, { 1 + 1 }, { 2 + 2 }))
+            assertEquals(Triple(1, 2, 3), fork(0, { 1 }, { 2 }, { 3 }))
+        }
+        maybeForking(0, { it >= 1 }) {
+            val nested = fork(0, { fork(1, { 10 }, { 20 }) }, { 30 })
+            assertEquals((10 to 20) to 30, nested)
         }
     }
 
