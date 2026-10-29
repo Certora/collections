@@ -167,7 +167,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         var newThis = this as TreapMap<K, V>
         for ((k, v) in m.entries) {
             if (k in this) {
-                newThis = newThis + (k to merger(k, this[k]!!, v))
+                newThis = newThis + (k to merger(k, storedValue(k), v))
             } else {
                 newThis = newThis + (k to v)
             }
@@ -191,11 +191,15 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         var newThis = clear()
         for ((k, v) in m.entries) {
             if (k in this) {
-                newThis = newThis + (k to merger(k, this[k]!!, v))
+                newThis = newThis + (k to merger(k, storedValue(k), v))
             }
         }
         return newThis
     }
+
+    // Map.get returns V? even when the key is present, so a stored null must not be forced with !!.
+    @Suppress("UNCHECKED_CAST")
+    private fun storedValue(key: K): V = this[key] as V
 
     /**
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the

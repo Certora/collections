@@ -24,11 +24,6 @@ class ProductBugTest {
     }
 
     @Test
-    @Ignore(
-        "AbstractTreapMap.fallbackUnion and fallbackIntersect force the left value with !!, " +
-            "so union/intersect with a plain Map throws NullPointerException when the treap holds a null value. " +
-            "Reproduce: treapMapOf(HashTestKey(1) to null).union(mapOf(HashTestKey(1) to \"b\")) { _, old, new -> new ?: old }."
-    )
     fun unionAndIntersectWithPlainMapAcceptNullValues() {
         val key = HashTestKey(1)
         val left = treapMapOf<HashTestKey, String?>(key to null, HashTestKey(2) to "keep")
