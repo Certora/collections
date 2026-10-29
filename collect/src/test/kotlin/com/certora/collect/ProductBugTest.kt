@@ -1,11 +1,16 @@
 package com.certora.collect
 
 import kotlin.test.*
+import org.junit.Rule
 
 /**
  * Each test states the behavior the public API should have.
  */
 class ProductBugTest {
+    @field:Rule
+    @JvmField
+    val treapListPriorities = TreapListPriorityRule()
+
     @Test
     fun mergeUnionWithNullLeftValueKeepsOneEntry() {
         val key = HashTestKey(1, code = 7)

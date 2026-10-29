@@ -1,10 +1,16 @@
 package com.certora.collect
 
+import kotlin.random.Random
 import kotlin.test.*
 import kotlinx.collections.immutable.*
+import org.junit.Rule
 
 /** Tests for [TreapList]. */
 class TreapListTest {
+    @field:Rule
+    @JvmField
+    val treapListPriorities = TreapListPriorityRule()
+
     @Test
     fun empty() {
         val empty = treapListOf<Int>()
@@ -404,6 +410,66 @@ class TreapListTest {
         large.removeAt(large.size / 2)
     }
 
+    /**
+        Priorities, high to low, build this cartesian tree (in-order is 0..6):
+
+            3
+          /   \
+         1     5
+        / \   / \
+       0   2 4   6
+
+        getNodeAt, setNodeAt, split, contains, remove, and listIterator.previous each have a branch that this shape
+        takes and that a right or left spine does not.
+     */
+    @Test
+    fun shapeDependentPaths() {
+        // Higher priority sits closer to the root. One draw per element, in order.
+        TreapListNode.setTreapListPriorityRandom(FixedPriorityRandom(intArrayOf(10, 50, 30, 100, 20, 40, 5)))
+        val list = (0..6).toTreapList()
+        assertEquals((0..6).toList(), list.toList())
+        // computeHashCode recurses into right only when a node has one. The lists hashCodes() builds
+        // under the per-test seed have none, so hash this tree, which does.
+        assertEquals(persistentListOf(0, 1, 2, 3, 4, 5, 6).hashCode(), list.hashCode())
+
+        for (i in list.indices) {
+            assertEquals(i, list[i])
+            assertEquals(i, list.indexOf(i))
+            assertEquals(i, list.lastIndexOf(i))
+            assertTrue(list.contains(i))
+            val expectedSet = (0..6).map { value ->
+                if (value == i) {
+                    100 + i
+                } else {
+                    value
+                }
+            }
+            assertEquals(expectedSet, list.set(i, 100 + i).toList())
+            assertEquals((0..6).filter { it != i }, list.removeAt(i).toList())
+            assertEquals((0..6).filter { it != i }, (list - i).toList())
+        }
+        assertFalse(list.contains(7))
+        assertEquals(list, list - 7)
+
+        // Splits that walk left, right, and land on the root.
+        assertEquals(listOf(0, 1, 2), list.subList(0, 3))
+        assertEquals(listOf(2, 3, 4), list.subList(2, 5))
+        assertEquals(listOf(4, 5, 6), list.subList(4, 7))
+        assertEquals(listOf(3), list.subList(3, 4))
+
+        walkBothDirections(list)
+    }
+
+    /** A seeded list large enough that predecessor and successor walks see nested left and right children. */
+    @Test
+    fun bidirectionalIteration() {
+        val list = (0 until 64).toTreapList()
+        for (i in list.indices) {
+            assertEquals(i, list[i])
+        }
+        walkBothDirections(list)
+    }
+
     @Test
     fun subList() {
         assertEquals(listOf<Int>(), treapListOf<Int>().subList(0, 0))
@@ -525,4 +591,43 @@ class TreapListTest {
         assertFailsWith<IndexOutOfBoundsException> { treapListOf(1, 2, 3).listIterator(-1) }
         assertFailsWith<IndexOutOfBoundsException> { treapListOf(1, 2, 3).listIterator(4) }
     }
+
+    private fun walkBothDirections(list: TreapList<Int>) {
+        for (start in 0..list.size) {
+            val forward = mutableListOf<Int>()
+            val it = list.listIterator(start)
+            while (it.hasNext()) {
+                val value = it.next()
+                forward.add(value)
+                assertEquals(value, it.previous())
+                assertEquals(value, it.next())
+            }
+            assertEquals((start until list.size).toList(), forward)
+            assertFailsWith<NoSuchElementException> { it.next() }
+
+            val backward = mutableListOf<Int>()
+            while (it.hasPrevious()) {
+                backward.add(it.previous())
+            }
+            assertEquals((list.size - 1 downTo 0).toList(), backward)
+            assertFailsWith<NoSuchElementException> { it.previous() }
+        }
+    }
+
+    /**
+        Yields a fixed priority for each successive node. [kotlin.random.Random.nextInt] is the only draw
+        [TreapListNode] makes.
+     */
+    private class FixedPriorityRandom(private val priorities: IntArray) : Random() {
+        private var index = 0
+
+        override fun nextBits(bitCount: Int): Int =
+            throw UnsupportedOperationException("list priorities are drawn with nextInt()")
+
+        override fun nextInt(): Int {
+            check(index < priorities.size) { "priority sequence exhausted at $index" }
+            return priorities[index++]
+        }
+    }
+
 }
