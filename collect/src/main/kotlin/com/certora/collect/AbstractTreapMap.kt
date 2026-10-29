@@ -496,6 +496,20 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.merg
         mergeWithImpl(that, mode, shallowMerge)
     }
 
+/**
+    True when the two treaps together are smaller than about 2^[parallelThresholdLog2].
+
+    Each side is compared to half of that budget. A threshold of 0 would make the half negative, and
+    [isApproximatelySmallerThanLog2] rejects a negative log. Empty is the only size below 2^0, which is what a log of 0
+    already means, so 0 is clamped instead of subtracting.
+ */
+private fun <@Treapable T, S : Treap<T, S>> Pair<S?, S?>.isSmallerThanMergeThreshold(
+    parallelThresholdLog2: Int
+): Boolean {
+    val sizeLog2 = if (parallelThresholdLog2 == 0) { 0 } else { parallelThresholdLog2 - 1 }
+    return first.isApproximatelySmallerThanLog2(sizeLog2) && second.isApproximatelySmallerThanLog2(sizeLog2)
+}
+
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.parallelMergeWith(
     that: S?,
     mode: MergeMode,
@@ -504,10 +518,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 ): S? =
     maybeForking(
         this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
+        { it.isSmallerThanMergeThreshold(parallelThresholdLog2) }
     ) {
         mergeWithImpl(that, mode, shallowMerge)
     }
@@ -569,10 +580,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 ): S? =
     maybeForking(
         this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
+        { it.isSmallerThanMergeThreshold(parallelThresholdLog2) }
     ) {
         unionWithImpl(that, shallowUnion)
     }
@@ -622,10 +630,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 ): S? =
     maybeForking(
         this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
+        { it.isSmallerThanMergeThreshold(parallelThresholdLog2) }
     ) {
         intersectWithImpl(that, shallowIntersect)
     }

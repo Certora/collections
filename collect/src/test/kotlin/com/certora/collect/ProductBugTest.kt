@@ -64,15 +64,14 @@ class ProductBugTest {
     }
 
     @Test
-    @Ignore(
-        "parallelMerge, parallelUnion, and parallelIntersect subtract 1 before the size check, so a threshold " +
-            "of 0 throws IllegalArgumentException. parallelUpdateValues and parallelMapReduce accept 0. " +
-            "Reproduce: treapMapOf(1 to 1).parallelMerge(treapMapOf(1 to 2), parallelThresholdLog2 = 0) { _, a, b -> (a ?: 0) + (b ?: 0) }."
-    )
     fun parallelMergeAcceptsZeroThreshold() {
         val left = treapMapOf(1 to 1, 2 to 2)
         val right = treapMapOf(2 to 3, 3 to 4)
         val merger = { _: Int, a: Int?, b: Int? -> (a ?: 0) + (b ?: 0) }
         assertEquals(left.merge(right, merger), left.parallelMerge(right, 0, merger))
+        val keepRight = { _: Int, _: Int, b: Int -> b }
+        val keepLeft = { _: Int, a: Int, _: Int -> a }
+        assertEquals(left.union(right, keepRight), left.parallelUnion(right, 0, keepRight))
+        assertEquals(left.intersect(right, keepLeft), left.parallelIntersect(right, 0, keepLeft))
     }
 }
