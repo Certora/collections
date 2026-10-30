@@ -576,6 +576,57 @@ class TreapListTest {
         assertFailsWith<NoSuchElementException> { builder.removeFirst() }
     }
 
+
+    @Test
+    fun builderSizeTracksEdits() {
+        val builder = treapListOf(1).builder()
+        builder.add(2)
+        assertEquals(2, builder.size)
+        assertEquals(1, builder.lastIndex)
+        assertEquals(listOf(1, 2), builder.subList(0, builder.size))
+        builder.clear()
+        assertEquals(0, builder.size)
+        assertTrue(builder.isEmpty())
+    }
+
+    @Test
+    fun builderIteratorSetIsVisibleToThatIterator() {
+        val builder = treapListOf(10, 20, 30).builder()
+        val iterator = builder.listIterator()
+        assertEquals(10, iterator.next())
+        iterator.set(99)
+        assertEquals(listOf(99, 20, 30), builder.build())
+        assertEquals(99, iterator.previous())
+
+        assertEquals(99, iterator.next())
+        assertEquals(20, iterator.next())
+        assertEquals(20, iterator.previous())
+        iterator.set(77)
+        assertEquals(77, iterator.next())
+        assertEquals(listOf(99, 77, 30), builder.build())
+    }
+
+    @Test
+    fun builderIteratorRejectsSetOrRemoveAfterStructuralChange() {
+        val builder = treapListOf(10, 20, 30).builder()
+        val iterator = builder.listIterator()
+        assertEquals(10, iterator.next())
+        iterator.remove()
+        assertFailsWith<IllegalStateException> { iterator.set(99) }
+        assertFailsWith<IllegalStateException> { iterator.remove() }
+        assertEquals(listOf(20, 30), builder.build())
+
+        assertEquals(20, iterator.next())
+        iterator.add(25)
+        assertFailsWith<IllegalStateException> { iterator.set(99) }
+        assertFailsWith<IllegalStateException> { iterator.remove() }
+        assertEquals(listOf(20, 25, 30), builder.build())
+
+        assertEquals(30, iterator.next())
+        iterator.set(35)
+        assertEquals(listOf(20, 25, 35), builder.build())
+    }
+
     @Test
     fun listIteratorFromMiddle() {
         val iterator = treapListOf(1, 2, 3, 4, 5).listIterator(3)

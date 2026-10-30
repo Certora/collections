@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.calls.inference.*
 import org.jetbrains.kotlin.resolve.calls.util.*
@@ -77,7 +78,7 @@ class Treapability(config: Config) : Rule(config) {
                         We have a hash code implementation.  Check the body for things that look fishy. This is a very
                         simple heuristic: we just look for references to properties that don't have stable hashCode
                         implementation, and flag those.  We make an exception for cases where the value is passed to
-                        'utils.HashCode.plus', because we know that does produce a stable hash code. So, we flag this:
+                        'TreapableHashCode.plus', because we know that does produce a stable hash code. So, we flag this:
 
                             ```
                             enum class E { A, B, C } // enums don't have stable hash codes
@@ -97,12 +98,9 @@ class Treapability(config: Config) : Rule(config) {
                     hashCodeFunc.accept(object : DetektVisitor() {
                         override fun visitReferenceExpression(expression: KtReferenceExpression) {
                             super.visitReferenceExpression(expression)
-                            val parent = expression.parent as? KtElement
-                            val call = parent?.getResolvedCall(bindingContext)
                             // A reference passed to TreapableHashCode.plus is exempt here. Generic plus is still
-                            // checked as a @Treapable type argument. A bare reference such as `hashCode() = b`
-                            // has no parent call and must still be checked.
-                            if (call?.resultingDescriptor?.fqNameSafe == hashCodePlusName) {
+                            // checked as a @Treapable type argument.
+                            if (expression.enclosingCallName() == hashCodePlusName) {
                                 return
                             }
                             val prop = bindingContext[BindingContext.REFERENCE_TARGET, expression]
@@ -113,6 +111,22 @@ class Treapability(config: Config) : Rule(config) {
                 }
             }
         }
+    }
+
+    /**
+        The name of the call that directly consumes this expression, as an operand (`it + e`) or as an argument
+        (`it.plus(e)`), looking through parentheses.
+     */
+    private fun KtExpression.enclosingCallName(): FqName? {
+        var outermost: KtExpression = this
+        while (true) {
+            outermost = outermost.parent as? KtParenthesizedExpression ?: break
+        }
+        val consumer = when (val parent = outermost.parent) {
+            is KtValueArgument -> parent.getStrictParentOfType<KtCallElement>()
+            else -> parent as? KtElement
+        }
+        return consumer?.getResolvedCall(bindingContext)?.resultingDescriptor?.fqNameSafe
     }
 
     /**

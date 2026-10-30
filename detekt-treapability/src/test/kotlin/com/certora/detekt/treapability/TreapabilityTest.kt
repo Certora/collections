@@ -176,6 +176,39 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
     }
 
     @Test
+    fun explicitTreapHashPlusCallIsAccepted() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = hash { it.plus(e) }
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun parenthesizedTreapHashPlusOperandIsAccepted() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = hash { it + (e) }
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun propertyPassedToOtherFunctionFails() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = java.util.Objects.hash(e)
+            }
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
     fun hashCodeReturningPropertyDirectlyFails() {
         val code = """
             import com.certora.collect.*

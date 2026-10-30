@@ -649,6 +649,34 @@ abstract class TreapMapTest {
         )
     }
 
+
+    @Test
+    fun parallelBulkOperationsAcceptZeroThreshold() {
+        val left = intMap(1..40)
+        val right = intMap(20..60)
+        val merge = { _: TestKey, a: Int?, b: Int? -> (a ?: 0) + (b ?: 0) }
+        assertEquals(left.merge(right, merge), left.parallelMerge(right, 0, merge))
+        val keepLeft = { _: TestKey, a: Int, _: Int -> a }
+        val keepRight = { _: TestKey, _: Int, b: Int -> b }
+        assertEquals(left.union(right, keepRight), left.parallelUnion(right, 0, keepRight))
+        assertEquals(left.intersect(right, keepLeft), left.parallelIntersect(right, 0, keepLeft))
+    }
+
+    @Test
+    fun unionAndIntersectWithPlainMapAcceptNullValues() {
+        val key = makeKey(1)
+        val left = makeMap().apply {
+            put(key, null)
+            put(makeKey(2), "keep")
+        }.build()
+        val right = mapOf(key to "from-right", makeKey(3) to "new")
+        val preferNew = { _: TestKey?, old: Any?, new: Any? -> new ?: old }
+        val unionExpected: Map<TestKey?, Any?> = mapOf(key to "from-right", makeKey(2) to "keep", makeKey(3) to "new")
+        assertEquals(unionExpected, left.union(right, preferNew))
+        val intersectExpected: Map<TestKey?, Any?> = mapOf(key to "from-right")
+        assertEquals(intersectExpected, left.intersect(right, preferNew))
+    }
+
     @Test
     fun emptyBulkOperations() {
         val empty = treapMapOf<TestKey, Int>()

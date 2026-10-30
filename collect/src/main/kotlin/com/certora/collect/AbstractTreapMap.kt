@@ -197,7 +197,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         return newThis
     }
 
-    // Map.get returns V? even when the key is present, so a stored null must not be forced with !!.
+    // Map.get returns V?; a key that is present may map to null.
     @Suppress("UNCHECKED_CAST")
     private fun storedValue(key: K): V = this[key] as V
 
@@ -499,9 +499,8 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.merg
 /**
     True when the two treaps together are smaller than about 2^[parallelThresholdLog2].
 
-    Each side is compared to half of that budget. A threshold of 0 would make the half negative, and
-    [isApproximatelySmallerThanLog2] rejects a negative log. Empty is the only size below 2^0, which is what a log of 0
-    already means, so 0 is clamped instead of subtracting.
+    Each side is compared to half of that budget. A threshold of 0 compares each side to 2^0, since only empty treaps
+    are smaller than that.
  */
 private fun <@Treapable T, S : Treap<T, S>> Pair<S?, S?>.isSmallerThanMergeThreshold(
     parallelThresholdLog2: Int

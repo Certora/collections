@@ -390,10 +390,9 @@ internal class TreapListNode<E> private constructor(
         /**
             Per-thread replacement for [Random.Default] when drawing node priorities.
 
-            No installation on this thread, the production setting, draws from [Random.Default]. That generator is
-            itself thread-local and unseeded. Tests install a seeded [Random] on the test thread, so one test cannot
-            see another test's draws. A fork/join worker does not inherit the installation. The [ThreadLocal] read is
-            the only added production step.
+            With nothing installed on this thread, the production setting, priorities come from [Random.Default].
+            Tests install a seeded [Random] on the test thread, so one test cannot see another test's draws. A
+            fork/join worker does not inherit the installation.
          */
         private val priorityRandom = ThreadLocal<Random?>()
 

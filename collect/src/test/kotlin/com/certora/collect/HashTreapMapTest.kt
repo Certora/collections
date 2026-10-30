@@ -74,4 +74,20 @@ class HashTreapMapTest: TreapMapTest() {
 
         assertEquals(6, left.mapReduce({ _, value -> value }, Int::plus))
     }
+
+    @Test
+    fun mergeUnionWithNullValueInCollidingBucketMergesOnce() {
+        val key = HashTestKey(1, code = 7)
+        val other = HashTestKey(2, code = 7)
+        var calls = 0
+        val merged = treapMapOf(key to null as String?, other to "keep").merge(
+            treapMapOf(key to "b")
+        ) { _, left, right ->
+            calls += 1
+            right ?: left
+        }
+        assertEquals(2, calls)
+        val expected: Map<HashTestKey, String?> = mapOf(key to "b", other to "keep")
+        assertEquals(expected, merged)
+    }
 }

@@ -57,12 +57,13 @@ internal class TreapListBuilder<E>(
             val i = nextIndex()
             add(i, element)
             listIterator = list.listIterator(i + 1)
+            lastReturnedIndex = -1
         }
 
         override fun set(element: E) {
             val i = lastReturnedIndex
             if (i == -1) {
-                throw IllegalStateException("set() called before next()")
+                throw IllegalStateException("set() called before next() or previous(), or after add() or remove()")
             }
             val cursor = listIterator.nextIndex()
             list = list.set(i, element)
@@ -72,10 +73,11 @@ internal class TreapListBuilder<E>(
         override fun remove() {
             val i = lastReturnedIndex
             if (i == -1) {
-                throw IllegalStateException("remove() called before next()")
+                throw IllegalStateException("remove() called before next() or previous(), or after add() or remove()")
             }
             removeAt(i)
             listIterator = list.listIterator(i)
+            lastReturnedIndex = -1
         }
     }
 
