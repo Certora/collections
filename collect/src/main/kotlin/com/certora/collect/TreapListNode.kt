@@ -27,7 +27,7 @@ internal class TreapListNode<E> private constructor(
     override val size: Int = addExact(1, addExact(left?.size?:0, right?.size?:0))
 ) : TreapList<E>, java.io.Serializable {
 
-    constructor(elem: E) : this(elem, priority = Random.Default.nextInt(), size = 1)
+    constructor(elem: E) : this(elem, priority = nextPriority(), size = 1)
 
     override fun hashCode() = computeHashCode(initial = 1)
     override fun toString() = joinToString(", ", "[", "]")
@@ -387,6 +387,32 @@ internal class TreapListNode<E> private constructor(
     }
 
     companion object {
+        /**
+            Per-thread replacement for [Random.Default] when drawing node priorities.
+
+            With nothing installed on this thread, the production setting, priorities come from [Random.Default].
+            Tests install a seeded [Random] on the test thread, so one test cannot see another test's draws. A
+            fork/join worker does not inherit the installation.
+         */
+        private val priorityRandom = ThreadLocal<Random?>()
+
+        internal fun setTreapListPriorityRandom(random: Random?) {
+            if (random == null) {
+                priorityRandom.remove()
+            } else {
+                priorityRandom.set(random)
+            }
+        }
+
+        private fun nextPriority(): Int {
+            val override = priorityRandom.get()
+            return if (override == null) {
+                Random.Default.nextInt()
+            } else {
+                override.nextInt()
+            }
+        }
+
         private infix fun <E> TreapListNode<E>?.append(that: TreapListNode<E>?): TreapListNode<E>? = when {
             this == null -> that
             that == null -> this
@@ -417,7 +443,7 @@ internal class TreapListNode<E> private constructor(
 
                 // Start the next element, and loop until we find one with a higher priority than [upperPri]
                 var nextElem = elems.next()
-                var nextPri = Random.Default.nextInt()
+                var nextPri = nextPriority()
                 while (true) {
                     when {
                         nextPri > upperPri -> {
@@ -432,7 +458,7 @@ internal class TreapListNode<E> private constructor(
                                 return Result(thisNode)
                             }
                             nextElem = elems.next()
-                            nextPri = Random.Default.nextInt()
+                            nextPri = nextPriority()
                         }
                         else -> {
                             // The priority is below the current node; construct a subtree on the right.
@@ -450,7 +476,7 @@ internal class TreapListNode<E> private constructor(
             }
 
             // Build the whole list
-            return buildLowerPri(Int.MAX_VALUE, elems.next(), Random.Default.nextInt()).node
+            return buildLowerPri(Int.MAX_VALUE, elems.next(), nextPriority()).node
         }
 
         internal tailrec fun <E> TreapListNode<E>?.isApproximatelySmallerThanLog2(sizeLog2: Int): Boolean = when {

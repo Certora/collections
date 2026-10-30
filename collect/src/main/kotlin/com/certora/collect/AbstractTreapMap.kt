@@ -167,7 +167,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         var newThis = this as TreapMap<K, V>
         for ((k, v) in m.entries) {
             if (k in this) {
-                newThis = newThis + (k to merger(k, this[k]!!, v))
+                newThis = newThis + (k to merger(k, storedValue(k), v))
             } else {
                 newThis = newThis + (k to v)
             }
@@ -191,11 +191,15 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         var newThis = clear()
         for ((k, v) in m.entries) {
             if (k in this) {
-                newThis = newThis + (k to merger(k, this[k]!!, v))
+                newThis = newThis + (k to merger(k, storedValue(k), v))
             }
         }
         return newThis
     }
+
+    // Map.get returns V?; a key that is present may map to null.
+    @Suppress("UNCHECKED_CAST")
+    private fun storedValue(key: K): V = this[key] as V
 
     /**
         Merges the entries in `m` with the entries in this AbstractTreapMap, applying the "merger" function to get the
@@ -492,6 +496,19 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.merg
         mergeWithImpl(that, mode, shallowMerge)
     }
 
+/**
+    True when the two treaps together are smaller than about 2^[parallelThresholdLog2].
+
+    Each side is compared to half of that budget. A threshold of 0 compares each side to 2^0, since only empty treaps
+    are smaller than that.
+ */
+private fun <@Treapable T, S : Treap<T, S>> Pair<S?, S?>.isSmallerThanMergeThreshold(
+    parallelThresholdLog2: Int
+): Boolean {
+    val sizeLog2 = if (parallelThresholdLog2 == 0) { 0 } else { parallelThresholdLog2 - 1 }
+    return first.isApproximatelySmallerThanLog2(sizeLog2) && second.isApproximatelySmallerThanLog2(sizeLog2)
+}
+
 internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.parallelMergeWith(
     that: S?,
     mode: MergeMode,
@@ -500,10 +517,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 ): S? =
     maybeForking(
         this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
+        { it.isSmallerThanMergeThreshold(parallelThresholdLog2) }
     ) {
         mergeWithImpl(that, mode, shallowMerge)
     }
@@ -565,10 +579,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 ): S? =
     maybeForking(
         this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
+        { it.isSmallerThanMergeThreshold(parallelThresholdLog2) }
     ) {
         unionWithImpl(that, shallowUnion)
     }
@@ -618,10 +629,7 @@ internal fun <@Treapable K, V, @Treapable S : AbstractTreapMap<K, V, S>> S?.para
 ): S? =
     maybeForking(
         this to that,
-        {
-            it.first.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1) &&
-            it.second.isApproximatelySmallerThanLog2(parallelThresholdLog2 - 1)
-        }
+        { it.isSmallerThanMergeThreshold(parallelThresholdLog2) }
     ) {
         intersectWithImpl(that, shallowIntersect)
     }

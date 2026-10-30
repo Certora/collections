@@ -1,10 +1,16 @@
 package com.certora.collect
 
+import kotlin.random.Random
 import kotlin.test.*
 import kotlinx.collections.immutable.*
+import org.junit.Rule
 
 /** Tests for [TreapList]. */
 class TreapListTest {
+    @field:Rule
+    @JvmField
+    val treapListPriorities = TreapListPriorityRule()
+
     @Test
     fun empty() {
         val empty = treapListOf<Int>()
@@ -404,6 +410,66 @@ class TreapListTest {
         large.removeAt(large.size / 2)
     }
 
+    /**
+        Priorities, high to low, build this cartesian tree (in-order is 0..6):
+
+            3
+          /   \
+         1     5
+        / \   / \
+       0   2 4   6
+
+        getNodeAt, setNodeAt, split, contains, remove, and listIterator.previous each have a branch that this shape
+        takes and that a right or left spine does not.
+     */
+    @Test
+    fun shapeDependentPaths() {
+        // Higher priority sits closer to the root. One draw per element, in order.
+        TreapListNode.setTreapListPriorityRandom(FixedPriorityRandom(intArrayOf(10, 50, 30, 100, 20, 40, 5)))
+        val list = (0..6).toTreapList()
+        assertEquals((0..6).toList(), list.toList())
+        // computeHashCode recurses into right only when a node has one. The lists hashCodes() builds
+        // under the per-test seed have none, so hash this tree, which does.
+        assertEquals(persistentListOf(0, 1, 2, 3, 4, 5, 6).hashCode(), list.hashCode())
+
+        for (i in list.indices) {
+            assertEquals(i, list[i])
+            assertEquals(i, list.indexOf(i))
+            assertEquals(i, list.lastIndexOf(i))
+            assertTrue(list.contains(i))
+            val expectedSet = (0..6).map { value ->
+                if (value == i) {
+                    100 + i
+                } else {
+                    value
+                }
+            }
+            assertEquals(expectedSet, list.set(i, 100 + i).toList())
+            assertEquals((0..6).filter { it != i }, list.removeAt(i).toList())
+            assertEquals((0..6).filter { it != i }, (list - i).toList())
+        }
+        assertFalse(list.contains(7))
+        assertEquals(list, list - 7)
+
+        // Splits that walk left, right, and land on the root.
+        assertEquals(listOf(0, 1, 2), list.subList(0, 3))
+        assertEquals(listOf(2, 3, 4), list.subList(2, 5))
+        assertEquals(listOf(4, 5, 6), list.subList(4, 7))
+        assertEquals(listOf(3), list.subList(3, 4))
+
+        walkBothDirections(list)
+    }
+
+    /** A seeded list large enough that predecessor and successor walks see nested left and right children. */
+    @Test
+    fun bidirectionalIteration() {
+        val list = (0 until 64).toTreapList()
+        for (i in list.indices) {
+            assertEquals(i, list[i])
+        }
+        walkBothDirections(list)
+    }
+
     @Test
     fun subList() {
         assertEquals(listOf<Int>(), treapListOf<Int>().subList(0, 0))
@@ -427,5 +493,192 @@ class TreapListTest {
         assertEquals(listOf(3), treapListOf(1, 2, 3).subList(2, 3))
         assertEquals(listOf<Int>(), treapListOf(1, 2, 3).subList(3, 3))
         assertEquals(listOf(1, 2, 3), treapListOf(1, 2, 3).subList(0, 3))
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf(1, 2, 3).subList(2, 1) }
+
+        val large = (1..50).toTreapList()
+        assertEquals((11..20).toList(), large.subList(10, 20))
+        assertEquals((1..10).toList(), large.subList(0, 10))
+        assertEquals((41..50).toList(), large.subList(40, 50))
+        assertEquals(emptyList<Int>(), large.subList(25, 25))
     }
+
+    @Test
+    @Suppress("ArrayPrimitive")
+    fun mapReduceAndOperators() {
+        val list = (1..40).toTreapList()
+        assertEquals((1..40).sum(), list.mapReduce({ it }, Int::plus))
+        assertEquals((1..40).sum(), list.parallelMapReduce({ it }, Int::plus, 1))
+        assertNull(treapListOf<Int>().mapReduce({ it }, Int::plus))
+        assertNull(treapListOf<Int>().parallelMapReduce({ it }, Int::plus, 1))
+
+        assertEquals(listOf(1, 2, 3), treapListOf(1) + listOf(2, 3))
+        assertEquals(listOf(1, 2, 3), treapListOf(1) + arrayOf(2, 3))
+        assertEquals(listOf(1, 2, 3), treapListOf(1) + sequenceOf(2, 3))
+        assertEquals(listOf(1, 3), treapListOf(1, 2, 3) - listOf(2))
+        assertEquals(listOf(1, 3), treapListOf(1, 2, 3) - arrayOf(2))
+        assertEquals(listOf(1, 3), treapListOf(1, 2, 3) - sequenceOf(2))
+        assertEquals(listOf(1, 2), treapListOf(1, 2, 3).mutate { it.removeAt(2) })
+        assertEquals(listOf('a', 'b'), "ab".toTreapList())
+        assertEquals(listOf(1, 2), sequenceOf(1, 2).toTreapList())
+        assertEquals(listOf(1, 2), listOf(1, 2).toTreapList())
+        val present = treapListOf(1, 2)
+        assertSame(present, present.orEmpty())
+        assertSame(present, present.toTreapList())
+        assertTrue((null as TreapList<Int>?).orEmpty().isEmpty())
+        assertSame(treapListOf<Int>(), emptyList<Int>().toTreapList())
+        val builder = treapListOf(1, 2).builder()
+        assertSame(builder.build(), builder.toTreapList())
+    }
+
+    @Test
+    fun builderEdits() {
+        val builder = treapListOf(1, 2, 3).builder()
+        assertEquals(1, builder.first())
+        assertEquals(3, builder.last())
+        assertEquals(1, builder.firstOrNull())
+        assertEquals(3, builder.lastOrNull())
+        assertEquals(1, builder.removeFirst())
+        assertEquals(3, builder.removeLast())
+        builder.addFirst(0)
+        builder.addLast(4)
+        assertEquals(listOf(0, 2, 4), builder.build())
+        assertEquals(0, builder[0])
+        assertEquals(0, builder.set(0, 9))
+        assertEquals(9, builder[0])
+        assertTrue(builder.remove(2))
+        assertFalse(builder.remove(2))
+        builder.addAll(1, listOf(7, 8))
+        assertEquals(listOf(9, 7, 8, 4), builder.build())
+        assertEquals(7, builder.removeAt(1))
+        builder.retainAll(setOf(9, 4))
+        assertEquals(listOf(9, 4), builder.build())
+        assertEquals(0, builder.indexOf(9))
+        assertEquals(1, builder.lastIndexOf(4))
+        assertTrue(builder.containsAll(listOf(9, 4)))
+        assertFalse(builder.contains(7))
+
+        val cursor = builder.listIterator()
+        assertEquals(9, cursor.next())
+        cursor.remove()
+        assertEquals(4, cursor.next())
+        cursor.add(5)
+        assertEquals(listOf(4, 5), builder.build())
+        assertEquals(5, cursor.previous())
+        cursor.set(6)
+        assertEquals(listOf(4, 6), builder.build())
+
+        builder.clear()
+        assertTrue(builder.isEmpty())
+        assertNull(builder.firstOrNull())
+        assertNull(builder.lastOrNull())
+        assertEquals(treapListOf<Int>(), builder.build())
+        assertFailsWith<NoSuchElementException> { builder.first() }
+        assertFailsWith<NoSuchElementException> { builder.removeFirst() }
+    }
+
+
+    @Test
+    fun builderSizeTracksEdits() {
+        val builder = treapListOf(1).builder()
+        builder.add(2)
+        assertEquals(2, builder.size)
+        assertEquals(1, builder.lastIndex)
+        assertEquals(listOf(1, 2), builder.subList(0, builder.size))
+        builder.clear()
+        assertEquals(0, builder.size)
+        assertTrue(builder.isEmpty())
+    }
+
+    @Test
+    fun builderIteratorSetIsVisibleToThatIterator() {
+        val builder = treapListOf(10, 20, 30).builder()
+        val iterator = builder.listIterator()
+        assertEquals(10, iterator.next())
+        iterator.set(99)
+        assertEquals(listOf(99, 20, 30), builder.build())
+        assertEquals(99, iterator.previous())
+
+        assertEquals(99, iterator.next())
+        assertEquals(20, iterator.next())
+        assertEquals(20, iterator.previous())
+        iterator.set(77)
+        assertEquals(77, iterator.next())
+        assertEquals(listOf(99, 77, 30), builder.build())
+    }
+
+    @Test
+    fun builderIteratorRejectsSetOrRemoveAfterStructuralChange() {
+        val builder = treapListOf(10, 20, 30).builder()
+        val iterator = builder.listIterator()
+        assertEquals(10, iterator.next())
+        iterator.remove()
+        assertFailsWith<IllegalStateException> { iterator.set(99) }
+        assertFailsWith<IllegalStateException> { iterator.remove() }
+        assertEquals(listOf(20, 30), builder.build())
+
+        assertEquals(20, iterator.next())
+        iterator.add(25)
+        assertFailsWith<IllegalStateException> { iterator.set(99) }
+        assertFailsWith<IllegalStateException> { iterator.remove() }
+        assertEquals(listOf(20, 25, 30), builder.build())
+
+        assertEquals(30, iterator.next())
+        iterator.set(35)
+        assertEquals(listOf(20, 25, 35), builder.build())
+    }
+
+    @Test
+    fun listIteratorFromMiddle() {
+        val iterator = treapListOf(1, 2, 3, 4, 5).listIterator(3)
+        assertEquals(3, iterator.nextIndex())
+        assertEquals(2, iterator.previousIndex())
+        assertEquals(4, iterator.next())
+        assertEquals(4, iterator.previous())
+        assertEquals(3, iterator.previous())
+        val atEnd = treapListOf(1, 2, 3).listIterator(3)
+        assertFalse(atEnd.hasNext())
+        assertTrue(atEnd.hasPrevious())
+        assertEquals(3, atEnd.previous())
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf(1, 2, 3).listIterator(-1) }
+        assertFailsWith<IndexOutOfBoundsException> { treapListOf(1, 2, 3).listIterator(4) }
+    }
+
+    private fun walkBothDirections(list: TreapList<Int>) {
+        for (start in 0..list.size) {
+            val forward = mutableListOf<Int>()
+            val it = list.listIterator(start)
+            while (it.hasNext()) {
+                val value = it.next()
+                forward.add(value)
+                assertEquals(value, it.previous())
+                assertEquals(value, it.next())
+            }
+            assertEquals((start until list.size).toList(), forward)
+            assertFailsWith<NoSuchElementException> { it.next() }
+
+            val backward = mutableListOf<Int>()
+            while (it.hasPrevious()) {
+                backward.add(it.previous())
+            }
+            assertEquals((list.size - 1 downTo 0).toList(), backward)
+            assertFailsWith<NoSuchElementException> { it.previous() }
+        }
+    }
+
+    /**
+        Yields a fixed priority for each successive node. [kotlin.random.Random.nextInt] is the only draw
+        [TreapListNode] makes.
+     */
+    private class FixedPriorityRandom(private val priorities: IntArray) : Random() {
+        private var index = 0
+
+        override fun nextBits(bitCount: Int): Int =
+            throw UnsupportedOperationException("list priorities are drawn with nextInt()")
+
+        override fun nextInt(): Int {
+            check(index < priorities.size) { "priority sequence exhausted at $index" }
+            return priorities[index++]
+        }
+    }
+
 }

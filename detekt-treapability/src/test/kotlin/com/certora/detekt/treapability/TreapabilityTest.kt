@@ -152,10 +152,68 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
 
     @Test
     fun classWithGoodHashCodePasses() {
+        // Generic plus calls hashCode(), so an unstable serializable property is still a violation.
+        // The documented safe form is the enum overload, which hashes the enum name.
+        // See documentedTreapHashPlusIsAccepted.
         val code = """
             import com.certora.collect.*
             class AA(val b: Unstable) : StableHashCode {
                 override fun hashCode() = hash { it + b }
+            }
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    fun documentedTreapHashPlusIsAccepted() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = hash { it + e }
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun explicitTreapHashPlusCallIsAccepted() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = hash { it.plus(e) }
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun parenthesizedTreapHashPlusOperandIsAccepted() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = hash { it + (e) }
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun propertyPassedToOtherFunctionFails() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val e: UnstableEnum) : StableHashCode {
+                override fun hashCode() = java.util.Objects.hash(e)
+            }
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    fun hashCodeReturningPropertyDirectlyFails() {
+        val code = """
+            import com.certora.collect.*
+            class AA(val b: Unstable) : StableHashCode {
+                override fun hashCode(): Int = b
             }
         """
         assertEquals(1, failureCount(code))
@@ -249,5 +307,85 @@ class TreapabilityTest(val env: KotlinCoreEnvironment) {
             val f = genericFunc(UnstableNonSerializable())
         """
         assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun listOfStableElementsPasses() {
+        val code = """
+            import com.certora.collect.*
+            val f = genericFunc(listOf(1, 2))
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun listOfUnstableElementsFails() {
+        val code = """
+            import com.certora.collect.*
+            val f = genericFunc(listOf(Unstable()))
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    fun starProjectionIsNotCheckedHere() {
+        val code = """
+            import com.certora.collect.*
+            fun f(c: Container<*>) = c
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun sealedNonSerializableArgumentPasses() {
+        val code = """
+            import com.certora.collect.*
+            sealed class S
+            class C : S()
+            fun use(s: S) = genericFunc(s)
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun dataClassWithExplicitHashCodePasses() {
+        val code = """
+            import com.certora.collect.*
+            data class A(val b: Unstable) : StableHashCode {
+                override fun hashCode() = 1
+            }
+        """
+        assertEquals(0, failureCount(code))
+    }
+
+    @Test
+    fun objectWithoutHashCodeFails() {
+        val code = """
+            import com.certora.collect.*
+            object O : StableHashCode
+        """
+        assertEquals(1, failureCount(code))
+    }
+
+    @Test
+    fun objectFixHintNamesTheRealHelper() {
+        val code = """
+            import com.certora.collect.*
+            object O : StableHashCode
+        """
+        val findings = Treapability(TestConfig()).lintWithContext(env, code, library)
+        assertEquals(1, findings.size)
+        val message = findings.single().message
+        assertTrue(message.contains("treapHashObject(this)"))
+        assertFalse(message.contains("utils.treapHashObject"))
+    }
+
+    @Test
+    fun providerRegistersTreapability() {
+        val provider = CollectionsRuleSetProvider()
+        assertEquals("certora-collections", provider.ruleSetId)
+        val rules = provider.instance(TestConfig()).rules
+        assertEquals(1, rules.size)
+        assertTrue(rules.single() is Treapability)
     }
 }

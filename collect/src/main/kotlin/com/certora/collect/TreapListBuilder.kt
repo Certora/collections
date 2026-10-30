@@ -3,7 +3,7 @@ package com.certora.collect
 internal class TreapListBuilder<E>(
     private var list: TreapList<E>
 ) : TreapList.Builder<E>, java.io.Serializable, AbstractMutableList<E>() {
-    override val size: Int = list.size
+    override val size: Int get() = list.size
     override fun isEmpty(): Boolean = list.isEmpty()
 
     override fun get(index: Int): E = list[index]
@@ -57,23 +57,27 @@ internal class TreapListBuilder<E>(
             val i = nextIndex()
             add(i, element)
             listIterator = list.listIterator(i + 1)
+            lastReturnedIndex = -1
         }
 
         override fun set(element: E) {
             val i = lastReturnedIndex
             if (i == -1) {
-                throw IllegalStateException("set() called before next()")
+                throw IllegalStateException("set() called before next() or previous(), or after add() or remove()")
             }
+            val cursor = listIterator.nextIndex()
             list = list.set(i, element)
+            listIterator = list.listIterator(cursor)
         }
 
         override fun remove() {
             val i = lastReturnedIndex
             if (i == -1) {
-                throw IllegalStateException("remove() called before next()")
+                throw IllegalStateException("remove() called before next() or previous(), or after add() or remove()")
             }
             removeAt(i)
             listIterator = list.listIterator(i)
+            lastReturnedIndex = -1
         }
     }
 
