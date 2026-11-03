@@ -107,20 +107,7 @@ internal abstract class Treap<@Treapable T, S : Treap<T, S>>(
     /**
         Produces a sequence of all nodes in this Treap, which we use at a higher level to enumerate elements/entries.
     */
-    fun asTreapSequence(): Sequence<S> = sequence<S> {
-        val stack = ArrayDeque<S>()
-        var current: S? = this@Treap.self
-        while (stack.isNotEmpty() || current != null) {
-            if (current != null) {
-                stack.addFirst(current)
-                current = current.left
-            } else {
-                current = stack.removeFirst()
-                yield(current)
-                current = current.right
-            }
-        }
-    }
+    fun asTreapSequence(): Sequence<S> = Sequence { TreapNodeIterator(self) }
 
     /**
         Counts the items stored in this Treap.
@@ -271,4 +258,35 @@ internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.isApproximatelySmallerTh
     this == null -> true
     sizeLog2 == 0 -> false
     else -> this.left.isApproximatelySmallerThanLog2(sizeLog2 - 1)
+}
+
+/**
+    Iterates over the nodes of a Treap in key order.  We keep an explicit stack of the nodes whose left subtrees we are
+    still visiting, rather than using a `sequence {}` builder: iterating via a coroutine costs several times more.
+ */
+internal class TreapNodeIterator<S : Treap<*, S>>(root: S?) : Iterator<S> {
+    private val stack = ArrayList<S>()
+
+    init {
+        pushLeftSpine(root)
+    }
+
+    private fun pushLeftSpine(node: S?) {
+        var current = node
+        while (current != null) {
+            stack.add(current)
+            current = current.left
+        }
+    }
+
+    override fun hasNext() = stack.isNotEmpty()
+
+    override fun next(): S {
+        if (stack.isEmpty()) {
+            throw NoSuchElementException()
+        }
+        val node = stack.removeAt(stack.lastIndex)
+        pushLeftSpine(node.right)
+        return node
+    }
 }

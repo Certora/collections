@@ -758,4 +758,28 @@ abstract class TreapMapTest {
         assertEquals(stored.hashCode(), roundTrip(stored).hashCode())
         assertEquals(stored, roundTrip(stored.builder()).build())
     }
+
+    @Test
+    fun iteratorsMatchForEachEntry() {
+        // Codes repeat every 7 values, so hashed maps chain several entries per Treap node.
+        val map = (1..200).map { makeKey(it, code = it % 7) to it }.toTreapMap()
+        val visited = mutableListOf<Pair<TestKey, Int>>()
+        map.forEachEntry { (k, v) -> visited += k to v }
+        assertEquals(200, visited.toSet().size)
+
+        val entries = map.entries.iterator()
+        val iterated = mutableListOf<Pair<TestKey, Int>>()
+        while (entries.hasNext()) {
+            iterated += entries.next().toPair()
+        }
+        assertFailsWith<NoSuchElementException> { entries.next() }
+        assertEquals(visited, iterated)
+        assertEquals(visited.map { it.first }, map.keys.toList())
+        assertEquals(visited.map { it.second }, map.values.toList())
+
+        val empty = treapMapOf<TestKey, Int>()
+        assertFailsWith<NoSuchElementException> { empty.entries.iterator().next() }
+        assertFailsWith<NoSuchElementException> { empty.keys.iterator().next() }
+        assertFailsWith<NoSuchElementException> { empty.values.iterator().next() }
+    }
 }

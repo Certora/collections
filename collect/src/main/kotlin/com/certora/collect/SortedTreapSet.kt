@@ -30,7 +30,16 @@ internal class SortedTreapSet<@Treapable E>(
         ?: (this as? SortedTreapMap<E, *>.KeySet)?.keys?.value
 
     override val self get() = this
-    override fun iterator(): Iterator<E> = this.asTreapSequence().map { it.treapKey }.iterator()
+    override fun iterator(): Iterator<E> = object : Iterator<E> {
+        val nodes = TreapNodeIterator(self)
+        override fun hasNext() = nodes.hasNext()
+        override fun next(): E {
+            if (!hasNext()) {
+                throw NoSuchElementException()
+            }
+            return nodes.next().treapKey
+        }
+    }
 
     override fun shallowEquals(that: SortedTreapSet<E>): Boolean = this.compareKeyTo(that) == 0
     override val shallowSize: Int get() = 1

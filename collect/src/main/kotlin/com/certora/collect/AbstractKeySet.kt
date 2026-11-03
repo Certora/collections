@@ -32,7 +32,7 @@ internal abstract class AbstractKeySet<@Treapable K, S : TreapSet<K>> : TreapSet
     override fun clear() = treapSetOf<K>()
 
     override operator fun contains(element: K) = map.containsKey(element)
-    override operator fun iterator() = map.entrySequence().map { it.key }.iterator()
+    override operator fun iterator() = map.entryIterator { k, _ -> k }
 
     override fun add(element: K) = keys.value.add(element)
     override fun addAll(elements: Collection<K>) = keys.value.addAll(elements)
