@@ -265,7 +265,12 @@ internal tailrec fun <@Treapable T, S : Treap<T, S>> S?.isApproximatelySmallerTh
     still visiting, rather than using a `sequence {}` builder: iterating via a coroutine costs several times more.
  */
 internal class TreapNodeIterator<S : Treap<*, S>>(root: S?) : Iterator<S> {
-    private val stack = ArrayList<S>()
+    /**
+        A plain array rather than an ArrayList: growing an ArrayList from its default capacity showed up in profiles.
+        [INITIAL_DEPTH] covers the depth of all but very large Treaps; deeper ones double it.
+     */
+    private var stack = arrayOfNulls<Any>(INITIAL_DEPTH)
+    private var size = 0
 
     init {
         pushLeftSpine(root)
@@ -274,19 +279,28 @@ internal class TreapNodeIterator<S : Treap<*, S>>(root: S?) : Iterator<S> {
     private fun pushLeftSpine(node: S?) {
         var current = node
         while (current != null) {
-            stack.add(current)
+            if (size == stack.size) {
+                stack = stack.copyOf(2 * size)
+            }
+            stack[size++] = current
             current = current.left
         }
     }
 
-    override fun hasNext() = stack.isNotEmpty()
+    override fun hasNext() = size > 0
 
     override fun next(): S {
-        if (stack.isEmpty()) {
+        if (size == 0) {
             throw NoSuchElementException()
         }
-        val node = stack.removeAt(stack.lastIndex)
+        @Suppress("UNCHECKED_CAST")
+        val node = stack[--size] as S
+        stack[size] = null
         pushLeftSpine(node.right)
         return node
+    }
+
+    private companion object {
+        const val INITIAL_DEPTH = 32
     }
 }
