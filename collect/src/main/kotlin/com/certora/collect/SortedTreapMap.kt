@@ -87,6 +87,17 @@ internal class SortedTreapMap<@Treapable K, V>(
 
     override fun shallowEntrySequence(): Sequence<Map.Entry<K, V>> = sequenceOf(MapEntry(key, value))
 
+    override fun <R> entryIterator(transform: (K, V) -> R): Iterator<R> = object : Iterator<R> {
+        val nodes = TreapNodeIterator(self)
+        override fun hasNext() = nodes.hasNext()
+        override fun next(): R {
+            if (!hasNext()) {
+                throw NoSuchElementException()
+            }
+            return nodes.next().let { transform(it.key, it.value) }
+        }
+    }
+
     override fun shallowContainsKey(key: K) = true
     override val shallowSize get() = 1
     override fun shallowRemove(element: K): SortedTreapMap<K, V>? = null

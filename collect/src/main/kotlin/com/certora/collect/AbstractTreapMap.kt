@@ -46,6 +46,12 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     abstract fun shallowEntrySequence(): Sequence<Map.Entry<K, V>>
 
     /**
+        Iterates over all entries of this Map, in order, applying [transform] to each key and value.  This is the
+        basis of [entries], [values], and [keys], and allocates no [Map.Entry] objects of its own.
+     */
+    abstract fun <R> entryIterator(transform: (K, V) -> R): Iterator<R>
+
+    /**
         Converts the supplied map key to a TreapKey appropriate to this type of AbstractTreapMap (sorted vs. hashed)
      */
     abstract fun K.toTreapKey(): TreapKey<K>?
@@ -84,7 +90,7 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
     /**
         Gets a sequence of all map entries in this Map.
      */
-    fun entrySequence() = asTreapSequence().flatMap { it.shallowEntrySequence() }
+    fun entrySequence(): Sequence<Map.Entry<K, V>> = Sequence { entryIterator { k, v -> MapEntry(k, v) } }
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,14 +147,14 @@ internal sealed class AbstractTreapMap<@Treapable K, V, @Treapable S : AbstractT
         get() = object : AbstractSet<Map.Entry<K, V>>(), ImmutableSet<Map.Entry<K, V>> {
             override val size get() = this@AbstractTreapMap.size
             override fun isEmpty() = this@AbstractTreapMap.isEmpty()
-            override fun iterator() = entrySequence().iterator()
+            override fun iterator() = entryIterator<Map.Entry<K, V>> { k, v -> MapEntry(k, v) }
         }
 
     override val values: ImmutableCollection<V>
         get() = object: AbstractCollection<V>(), ImmutableCollection<V> {
             override val size get() = this@AbstractTreapMap.size
             override fun isEmpty() = this@AbstractTreapMap.isEmpty()
-            override operator fun iterator() = entrySequence().map { it.value }.iterator()
+            override operator fun iterator() = entryIterator { _, v -> v }
         }
 
     override fun union(m: Map<out K, V>, merger: (K, V, V) -> V): TreapMap<K, V> =

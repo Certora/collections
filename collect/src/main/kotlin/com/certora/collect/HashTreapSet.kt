@@ -221,13 +221,22 @@ internal class HashTreapSet<@Treapable E>(
         return h
     }
 
-    override fun iterator(): Iterator<E> = sequence {
-        self.asTreapSequence().forEach { node ->
-            node.forEachNodeElement {
-                yield(it)
+    override fun iterator(): Iterator<E> = object : Iterator<E> {
+        val nodes = TreapNodeIterator(self)
+        /** The rest of the current node's collision chain. */
+        var chain: ElementList<E>? = null
+
+        override fun hasNext() = chain != null || nodes.hasNext()
+
+        override fun next(): E {
+            if (!hasNext()) {
+                throw NoSuchElementException()
             }
+            val current = chain ?: nodes.next()
+            chain = current.next
+            return current.element
         }
-    }.iterator()
+    }
 
     override fun singleOrNull(): E? = element.takeIf { next == null && left == null && right == null }
     override fun single(): E {

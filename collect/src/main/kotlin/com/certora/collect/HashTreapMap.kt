@@ -169,9 +169,23 @@ internal class HashTreapMap<@Treapable K, V>(
 
     override fun copyWith(left: HashTreapMap<K, V>?, right: HashTreapMap<K, V>?): HashTreapMap<K, V> = HashTreapMap(key, value, next, left, right)
 
-    override fun shallowEntrySequence(): Sequence<Map.Entry<K, V>> = sequence {
-        forEachPair { (k, v) ->
-            yield (MapEntry(k, v))
+    override fun shallowEntrySequence(): Sequence<Map.Entry<K, V>> =
+        generateSequence<KeyValuePairList<K, V>>(this) { it.next }.map { MapEntry(it.key, it.value) }
+
+    override fun <R> entryIterator(transform: (K, V) -> R): Iterator<R> = object : Iterator<R> {
+        val nodes = TreapNodeIterator(self)
+        /** The rest of the current node's collision chain. */
+        var chain: KeyValuePairList<K, V>? = null
+
+        override fun hasNext() = chain != null || nodes.hasNext()
+
+        override fun next(): R {
+            if (!hasNext()) {
+                throw NoSuchElementException()
+            }
+            val current = chain ?: nodes.next()
+            chain = current.next
+            return transform(current.key, current.value)
         }
     }
 

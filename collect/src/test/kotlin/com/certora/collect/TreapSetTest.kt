@@ -470,5 +470,23 @@ abstract class TreapSetTest {
         }
         assertFailsWith<IllegalStateException> { set.iterator().remove() }
     }
+
+    @Test
+    fun iteratorMatchesForEachElement() {
+        // Codes repeat every 7 values, so hashed sets chain several elements per Treap node.
+        val set = (1..200).map { makeKey(it, code = it % 7) }.toTreapSet()
+        val iterated = mutableListOf<TestKey>()
+        val iterator = set.iterator()
+        while (iterator.hasNext()) {
+            iterated += iterator.next()
+        }
+        assertFailsWith<NoSuchElementException> { iterator.next() }
+        val visited = mutableListOf<TestKey>()
+        set.forEachElement { visited += it }
+        assertEquals(visited, iterated)
+        assertEquals(200, iterated.toSet().size)
+        assertFalse(treapSetOf<TestKey>().iterator().hasNext())
+        assertFailsWith<NoSuchElementException> { treapSetOf<TestKey>().iterator().next() }
+    }
 }
 
